@@ -54,21 +54,19 @@ done
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-OAID="$(basename $(cd $BIN/../..;pwd))"
-
 ROOT_DIR="$(cd $BIN/../..;pwd)"
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
+OAID="$(basename ${ROOT_DIR})"
 
-PID="$(basename $(cd ../;pwd))"
+PID="$(basename $(cd ../../;pwd))"
 CONTAINER="$(basename $(pwd))"
-if [[ -e 'container.json' ]]; then
-  REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
+if [[ -e "container.json" ]]; then
+    REGION=$(grep '"Region"' "container.json" | cut -d '"' -f 4)
 fi
-if [[ "${REGION}" == "" && -e '../solution.json' ]]; then
-  REGION=$(grep '"Region"' ../solution.json | cut -d '"' -f 4)
+if [[ "${REGION}" == "" && -e "../solution.json" ]]; then
+    REGION=$(grep '"Region"' "../solution.json" | cut -d '"' -f 4)
 fi
-if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
-  REGION=$(grep '"Region"' ../../account.json | cut -d '"' -f 4)
+if [[ "${REGION}" == "" && -e "../../../${OAID}/account.json" ]]; then
+    REGION=$(grep '"Region"' "../../../${OAID}/account.json" | cut -d '"' -f 4)
 fi
 
 if [[ "${REGION}" == "" ]]; then

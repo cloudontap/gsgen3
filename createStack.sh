@@ -73,49 +73,49 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-OAID="$(basename $(cd $BIN/../..;pwd))"
-
 ROOT_DIR="$(cd $BIN/../..;pwd)"
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
+OAID="$(basename ${ROOT_DIR})"
+
+AWS_DIR="${ROOT_DIR}/infrastructure"
 
 # Determine the Organisation Account Identifier, Project Identifier, and region
 # in which the stack should be created.
 case $TYPE in
 account)
-  if [[ -e 'account.json' ]]; then
-	REGION=$(grep '"Region"' account.json | cut -d '"' -f 4)
+  if [[ -e "account.json" ]]; then
+	REGION=$(grep '"Region"' "account.json" | cut -d '"' -f 4)
   fi
-  CF_DIR="${AWS_DIR}/cf"
+  CF_DIR="${AWS_DIR}/${OAID}/aws/cf"
   STACKNAME="$OAID-$TYPE"
   TEMPLATE="${TYPE}-${REGION}-template.json"
   STACK="${TYPE}-${REGION}-stack.json"
   ;;
 project)
   PID="$(basename $(pwd))"
-  if [[ "${REGION}" == "" && -e 'solution.json' ]]; then
-	REGION=$(grep '"Region"' solution.json | cut -d '"' -f 4)
+  if [[ "${REGION}" == "" && -e "solutions/solution.json" ]]; then
+	REGION=$(grep '"Region"' "solutions/solution.json" | cut -d '"' -f 4)
   fi
-  if [[ "${REGION}" == "" && -e '../account.json' ]]; then
-	REGION=$(grep '"Region"' ../account.json | cut -d '"' -f 4)
+  if [[ "${REGION}" == "" && -e "../${OAID}/account.json" ]]; then
+	REGION=$(grep '"Region"' "../${OAID}/account.json" | cut -d '"' -f 4)
   fi
-  CF_DIR="${AWS_DIR}/${PID}/cf"
+  CF_DIR="${AWS_DIR}/${PID}/aws/cf"
   STACKNAME="$PID-$TYPE"
   TEMPLATE="${TYPE}-${REGION}-template.json"
   STACK="${TYPE}-${REGION}-stack.json"
   ;;
 solution|container|application)
-  PID="$(basename $(cd ../;pwd))"
+  PID="$(basename $(cd ../../;pwd))"
   CONTAINER="$(basename $(pwd))"
-  if [[ -e 'container.json' ]]; then
-	REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
+  if [[ -e "container.json" ]]; then
+	REGION=$(grep '"Region"' "container.json" | cut -d '"' -f 4)
   fi
-  if [[ "${REGION}" == "" && -e '../solution.json' ]]; then
-	REGION=$(grep '"Region"' ../solution.json | cut -d '"' -f 4)
+  if [[ "${REGION}" == "" && -e "../solution.json" ]]; then
+	REGION=$(grep '"Region"' "../solution.json" | cut -d '"' -f 4)
   fi
-  if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
-	REGION=$(grep '"Region"' ../../account.json | cut -d '"' -f 4)
+  if [[ "${REGION}" == "" && -e "../../../${OAID}/account.json" ]]; then
+	REGION=$(grep '"Region"' "../../../${OAID}/account.json" | cut -d '"' -f 4)
   fi
-  CF_DIR="${AWS_DIR}/${PID}/${CONTAINER}/cf"
+  CF_DIR="${AWS_DIR}/${PID}/aws/${CONTAINER}/cf"
   STACKNAME="$PID-$CONTAINER-$TYPE"
   TEMPLATE="${TYPE}-${REGION}-template.json"
   STACK="${TYPE}-${REGION}-stack.json"

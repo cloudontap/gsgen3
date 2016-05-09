@@ -1,7 +1,7 @@
-#!/bin/bash -x
+#!/bin/bash
 
 function usage() {
-  echo -e "\nConvert config tree used for gsgen2 to format required for gsgen3" 
+  echo -e "\nConvert config/infrastructure trees used for gsgen2 to the format required for gsgen3" 
   echo -e "\nUsage: $(basename $0) -a OAID -p PID"
   echo -e "\nwhere\n"
   echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
@@ -9,8 +9,7 @@ function usage() {
   echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
   echo -e "\nNOTES:\n"
   echo -e "1) GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
-  echo -e "2) If the project directory is found as an immediate child of the OAID directory, nothing is done"
-  echo -e "3) It is assumed we are in the config directory under the OAID directory when the script is run"
+  echo -e "2) It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
   echo -e ""
   exit 1
 }
@@ -45,17 +44,13 @@ if [[ "${OAID}" == "" ||
   usage
 fi
 
-ROOT="$(basename $(cd ..;pwd))"
+OAID_DIR="$(basename $(cd ..;pwd))"
+CURRENT_DIR="$(basename $(pwd))"
 
-if [[ "${OAID}" != "${ROOT}" ]]; then
+if [[ "${OAID}" != "${OAID_DIR}" ]]; then
     echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
     usage
 fi
-
-# if [[ -d ${PID} ]]; then
-#    echo -e "\nLooks like the project directory tree already exists. Nothing to do."
-#    usage
-# fi
 
 # If in a repo, save the results of the rearrangement
 if [[ -d .git ]]; then
@@ -64,8 +59,27 @@ else
     MVCMD="mv"
 fi
 
-# Move each project to its own directory under config
-for TREE in solutions deployments; do
+# Deal with the aws/startup and aws/cf directories
+# They shouldn't be treated as a project
+# We also combine the account and project level cf directories for OAID
+if [[ -d aws ]]; then
+    mkdir -p ${OAID}/aws/
+    pushd aws
+    for DIRECTORY in startup cf ; do
+        if [[ -d ${DIRECTORY} ]]; then
+            ${MVCMD} ${DIRECTORY} ../${OAID}/aws
+        fi
+    done
+    if [[ -d ${OAID}/cf ]]; then
+        ${MVCMD} ${OAID}/cf/* ../${OAID}/aws/cf
+        rm -rf ${OAID}/cf
+    fi
+    popd
+fi
+
+# Move each project to its own directory
+# This will pick up the alm as a "project" as well
+for TREE in solutions deployments credentials aws; do
     if [[ -d ${TREE} ]]; then
         pushd ${TREE}
         for PROJECT in $(ls -d */ 2>/dev/null); do
@@ -82,11 +96,24 @@ for FILE in $(ls solutions/*.json  2>/dev/null); do
     ${MVCMD} ${FILE} ${OAID}
 done
 
-# Move the ALM project and solution files into the alm directory
-for FILE in $(ls ${OAID}/solutions/*.json  2>/dev/null); do
-    ${MVCMD} ${FILE} ${OAID}/solutions/alm
+# Move the project.json files to their respective project directories
+for PROJECT in $(ls -d */ 2>/dev/null); do
+    if [[ -f ${PROJECT}/solutions/project.json ]]; then
+    ${MVCMD} ${PROJECT}/solutions/project.json ${PROJECT}/${TREE}
+    fi
 done
 
+# Move the ALM solution file into the alm directory
+if [[ -f ${OAID}/solutions/solution.json ]]; then
+    ${MVCMD} ${OAID}/solutions/solution.json ${OAID}/solutions/alm
+fi
+
+# Final cleanup
+for TREE in solutions deployments credentials aws; do
+    if [[ -d ${TREE} ]]; then
+        rm -rf ${TREE}
+    fi
+done
 
 # Commit the results if necessary 
 if [[ -d .git ]]; then
