@@ -2,21 +2,23 @@
 
 function usage() {
   echo -e "\nSynchronise the contents of the code and credentials buckets to the local values" 
-  echo -e "\nUsage: $(basename $0) -a OAID -d DOMAIN -y"
+  echo -e "\nUsage: $(basename $0) -a OAID -d DOMAIN -x -y"
   echo -e "\nwhere\n"
   echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
   echo -e "(o) -d DOMAIN is the domain of the buckets to be synchronised"
   echo -e "    -h shows this text"
+  echo -e "(o) -x for no delete - by default files in the buckets that are absent locally are deleted"
   echo -e "(o) -y for a dryrun - show what will happen without actually transferring any files"
   echo -e "\nDEFAULTS:\n"
   echo -e "DOMAIN = {OAID}.gosource.com.au"
   echo -e "\nNOTES:\n"
-  echo -e "1) The OAID is only used to ensure we are in the correct directory tree"
+  echo -e "1) The OAID is only used to ensure we are in the OAID directory"
   echo -e ""
   exit 1
 }
 
 DRYRUN=
+DELETE="--delete"
 
 # Parse options
 while getopts ":a:d:hy" opt; do
@@ -29,6 +31,9 @@ while getopts ":a:d:hy" opt; do
       ;;
     h)
       usage
+      ;;
+    x)
+      DELETE=
       ;;
     y)
       DRYRUN="--dryrun"
@@ -53,13 +58,13 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT="$(basename $(cd $BIN/../..;pwd))"
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+ROOT_DIR="$(pwd)"
+ROOT="$(basename ${ROOT_DIR})"
 
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
-STARTUP_DIR="${AWS_DIR}/startup"
+STARTUP_DIR="${ROOT_DIR}/infrastructure/startup"
 
-CREDS_DIR="${ROOT_DIR}/infrastructure/credentials"
+ACCOUNT_DIR="${ROOT_DIR}/config/${OAID}"
+ACCOUNT_CREDS_DIR="${ROOT_DIR}/infrastructure/${OAID}/credentials"
 
 SOLUTIONS_DIR="${ROOT_DIR}/config/solutions"
 
@@ -76,7 +81,7 @@ if [[ "$?" -eq 0 ]]; then
     PROFILE="--profile ${OAID}"
 fi
 
-pushd ${SOLUTIONS_DIR}  > /dev/null 2>&1
+pushd ${ACCOUNT_DIR}  > /dev/null 2>&1
 
 REGION=$(grep '"Region"' account.json | cut -d '"' -f 4)
 
@@ -95,7 +100,7 @@ if [[ "$?" -ne 0 ]]; then
 fi
 
 pushd ${STARTUP_DIR}  > /dev/null 2>&1
-aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} --delete bootstrap/ s3://code.${DOMAIN}/bootstrap/
+aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} bootstrap/ s3://code.${DOMAIN}/bootstrap/
 
 # Confirm access to the credentials bucket
 aws ${PROFILE} --region ${REGION} s3 ls s3://credentials.${DOMAIN}/ > /dev/null 2>&1
@@ -104,6 +109,6 @@ if [[ "$?" -ne 0 ]]; then
       usage
 fi
 
-pushd ${CREDS_DIR}/${OAID}/alm/docker  > /dev/null 2>&1
-aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} --delete . s3://credentials.${DOMAIN}/${OAID}/alm/docker/
+pushd ${ACCOUNT_CREDS_DIR}/alm/docker  > /dev/null 2>&1
+aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} . s3://credentials.${DOMAIN}/${OAID}/alm/docker/
 

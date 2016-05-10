@@ -72,6 +72,7 @@
 [#assign dnsHostnames = containerObject.DNSHostnames!solutionContainer.DNSHostnames]
 [#assign jumpServer = internetAccess && (containerObject.NAT?? || solutionContainer.NAT??)]
 [#assign jumpServerPerAZ = jumpServer && (containerObject.NAT!solutionContainer.NAT).MultiAZ]
+
 [#assign sshPerContainer = containerObject.SSHPerContainer!solutionObject.SSHPerContainer]
 
 [#assign credentialsBucket = "credentials." + accountDomain]
@@ -84,10 +85,22 @@
 [#assign logsExpiration = (containerObject.Logs.Expiration)!(solutionObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (containerObject.Backups.Expiration)!(solutionObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
 
+[#-- Determine AZ to be used --]
+[#if (containerObject.AZList)??]
+    [#assign azList = containerObject.AZList]
+[#else]
+    [#if (solutionContainer.AZList)??]
+        [#assign azList = solutionContainer.AZList]
+    [#else]
+        [#assign azList = []]
+        [#list regionObject.Zones as zone]
+            [#assign azList = azList + [zone.Id]]
+        [/#list]
+    [/#if]
+[/#if]
+
 [#-- Optimise some repeated loops --]
 [#assign lastTier = solutionTiers?last]
-[#assign firstZone = regionObject.Zones?first]
-[#assign lastZone = regionObject.Zones?last]
 
 [#function getKey key]
   [#list stacks as stack]
@@ -147,15 +160,17 @@
         [#if jumpServer]
 		    [#assign tier = tiers["mgmt"]]
 		    [#list regionObject.Zones as zone]
-			    [#if jumpServerPerAZ || firstZone.Id = zone.Id]
-			        [#if eipCount > 0],[/#if]
-				    "eipX${tier.Id}XnatX${zone.Id}": {
-				        "Type" : "AWS::EC2::EIP",
-				        "Properties" : {
-				  	        "Domain" : "vpc"
-				        }
-				    }
-				    [#assign eipCount = eipCount + 1]
+			    [#if azList?seq_contains(zone.Id)]
+                    [#if jumpServerPerAZ || (azList[0] == zone.Id)]
+                        [#if eipCount > 0],[/#if]
+                        "eipX${tier.Id}XnatX${zone.Id}": {
+                            "Type" : "AWS::EC2::EIP",
+                            "Properties" : {
+                                "Domain" : "vpc"
+                            }
+                        }
+                        [#assign eipCount = eipCount + 1]
+                    [/#if]
 				[/#if]
 		    [/#list]
 		    [#assign sliceCount = sliceCount + 1]
@@ -208,45 +223,47 @@
 			[#assign tier = tiers[solutionTier.Id]]
 			[#assign routeTable = routeTables[solutionTier.RouteTable!tier.RouteTable]]
 			[#list regionObject.Zones as zone]
-				[#assign tableId = routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")]
-				[#assign tableName = routeTable.Name + jumpServerPerAZ?string("-" + zone.Id,"")]
-				[#if !solutionRouteTables?seq_contains(tableId)]
-					[#assign solutionRouteTables = solutionRouteTables + [tableId]]
-					,"routeTableX${tableId}" :
-					{
-						"Type" : "AWS::EC2::RouteTable",
-						"Properties" : 
-						{
-							"VpcId" : { "Ref" : "vpc" },
-							"Tags" : [ 
-							  { "Key" : "gs:account", "Value" : "${accountId}" },
-							  { "Key" : "gs:project", "Value" : "${projectId}" },
-							  { "Key" : "gs:container", "Value" : "${containerId}" },
-							  { "Key" : "gs:environment", "Value" : "${environmentId}" },
-							  { "Key" : "gs:category", "Value" : "${categoryId}" },
-							  [#if jumpServerPerAZ]
-								{ "Key" : "gs:zone", "Value" : "${zone.Id}" },
-							  [/#if]
-							  { "Key" : "Name", "Value" : "${projectName}-${containerName}-${tableName}" } 
-							]
-						}
-					}
-					[#list routeTable.Routes as route]
-						,"routeX${tableId}X${route.Id}" : {
-							"Type" : "AWS::EC2::Route",
-							"Properties" : {
-								"RouteTableId" : { "Ref" : "routeTableX${tableId}" },
-								[#switch route.Type]
-									[#case "gateway"]
-										"DestinationCidrBlock" : "0.0.0.0/0",
-										"GatewayId" : { "Ref" : "igw" }						
-									[#break]
-								[/#switch]
-								}
-						}
-					[/#list]
+			    [#if azList?seq_contains(zone.Id)]
+                    [#assign tableId = routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")]
+                    [#assign tableName = routeTable.Name + jumpServerPerAZ?string("-" + zone.Id,"")]
+                    [#if !solutionRouteTables?seq_contains(tableId)]
+                        [#assign solutionRouteTables = solutionRouteTables + [tableId]]
+                        ,"routeTableX${tableId}" :
+                        {
+                            "Type" : "AWS::EC2::RouteTable",
+                            "Properties" : 
+                            {
+                                "VpcId" : { "Ref" : "vpc" },
+                                "Tags" : [ 
+                                  { "Key" : "gs:account", "Value" : "${accountId}" },
+                                  { "Key" : "gs:project", "Value" : "${projectId}" },
+                                  { "Key" : "gs:container", "Value" : "${containerId}" },
+                                  { "Key" : "gs:environment", "Value" : "${environmentId}" },
+                                  { "Key" : "gs:category", "Value" : "${categoryId}" },
+                                  [#if jumpServerPerAZ]
+                                    { "Key" : "gs:zone", "Value" : "${zone.Id}" },
+                                  [/#if]
+                                  { "Key" : "Name", "Value" : "${projectName}-${containerName}-${tableName}" } 
+                                ]
+                            }
+                        }
+                        [#list routeTable.Routes as route]
+                            ,"routeX${tableId}X${route.Id}" : {
+                                "Type" : "AWS::EC2::Route",
+                                "Properties" : {
+                                    "RouteTableId" : { "Ref" : "routeTableX${tableId}" },
+                                    [#switch route.Type]
+                                        [#case "gateway"]
+                                            "DestinationCidrBlock" : "0.0.0.0/0",
+                                            "GatewayId" : { "Ref" : "igw" }						
+                                        [#break]
+                                    [/#switch]
+                                    }
+                            }
+                        [/#list]
+                    [/#if]
 				[/#if]
-			[/#list]
+            [/#list]
 		[/#list]
 		[#-- Define network ACLs --]
 		[#assign solutionNetworkACLs = []]
@@ -315,49 +332,51 @@
 			[#assign routeTable = routeTables[solutionTier.RouteTable!tier.RouteTable]]
 			[#assign networkACL = networkACLs[solutionTier.NetworkACL!tier.NetworkACL]]
 			[#list regionObject.Zones as zone]
-				,"subnetX${tier.Id}X${zone.Id}" : 
-				{
-				  "Type" : "AWS::EC2::Subnet",
-				  "Properties" : 
-				  {
-					"VpcId" : { "Ref" : "vpc" },
-					"AvailabilityZone" : "${zone.AWSZone}",
-					"CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
-					"Tags" : [
-					  { "Key" : "gs:account", "Value" : "${accountId}" },
-					  { "Key" : "gs:project", "Value" : "${projectId}" },
-					  { "Key" : "gs:container", "Value" : "${containerId}" },
-					  { "Key" : "gs:environment", "Value" : "${environmentId}" },
-					  { "Key" : "gs:category", "Value" : "${categoryId}" },
-					  { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-					  { "Key" : "gs:zone", "Value" : "${zone.Id}" },
-					  [#if routeTable.Private!false]
-						{ "Key" : "network", "Value" : "private" },
-					  [/#if]
-					  { "Key" : "Name", "Value" : "${projectName}-${containerName}-${tier.Name}-${zone.Name}" } 
-					]
-				  }
-				},
-	
-				"routeTableXassociationX${tier.Id}X${zone.Id}" : 
-				{
-				  "Type" : "AWS::EC2::SubnetRouteTableAssociation",
-				  "Properties" : 
-				  {
-					"SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-					"RouteTableId" : { "Ref" : "routeTableX${routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")}" }
-				  }
-				},
-	
-				"networkACLXassociationX${tier.Id}X${zone.Id}" : 
-				{
-				  "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-				  "Properties" : 
-				  {
-					"SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-					"NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" }
-				  }
-				}
+			    [#if azList?seq_contains(zone.Id)]
+                    ,"subnetX${tier.Id}X${zone.Id}" : 
+                    {
+                      "Type" : "AWS::EC2::Subnet",
+                      "Properties" : 
+                      {
+                        "VpcId" : { "Ref" : "vpc" },
+                        "AvailabilityZone" : "${zone.AWSZone}",
+                        "CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
+                        "Tags" : [
+                          { "Key" : "gs:account", "Value" : "${accountId}" },
+                          { "Key" : "gs:project", "Value" : "${projectId}" },
+                          { "Key" : "gs:container", "Value" : "${containerId}" },
+                          { "Key" : "gs:environment", "Value" : "${environmentId}" },
+                          { "Key" : "gs:category", "Value" : "${categoryId}" },
+                          { "Key" : "gs:tier", "Value" : "${tier.Id}" },
+                          { "Key" : "gs:zone", "Value" : "${zone.Id}" },
+                          [#if routeTable.Private!false]
+                            { "Key" : "network", "Value" : "private" },
+                          [/#if]
+                          { "Key" : "Name", "Value" : "${projectName}-${containerName}-${tier.Name}-${zone.Name}" } 
+                        ]
+                      }
+                    },
+        
+                    "routeTableXassociationX${tier.Id}X${zone.Id}" : 
+                    {
+                      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+                      "Properties" : 
+                      {
+                        "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
+                        "RouteTableId" : { "Ref" : "routeTableX${routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")}" }
+                      }
+                    },
+        
+                    "networkACLXassociationX${tier.Id}X${zone.Id}" : 
+                    {
+                      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+                      "Properties" : 
+                      {
+                        "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
+                        "NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" }
+                      }
+                    }
+				[/#if]
 			[/#list]
 		[/#list]
   
@@ -472,143 +491,145 @@
 	
 		[#assign solutionNATInstances = []]
 		[#list regionObject.Zones as zone]
-			[#if jumpServerPerAZ || firstZone.Id = zone.Id]
-				,"asgX${tier.Id}XnatX${zone.Id}": {
-				  "DependsOn" : [ "subnetX${tier.Id}X${zone.Id}" ],
-				  "Type": "AWS::AutoScaling::AutoScalingGroup",
-				  "Metadata": {
-					"AWS::CloudFormation::Init": {
-					  "configSets" : {
-						"nat" : ["dirs", "bootstrap", "nat"]
-					  },
-					  "dirs": {
-						"commands": {
-						  "01Directories" : {
-							"command" : "mkdir --parents --mode=0755 /etc/gosource && mkdir --parents --mode=0755 /opt/gosource/bootstrap && mkdir --parents --mode=0755 /var/log/gosource",
-							"ignoreErrors" : "false"
-						  }
-						}
-					  },
-					  "bootstrap": {		  
-						"packages" : {
-							"yum" : {
-								"aws-cli" : []
-							}
-						},  
-						"files" : {
-						  "/etc/gosource/facts.sh" : {
-							"content" : { "Fn::Join" : ["", [
-									"#!/bin/bash\n",
-									"echo \"gs:accountRegion=${accountRegionId}\"\n",
-									"echo \"gs:account=${accountId}\"\n",
-									"echo \"gs:project=${projectId}\"\n",
-									"echo \"gs:region=${regionId}\"\n",
-									"echo \"gs:container=${containerId}\"\n",
-									"echo \"gs:environment=${environmentId}\"\n",
-									"echo \"gs:tier=${tier.Id}\"\n",
-									"echo \"gs:component=nat\"\n",
-									"echo \"gs:zone=${zone.Id}\"\n",
-									"echo \"gs:role=nat\"\n",
-									"echo \"gs:credentials=${credentialsBucket}\"\n",
-									"echo \"gs:code=${codeBucket}\"\n",
-									"echo \"gs:configuration=${configurationBucket}\"\n",
-									"echo \"gs:logs=${logsBucket}\"\n",
-									"echo \"gs:backups=${backupsBucket}\"\n"
-								]]
-							},
-							"mode" : "000755"
-						  },
-						  "/opt/gosource/bootstrap/fetch.sh" : {
-							"content" : { "Fn::Join" : ["", [
-									"#!/bin/bash -ex\n",
-									"exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-									"REGION=$(/etc/gosource/facts.sh | grep gs:accountRegion | cut -d '=' -f 2)\n",
-									"CODE=$(/etc/gosource/facts.sh | grep gs:code | cut -d '=' -f 2)\n",
-									"aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0500 /opt/gosource/bootstrap/*.sh\n"
-								]]
-							},
-							"mode" : "000755"
-						  }		  	  
-						},
-						"commands": {
-						  "01Fetch" : {
-							"command" : "/opt/gosource/bootstrap/fetch.sh",
-							"ignoreErrors" : "false"
-						  },
-						  "02Initialise" : {
-							"command" : "/opt/gosource/bootstrap/init.sh",
-							"ignoreErrors" : "false"
-						  }
-						}
-					  },
-					  "nat": {
-						"commands": {
-						  "01ExecuteRouteUpdateScript" : {
-							"command" : "/opt/gosource/bootstrap/nat.sh",
-							"ignoreErrors" : "false"
-						  },
- 						  "02ExecuteAllocateEIPScript" : {
-							"command" : "/opt/gosource/bootstrap/eip.sh",
-							"env" : { 
-							    [#if slice?? && slice?contains("eip")]
-							        [#-- Legacy code to support definition of eip and vpc in one template --]
-    							    "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
-							    [#else]
-							        [#-- Normally assume eip defined in a separate template to the vpc --]
-     							    "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
-                               [/#if]
-							},
-							"ignoreErrors" : "false"
-						  }
-						}
-					  }
-					}
-				  },
-				  "Properties": {
-					"Cooldown" : "30",
-					"LaunchConfigurationName": {"Ref": "launchConfigX${tier.Id}XnatX${zone.Id}"},
-					"MinSize": "1",
-					"MaxSize": "1",
-					"VPCZoneIdentifier": [ { "Ref" : "subnetX${tier.Id}X${zone.Id}"} ],
-					"Tags" : [
-						{ "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:project", "Value" : "${projectId}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:container", "Value" : "${containerId}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "gs:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
-						{ "Key" : "gs:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
-						{ "Key" : "Name", "Value" : "${projectName}-${containerName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
-					]
-				  }
-				},
-			
-				[#assign component = { "Id" : ""}]
-				[#assign processorProfile = getProcessor(tier, component, "NAT")]
-				"launchConfigX${tier.Id}XnatX${zone.Id}": {
-				  "Type": "AWS::AutoScaling::LaunchConfiguration",
-				  "Properties": {
-					"KeyName": "${projectName + sshPerContainer?string("-" + containerName,"")}",
-					"ImageId": "${regionObject.AMIs.Centos.NAT}",
-					"InstanceType": "${processorProfile.Processor}",
-					"SecurityGroups" : [ { "Ref": "securityGroupX${tier.Id}Xnat" } ],
-					"IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}Xnat" },
-					"AssociatePublicIpAddress": true,
-					"UserData": {
-					  "Fn::Base64": { "Fn::Join": [ "", [
-						"#!/bin/bash -ex\n",
-						"exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n",
-						"yum install -y aws-cfn-bootstrap\n",				  
-						"# Remainder of configuration via metadata\n",
-						"/opt/aws/bin/cfn-init -v",
-						"         --stack ", { "Ref" : "AWS::StackName" },
-						"         --resource asgX${tier.Id}XnatX${zone.Id}",
-						"         --region ${regionId} --configsets nat\n"
-					  ] ] }
-					}
-				  }
-				}
+		    [#if azList?seq_contains(zone.Id)]
+                [#if jumpServerPerAZ || (azList[0] == zone.Id)]
+                    ,"asgX${tier.Id}XnatX${zone.Id}": {
+                      "DependsOn" : [ "subnetX${tier.Id}X${zone.Id}" ],
+                      "Type": "AWS::AutoScaling::AutoScalingGroup",
+                      "Metadata": {
+                        "AWS::CloudFormation::Init": {
+                          "configSets" : {
+                            "nat" : ["dirs", "bootstrap", "nat"]
+                          },
+                          "dirs": {
+                            "commands": {
+                              "01Directories" : {
+                                "command" : "mkdir --parents --mode=0755 /etc/gosource && mkdir --parents --mode=0755 /opt/gosource/bootstrap && mkdir --parents --mode=0755 /var/log/gosource",
+                                "ignoreErrors" : "false"
+                              }
+                            }
+                          },
+                          "bootstrap": {		  
+                            "packages" : {
+                                "yum" : {
+                                    "aws-cli" : []
+                                }
+                            },  
+                            "files" : {
+                              "/etc/gosource/facts.sh" : {
+                                "content" : { "Fn::Join" : ["", [
+                                        "#!/bin/bash\n",
+                                        "echo \"gs:accountRegion=${accountRegionId}\"\n",
+                                        "echo \"gs:account=${accountId}\"\n",
+                                        "echo \"gs:project=${projectId}\"\n",
+                                        "echo \"gs:region=${regionId}\"\n",
+                                        "echo \"gs:container=${containerId}\"\n",
+                                        "echo \"gs:environment=${environmentId}\"\n",
+                                        "echo \"gs:tier=${tier.Id}\"\n",
+                                        "echo \"gs:component=nat\"\n",
+                                        "echo \"gs:zone=${zone.Id}\"\n",
+                                        "echo \"gs:role=nat\"\n",
+                                        "echo \"gs:credentials=${credentialsBucket}\"\n",
+                                        "echo \"gs:code=${codeBucket}\"\n",
+                                        "echo \"gs:configuration=${configurationBucket}\"\n",
+                                        "echo \"gs:logs=${logsBucket}\"\n",
+                                        "echo \"gs:backups=${backupsBucket}\"\n"
+                                    ]]
+                                },
+                                "mode" : "000755"
+                              },
+                              "/opt/gosource/bootstrap/fetch.sh" : {
+                                "content" : { "Fn::Join" : ["", [
+                                        "#!/bin/bash -ex\n",
+                                        "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
+                                        "REGION=$(/etc/gosource/facts.sh | grep gs:accountRegion | cut -d '=' -f 2)\n",
+                                        "CODE=$(/etc/gosource/facts.sh | grep gs:code | cut -d '=' -f 2)\n",
+                                        "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0500 /opt/gosource/bootstrap/*.sh\n"
+                                    ]]
+                                },
+                                "mode" : "000755"
+                              }		  	  
+                            },
+                            "commands": {
+                              "01Fetch" : {
+                                "command" : "/opt/gosource/bootstrap/fetch.sh",
+                                "ignoreErrors" : "false"
+                              },
+                              "02Initialise" : {
+                                "command" : "/opt/gosource/bootstrap/init.sh",
+                                "ignoreErrors" : "false"
+                              }
+                            }
+                          },
+                          "nat": {
+                            "commands": {
+                              "01ExecuteRouteUpdateScript" : {
+                                "command" : "/opt/gosource/bootstrap/nat.sh",
+                                "ignoreErrors" : "false"
+                              },
+                              "02ExecuteAllocateEIPScript" : {
+                                "command" : "/opt/gosource/bootstrap/eip.sh",
+                                "env" : { 
+                                    [#if slice?? && slice?contains("eip")]
+                                        [#-- Legacy code to support definition of eip and vpc in one template --]
+                                        "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                                    [#else]
+                                        [#-- Normally assume eip defined in a separate template to the vpc --]
+                                        "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
+                                   [/#if]
+                                },
+                                "ignoreErrors" : "false"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Properties": {
+                        "Cooldown" : "30",
+                        "LaunchConfigurationName": {"Ref": "launchConfigX${tier.Id}XnatX${zone.Id}"},
+                        "MinSize": "1",
+                        "MaxSize": "1",
+                        "VPCZoneIdentifier": [ { "Ref" : "subnetX${tier.Id}X${zone.Id}"} ],
+                        "Tags" : [
+                            { "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:project", "Value" : "${projectId}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:container", "Value" : "${containerId}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "gs:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
+                            { "Key" : "gs:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
+                            { "Key" : "Name", "Value" : "${projectName}-${containerName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
+                        ]
+                      }
+                    },
+                
+                    [#assign component = { "Id" : ""}]
+                    [#assign processorProfile = getProcessor(tier, component, "NAT")]
+                    "launchConfigX${tier.Id}XnatX${zone.Id}": {
+                      "Type": "AWS::AutoScaling::LaunchConfiguration",
+                      "Properties": {
+                        "KeyName": "${projectName + sshPerContainer?string("-" + containerName,"")}",
+                        "ImageId": "${regionObject.AMIs.Centos.NAT}",
+                        "InstanceType": "${processorProfile.Processor}",
+                        "SecurityGroups" : [ { "Ref": "securityGroupX${tier.Id}Xnat" } ],
+                        "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}Xnat" },
+                        "AssociatePublicIpAddress": true,
+                        "UserData": {
+                          "Fn::Base64": { "Fn::Join": [ "", [
+                            "#!/bin/bash -ex\n",
+                            "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n",
+                            "yum install -y aws-cfn-bootstrap\n",				  
+                            "# Remainder of configuration via metadata\n",
+                            "/opt/aws/bin/cfn-init -v",
+                            "         --stack ", { "Ref" : "AWS::StackName" },
+                            "         --resource asgX${tier.Id}XnatX${zone.Id}",
+                            "         --region ${regionId} --configsets nat\n"
+                          ] ] }
+                        }
+                      }
+                    }
+                [/#if]
 			[/#if]
 		[/#list]
 	  [/#if]
@@ -692,16 +713,18 @@
         [#if jumpServer]
 		    [#assign tier = tiers["mgmt"]]
 		    [#list regionObject.Zones as zone]
-			    [#if jumpServerPerAZ || firstZone.Id = zone.Id]
-			        [#if eipCount > 0],[/#if]
-					"eipX${tier.Id}XnatX${zone.Id}Xip": {
-						"Value" : { "Ref" : "eipX${tier.Id}XnatX${zone.Id}" }
-					},
-					"eipX${tier.Id}XnatX${zone.Id}Xid": {
-						"Value" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
-					}
-				    [#assign eipCount = eipCount + 1]
-				[/#if]
+    		    [#if azList?seq_contains(zone.Id)]
+                    [#if jumpServerPerAZ || (azList[0] == zone.Id)]
+                        [#if eipCount > 0],[/#if]
+                        "eipX${tier.Id}XnatX${zone.Id}Xip": {
+                            "Value" : { "Ref" : "eipX${tier.Id}XnatX${zone.Id}" }
+                        },
+                        "eipX${tier.Id}XnatX${zone.Id}Xid": {
+                            "Value" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                        }
+                        [#assign eipCount = eipCount + 1]
+                    [/#if]
+               [/#if]
 		    [/#list]
             [#assign sliceCount = sliceCount + 1]
 		[/#if]
@@ -725,11 +748,13 @@
 		[#list solutionTiers as solutionTier]
 			[#assign tier = tiers[solutionTier.Id]]
 			[#list regionObject.Zones as zone]
-				,"subnetX${tier.Id}X${zone.Id}" : 
-				{
-				  "Value" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" }
-				}
-			[/#list]
+    		    [#if azList?seq_contains(zone.Id)]
+                    ,"subnetX${tier.Id}X${zone.Id}" : 
+                    {
+                      "Value" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" }
+                    }
+                [/#if]
+           [/#list]
 		[/#list]
         [#assign sliceCount = sliceCount + 1]
     [/#if]

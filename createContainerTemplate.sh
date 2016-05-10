@@ -34,19 +34,25 @@ done
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-PID="$(basename $(cd ..;pwd))"
-CONTAINER="$(basename $(pwd))"
+CURRENT_DIR="$(pwd)"
+PROJECT_DIR="$(cd ../../;pwd)"
+ROOT_DIR="$(cd ../../../../;pwd)"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
-PROJECT_DIR="${AWS_DIR}/${PID}"
-CONTAINER_DIR="${PROJECT_DIR}/${CONTAINER}"
-CF_DIR="${CONTAINER_DIR}/cf"
+CONTAINER="$(basename ${CURRENT_DIR})"
+PID="$(basename ${PROJECT_DIR})"
+OAID="$(basename ${ROOT_DIR})"
 
-ORGANISATIONFILE="../../organisation.json"
-ACCOUNTFILE="../../account.json"
-PROJECTFILE="../project.json"
-CONTAINERFILE="container.json"
+CONFIG_DIR="${ROOT_DIR}/config"
+INFRA_DIR="${ROOT_DIR}/infrastructure"
+
+ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"
+
+CF_DIR="${INFRA_DIR}/${PID}/aws/${CONTAINER}/cf"
+
+ORGANISATIONFILE="${ACCOUNT_DIR}/organisation.json"
+ACCOUNTFILE="${ACCOUNT_DIR}/account.json"
+PROJECTFILE="${PROJECT_DIR}/project.json"
+CONTAINERFILE="${CURRENT_DIR}/container.json"
 
 if [[ -f solution.json ]]; then
 	SOLUTIONFILE="solution.json"

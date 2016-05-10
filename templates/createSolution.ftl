@@ -75,7 +75,6 @@
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
-[#assign internetAccess = containerObject.InternetAccess!solutionContainer.InternetAccess]
 [#assign sshPerContainer = containerObject.SSHPerContainer!solutionObject.SSHPerContainer]
 [#assign solnMultiAZ = containerObject.MultiAZ!(solutionObject.MultiAZ!(environmentObject.MultiAZ!false))]
 
@@ -84,12 +83,26 @@
 
 [#assign logsBucket = "logs." + containerDomain]
 [#assign backupsBucket = "backups." + containerDomain]
-[#assign configurationBucket = "configuration." + accountDomain]
+
+[#-- Determine AZ to be used --]
+[#if (containerObject.AZList)??]
+    [#assign azList = containerObject.AZList]
+[#else]
+    [#if (solutionContainer.AZList)??]
+        [#assign azList = solutionContainer.AZList]
+    [#else]
+        [#assign azList = []]
+        [#list regionObject.Zones as zone]
+            [#assign azList = azList + [zone.Id]]
+        [/#list]
+    [/#if]
+[/#if]
 
 [#-- Optimise some repeated loops --]
-[#assign firstZone = regionObject.Zones?first]
-[#assign lastZone = regionObject.Zones?last]
-[#assign zoneCount = regionObject.Zones?size]
+[#assign lastTier = solutionTiers?last]
+[#assign firstZone = azList?first]
+[#assign lastZone = azList?last]
+[#assign zoneCount = azList?size]
 
 [#function getKey key]
   [#list stacks as stack]
@@ -298,14 +311,14 @@
 						  "Properties" : {
 							[#if multiAZ]
 								"Subnets" : [
-									[#list regionObject.Zones as zone]
-										"${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zone.Id == lastZone.Id)],[/#if]
+									[#list azList as zone]
+										"${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
 									[/#list]
 								],
 								"CrossZone" : true,
 							[#else]
 								"Subnets" : [
-									"${getKey("subnetX"+tier.Id+"X"+firstZone.Id)}"
+									"${getKey("subnetX"+tier.Id+"X"+firstZone)}"
 								],
 							[/#if]
 							"Listeners" : [ 
@@ -433,7 +446,7 @@
 	
 						[#assign ec2Count = 0]
 						[#list regionObject.Zones as zone]
-							[#if multiAZ || firstZone.Id = zone.Id]
+							[#if azList?seq_contains(zone.Id) && (multiAZ || firstZone = zone.Id)]
 							    [#if ec2Count > 0],[/#if]
 								"ec2InstanceX${tier.Id}X${component.Id}X${zone.Id}": {
 								  "Type": "AWS::EC2::Instance",
@@ -473,7 +486,6 @@
 													"echo \"gs:role=${component.Role}\"\n",
 													"echo \"gs:credentials=${credentialsBucket}\"\n",
 													"echo \"gs:code=${codeBucket}\"\n",
-													"echo \"gs:configuration=${configurationBucket}\"\n",
 													"echo \"gs:logs=${logsBucket}\"\n",
 													"echo \"gs:backup=${backupsBucket}\"\n"
 												]]
@@ -793,7 +805,6 @@
 											"echo \"gs:role=${component.Role}\"\n",
 											"echo \"gs:credentials=${credentialsBucket}\"\n",
 											"echo \"gs:code=${codeBucket}\"\n",
-											"echo \"gs:configuration=${configurationBucket}\"\n",
 											"echo \"gs:logs=${logsBucket}\"\n",
 											"echo \"gs:backup=${backupsBucket}\"\n"
 										]]
@@ -863,15 +874,15 @@
 								"MaxSize": "${maxSize}",
 								"DesiredCapacity": "${processorProfile.DesiredPerZone * zoneCount}",
 								"VPCZoneIdentifier": [ 
-									[#list regionObject.Zones as zone]
-										"${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zone.Id == lastZone.Id)],[/#if]
+									[#list azList as zone]
+										"${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
 									[/#list]
 								],
 							[#else]
 								"MinSize": "${processorProfile.MinPerZone}",
 								"MaxSize": "${maxSize}",
 								"DesiredCapacity": "${processorProfile.DesiredPerZone}",
-								"VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+firstZone.Id)}"],
+								"VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+firstZone)}"],
 							[/#if]
 							"Tags" : [
 								{ "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
@@ -955,8 +966,8 @@
 							"Properties" : {
 								"Description" : "${projectName}-${containerName}-${tier.Name}-${component.Name}",
 								"SubnetIds" : [ 
-									[#list regionObject.Zones as zone]
-										"${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zone.Id == lastZone.Id)],[/#if]
+									[#list azList as zone]
+										"${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
 									[/#list]
 								]
 							}
@@ -984,16 +995,24 @@
 								"AZMode": "cross-az",
 								"PreferredAvailabilityZones" : [
 									[#assign countPerZone = processorProfile.CountPerZone]
+									[#assign zoneCount = 0]
 									[#list regionObject.Zones as zone]
-										[#list 1..countPerZone as i]
-											"${zone.AWSZone}"[#if !((zone.Id == lastZone.Id) && (i == countPerZone))],[/#if]
-										[/#list]
+									    [#if azList?seq_contains(zone.Id)]
+                                            [#list 1..countPerZone as i]
+                                                [#if zoneCount > 0],[/#if]"${zone.AWSZone}"
+                                                [#assign zoneCount = zoneCount + 1]
+                                            [/#list]
+										[/#if]
 									[/#list]
 								],
 								"NumCacheNodes" : "${processorProfile.CountPerZone * zoneCount}",
 							[#else]
 								"AZMode": "single-az",
-								"PreferredAvailabilityZone" : "${firstZone.AWSZone}",
+                                [#list regionObject.Zones as zone]
+                                    [#if firstZone == zone.Id]
+                                        "PreferredAvailabilityZone" : "${zone.AWSZone}",
+                                    [/#if]
+                                [/#list]
 								"NumCacheNodes" : "${processorProfile.CountPerZone}",
 							[/#if]
 							[#if (cache.SnapshotRetentionLimit)??]
@@ -1054,8 +1073,8 @@
 							"Properties" : {
 								"DBSubnetGroupDescription" : "${projectName}-${containerName}-${tier.Name}-${component.Name}",
 								"SubnetIds" : [ 
-									[#list regionObject.Zones as zone]
-										"${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zone.Id == lastZone.Id)],[/#if]
+									[#list azList as zone]
+										"${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
 									[/#list]
 								],
 								"Tags" : [
@@ -1172,9 +1191,9 @@
                                                 "IpAddress": {
                                                     [#assign ipCount = 0]
                                                     "aws:SourceIp": [
-                                                        [#list regionObject.Zones as zone]
+                                                        [#list azList as zone]
                                                             [#if ipCount > 0],[/#if]
-                                                            [#if (getKey("eipXmgmtXnatX" + zone.Id + "Xip")??)]"${getKey("eipXmgmtXnatX" + zone.Id + "Xip")}"[/#if]
+                                                            [#if (getKey("eipXmgmtXnatX" + zone + "Xip")??)]"${getKey("eipXmgmtXnatX" + zone + "Xip")}"[/#if]
                                                             [#assign ipCount = ipCount + 1]
 				                                        [/#list]
                                                     ]

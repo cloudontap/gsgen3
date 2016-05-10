@@ -34,25 +34,28 @@ done
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-PID="$(basename $(cd ..;pwd))"
-CONTAINER="$(basename $(pwd))"
+CURRENT_DIR="$(pwd)"
+PROJECT_DIR="$(cd ../../;pwd)"
+ROOT_DIR="$(cd ../../../../;pwd)"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+CONTAINER="$(basename ${CURRENT_DIR})"
+PID="$(basename ${PROJECT_DIR})"
+OAID="$(basename ${ROOT_DIR})"
 
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
-PROJECT_DIR="${AWS_DIR}/${PID}"
-CONTAINER_DIR="${PROJECT_DIR}/${CONTAINER}"
-CF_DIR="${CONTAINER_DIR}/cf"
+CONFIG_DIR="${ROOT_DIR}/config"
+INFRA_DIR="${ROOT_DIR}/infrastructure"
 
-CREDS_DIR="${ROOT_DIR}/infrastructure/credentials"
-PROJECT_CREDS_DIR=${CREDS_DIR}/${PID}
-CONTAINER_CREDS_DIR=${PROJECT_CREDS_DIR}/${CONTAINER}
+ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"
 
-ORGANISATIONFILE="../../organisation.json"
-ACCOUNTFILE="../../account.json"
-PROJECTFILE="../project.json"
-CONTAINERFILE="container.json"
-CREDENTIALSFILE="${CONTAINER_CREDS_DIR}/credentials.json"
+CF_DIR="${INFRA_DIR}/${PID}/aws/${CONTAINER}/cf"
+
+CREDS_DIR="${INFRA_DIR}/${PID}/credentials/${CONTAINER}"
+
+ORGANISATIONFILE="${ACCOUNT_DIR}/organisation.json"
+ACCOUNTFILE="${ACCOUNT_DIR}/account.json"
+PROJECTFILE="${PROJECT_DIR}/project.json"
+CONTAINERFILE="${CURRENT_DIR}/container.json"
+CREDENTIALSFILE="${CREDS_DIR}/credentials.json"
 
 if [[ -f solution.json ]]; then
 	SOLUTIONFILE="solution.json"
