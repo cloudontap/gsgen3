@@ -103,7 +103,7 @@
 					"Name" : "a",
 					"Description" : "Zone A",
 					"CClassOffset" : 0,
-					"CIDRMask" : 21,
+					"CIDRMask" : 22,
 					"AWSZone" : "ap-southeast-2a",
 					"Locality" : "Sydney"
 				},
@@ -112,9 +112,19 @@
 					"Id" : "b",
 					"Name" : "b",
 					"Description" : "Zone B",
-					"CClassOffset" : 8,
-					"CIDRMask" : 21,
+					"CClassOffset" : 4,
+					"CIDRMask" : 22,
 					"AWSZone" : "ap-southeast-2b",
+					"Locality" : "Sydney"
+				},
+				{
+					"Title" : "Zone C",
+					"Id" : "c",
+					"Name" : "c",
+					"Description" : "Zone C",
+					"CClassOffset" : 8,
+					"CIDRMask" : 22,
+					"AWSZone" : "ap-southeast-2c",
 					"Locality" : "Sydney"
 				}
 			],
