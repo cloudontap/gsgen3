@@ -2,9 +2,10 @@
 
 function usage() {
   echo -e "\nCreate project credentials and install them in an AWS region" 
-  echo -e "\nUsage: $(basename $0) -a OAID -p PID -r REGION"
+  echo -e "\nUsage: $(basename $0) -a OAID -p PID -c CONTAINER -r REGION"
   echo -e "\nwhere\n"
   echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
+  echo -e "(o) -c CONTAINER is the container to be updated"
   echo -e "    -h shows this text"
   echo -e "(m) -p PID is the project id e.g. \"eticket\""
   echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
@@ -13,15 +14,19 @@ function usage() {
   echo -e "2) The script assumes we are in the OAID directory"
   echo -e "3) If ssh keys already exist, they are not recreated"
   echo -e "4) If a region is not provided, the organisation account/solution region will be used"
+  echo -e "5) If a container is not provided, all containers are updated"
   echo -e ""
   exit 1
 }
 
 # Parse options
-while getopts ":a:hp:r:" opt; do
+while getopts ":a:c:hp:r:" opt; do
   case $opt in
     a)
       OAID=$OPTARG
+      ;;
+    c)
+      CONTAINER=$OPTARG
       ;;
     h)
       usage
@@ -163,11 +168,19 @@ function check_certificate () {
 }
 
 pushd ${CREDS_DIR} > /dev/null 2>&1
-KEYNAME=${PID} check_ssh_key 
-CERTNAME=${PID} check_certificate
+if [[ "${CONTAINER}" == "" || (! -f "${CONTAINER}/.sshpair") ]]; then
+    KEYNAME=${PID} check_ssh_key
+    CERTNAME=${PID} check_certificate
+fi
+
+if [[ "${CONTAINER}" == ""]]; then
+    CONTAINER_LIST="$(ls -d */)"
+else
+    CONTAINER_LIST="${CONTAINER}"
+fi
 
 # Check if container specific keypair/certificate
-for CONTAINER in $(ls -d */); do
+for CONTAINER in ${CONTAINER_LIST}; do
   	CONTAINER_NAME="$(basename ${CONTAINER})"
     pushd $CONTAINER_NAME > /dev/null 2>&1
     if [[ -f .sshpair ]]; then 
