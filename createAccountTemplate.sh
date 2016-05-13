@@ -4,16 +4,20 @@ function usage() {
   echo -e "\nCreate the account specific CloudFormation template" 
   echo -e "\nUsage: $(basename $0) -h"
   echo -e "\nwhere\n"
+  echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
   echo -e "    -h shows this text"
   echo -e "\nNOTES:\n"
-  echo -e "1) You must be in the account directory when running this script"
+  echo -e "1) You must be in the OAID directory when running this script"
   echo -e ""
   exit 1
 }
 
 # Parse options
-while getopts ":h" opt; do
+while getopts ":a:h" opt; do
   case $opt in
+    a)
+      OAID=$OPTARG
+      ;;
     h)
       usage
       ;;
@@ -28,14 +32,29 @@ while getopts ":h" opt; do
    esac
 done
 
+# Ensure mandatory arguments have been provided
+if [[ "${OAID}" == "" ]]; then
+  echo -e "\nInsufficient arguments"
+  usage
+fi
+
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
-AWS_DIR="${ROOT_DIR}/infrastructure/aws"
-CF_DIR="${AWS_DIR}/cf"
+ROOT_DIR="$(pwd)"
+ROOT="$(basename ${ROOT_DIR})"
 
+ACCOUNT_DIR="${ROOT_DIR}/config/${OAID}"
+
+CF_DIR="${ROOT_DIR}/infrastructure/${OAID}/aws/${CONTAINER}/cf"
+
+if [[ "${OAID}" != "${ROOT}" ]]; then
+    echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
+    usage
+fi
+
+cd ${ACCOUNT_DIR}
 if [[ ! -f account.json ]]; then
-    echo -e "\nNo \"account.json\" file in current directory. Are we in a account directory? Nothing to do."
+    echo -e "\nNo \"account.json\" file in the config/${OAID} directory. Nothing to do."
     usage
 fi 
 
