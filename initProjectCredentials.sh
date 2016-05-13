@@ -173,7 +173,7 @@ if [[ "${CONTAINER}" == "" || (! -f "${CONTAINER}/.sshpair") ]]; then
     CERTNAME=${PID} check_certificate
 fi
 
-if [[ "${CONTAINER}" == ""]]; then
+if [[ "${CONTAINER}" == "" ]]; then
     CONTAINER_LIST="$(ls -d */)"
 else
     CONTAINER_LIST="${CONTAINER}"
