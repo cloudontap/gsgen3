@@ -99,8 +99,8 @@ if [[ "$?" -ne 0 ]]; then
       usage
 fi
 
-pushd ${STARTUP_DIR}  > /dev/null 2>&1
-aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} bootstrap/ s3://code.${DOMAIN}/bootstrap/
+cd ${STARTUP_DIR}
+aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://code.${DOMAIN}/bootstrap/
 
 # Confirm access to the credentials bucket
 aws ${PROFILE} --region ${REGION} s3 ls s3://credentials.${DOMAIN}/ > /dev/null 2>&1
@@ -109,6 +109,6 @@ if [[ "$?" -ne 0 ]]; then
       usage
 fi
 
-pushd ${ACCOUNT_CREDS_DIR}/alm/docker  > /dev/null 2>&1
+cd ${ACCOUNT_CREDS_DIR}/alm/docker
 aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} . s3://credentials.${DOMAIN}/${OAID}/alm/docker/
 
