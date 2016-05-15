@@ -40,7 +40,7 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(pwd)"
+ROOT_DIR="$(cd ../..;pwd)"
 ROOT="$(basename ${ROOT_DIR})"
 
 ACCOUNT_DIR="${ROOT_DIR}/config/${OAID}"
