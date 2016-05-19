@@ -164,6 +164,11 @@ RESULT=1
 if [[ "${WAIT}" = "true" ]]; then
   while true; do
     aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
+    if [ "$RESULT" -eq 255 ]; then
+        # Assume stack doesn't exist
+        RESULT=0
+        break
+    fi
     grep "StackStatus" $STACK > STATUS.txt
     cat STATUS.txt
     grep "DELETE_COMPLETE" STATUS.txt >/dev/null 2>&1
