@@ -298,15 +298,15 @@
                             "Type" : "AWS::SQS::Queue",
                             "Properties" : {
                                 [#if sqs.Name??]
-                                    "QueueName" : "${sqs.Name}",
+                                    "QueueName" : "${sqs.Name}"
                                 [#else]
-                                    "QueueName" : "${projectId}-${environmentName}-${component.Name}",
+                                    "QueueName" : "${projectId}-${environmentName}-${component.Name}"
                                 [/#if]
-                                [#if sqs.DelaySeconds??]"DelaySeconds" : ${sqs.DelaySeconds?c},[/#if]
-                                [#if sqs.MaximumMessageSize??]"MaximumMessageSize" : ${sqs.MaximumMessageSize?c},[/#if]
-                                [#if sqs.MessageRetentionPeriod??]"MessageRetentionPeriod" : ${sqs.MessageRetentionPeriod?c},[/#if]
-                                [#if sqs.ReceiveMessageWaitTimeSeconds??]"ReceiveMessageWaitTimeSeconds" : ${sqs.ReceiveMessageWaitTimeSeconds?c},[/#if]
-                                [#if sqs.VisibilityTimeout??]"VisibilityTimeout" : ${sqs.VisibilityTimeout?c}[/#if]
+                                [#if sqs.DelaySeconds??],"DelaySeconds" : ${sqs.DelaySeconds?c}[/#if]
+                                [#if sqs.MaximumMessageSize??],"MaximumMessageSize" : ${sqs.MaximumMessageSize?c}[/#if]
+                                [#if sqs.MessageRetentionPeriod??],"MessageRetentionPeriod" : ${sqs.MessageRetentionPeriod?c}[/#if]
+                                [#if sqs.ReceiveMessageWaitTimeSeconds??],"ReceiveMessageWaitTimeSeconds" : ${sqs.ReceiveMessageWaitTimeSeconds?c}[/#if]
+                                [#if sqs.VisibilityTimeout??],"VisibilityTimeout" : ${sqs.VisibilityTimeout?c}[/#if]
                             }
 						}
 						[#assign count = count + 1]
