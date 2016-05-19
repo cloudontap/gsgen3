@@ -1321,13 +1321,13 @@
 						[#assign sqs = component.SQS]
 						[#if count > 0],[/#if]
 						"sqsX${tier.Id}X${component.Id}" : {
-							"Value" : { "Fn::GetAtt" : ["s3X${tier.Id}X${component.Id}", "QueueName"] }
+							"Value" : { "Fn::GetAtt" : ["sqsX${tier.Id}X${component.Id}", "QueueName"] }
 						},
 						"sqsX${tier.Id}X${component.Id}url" : {
 							"Value" : { "Ref" : "sqsX${tier.Id}X${component.Id}" }
 						},
 						"sqsX${tier.Id}X${component.Id}Xarn" : {
-							"Value" : { "Fn::GetAtt" : ["s3X${tier.Id}X${component.Id}", "Arn"] }
+							"Value" : { "Fn::GetAtt" : ["sqsX${tier.Id}X${component.Id}", "Arn"] }
 						}
 					[/#if]
 					[#-- ELB --]
