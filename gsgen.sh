@@ -62,7 +62,7 @@ if [[ "${VARIABLES}" != "" ]]; then
   VARIABLEARG="-v ${VARIABLES}"
 fi
 
-CMD="java -jar "$BIN/gsgen.jar" -i $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $VARIABLEARG"
+CMD="java -jar "$BIN/gsgen-1.1.jar" -i $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $VARIABLEARG"
 eval $CMD
 
 exit $?
