@@ -1323,7 +1323,7 @@
 						"sqsX${tier.Id}X${component.Id}" : {
 							"Value" : { "Fn::GetAtt" : ["sqsX${tier.Id}X${component.Id}", "QueueName"] }
 						},
-						"sqsX${tier.Id}X${component.Id}url" : {
+						"sqsX${tier.Id}X${component.Id}Xurl" : {
 							"Value" : { "Ref" : "sqsX${tier.Id}X${component.Id}" }
 						},
 						"sqsX${tier.Id}X${component.Id}Xarn" : {
