@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 function usage() {
   echo -e "\nCreate project credentials and install them in an AWS region" 
   echo -e "\nUsage: $(basename $0) -a OAID -p PID -c CONTAINER -r REGION"

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 # Defaults
 ALMSIZE_DEFAULT="small"
 ALMTYPE_DEFAULT="external"

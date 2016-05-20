@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 function usage() {
   echo -e "\nCreate the configuration directory structure for a project" 
   echo -e "\nUsage: $(basename $0) -a OAID -t TITLE -p PID -r REGION -s SOLUTION -l ALPHASOLUTION"

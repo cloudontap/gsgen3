@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 function usage() {
   echo -e "\nCreate a solution specific CloudFormation template" 
   echo -e "\nUsage: $(basename $0) -s SLICE"

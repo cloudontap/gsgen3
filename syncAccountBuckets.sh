@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 function usage() {
   echo -e "\nSynchronise the contents of the code and credentials buckets to the local values" 
   echo -e "\nUsage: $(basename $0) -a OAID -d DOMAIN -x -y"

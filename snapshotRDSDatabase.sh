@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+
 trap 'find . -name STATUS.txt -exec rm {} \; ; exit $RESULT' EXIT SIGHUP SIGINT SIGTERM
 
 DELAY_DEFAULT=30
@@ -125,7 +127,6 @@ if [[ ("${RETAIN}" != "") || ("${AGE}" != "") ]]; then
     else
         LIST=$(aws ${PROFILE} --region ${REGION} rds describe-db-snapshots --snapshot-type manual | grep DBSnapshotIdentifier | grep ${DB_INSTANCE_IDENTIFIER} | cut -d'"' -f 4 | sort)
     fi
-#    echo LIST=$LIST
     if [[ "${AGE}" != "" ]]; then
         BASELIST=${LIST}
         LIST=""
@@ -140,7 +141,6 @@ if [[ ("${RETAIN}" != "") || ("${AGE}" != "") ]]; then
             fi
         done        
     fi
-#    echo LIST=$LIST
     if [[ "${LIST}" != "" ]]; then
         for SNAPSHOT in $(echo $LIST); do
             aws ${PROFILE} --region ${REGION} rds delete-db-snapshot --db-snapshot-identifier $SNAPSHOT
