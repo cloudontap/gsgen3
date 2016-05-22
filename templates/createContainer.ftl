@@ -570,8 +570,8 @@
                               "02ExecuteAllocateEIPScript" : {
                                 "command" : "/opt/gosource/bootstrap/eip.sh",
                                 "env" : { 
-                                    [#if slice?? && slice?contains("eip")]
-                                        [#-- Legacy code to support definition of eip and vpc in one template --]
+                                    [#if !(slice??) || (slice?contains("eip"))]
+                                        [#-- Legacy code to support definition of eip and vpc in one template (slice not provided, or = "vpceip" depending on how S3 to be defined)  --]
                                         "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
                                     [#else]
                                         [#-- Normally assume eip defined in a separate template to the vpc --]
