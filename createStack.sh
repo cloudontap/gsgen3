@@ -170,8 +170,10 @@ if [[ "${CREATE}" == "true" ]]; then
 		if [ "$RESULT" -eq 0 ]; then DOCREATE="false"; fi
 	fi
 	if [[ "${DOCREATE}" == "true" ]]; then
-		aws ${PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://$TEMPLATE --capabilities CAPABILITY_IAM
+	    cat $TEMPLATE | jq -c . > stripped-${TEMPLATE}
+	    aws ${PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://stripped-${TEMPLATE} --capabilities CAPABILITY_IAM
 		RESULT=$?
+		rm -f stripped-${TEMPLATE}
 		if [ "$RESULT" -ne 0 ]; then exit; fi
 	fi
 fi
