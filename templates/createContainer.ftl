@@ -92,10 +92,11 @@
     [#if (solutionContainer.AZList)??]
         [#assign azList = solutionContainer.AZList]
     [#else]
-        [#assign azList = []]
-        [#list regionObject.Zones as zone]
-            [#assign azList = azList + [zone.Id]]
-        [/#list]
+        [#if regionObject.DefaultZones??]
+            [#assign azList = regionObject.DefaultZones]
+        [#else]
+            [#assign azList = ["a", "b"]]
+        [/#if
     [/#if]
 [/#if]
 
