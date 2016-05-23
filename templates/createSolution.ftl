@@ -1169,7 +1169,11 @@
 							[#if multiAZ]
 								"MultiAZ": true,
 							[#else]
-								"AvailabilityZone" : "${firstZone.AWSZone}",
+							    [#list regionObject.Zones as zone]
+							        [#if firstZone == zone.Id]
+							            "AvailabilityZone" : "${zone.AWSZone}",
+							        [/#if]
+							    [/#list]
 							[/#if]
 							"VPCSecurityGroups":[
 								{ "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
