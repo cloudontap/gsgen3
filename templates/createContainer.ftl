@@ -96,7 +96,7 @@
             [#assign azList = regionObject.DefaultZones]
         [#else]
             [#assign azList = ["a", "b"]]
-        [/#if
+        [/#if]
     [/#if]
 [/#if]
 
