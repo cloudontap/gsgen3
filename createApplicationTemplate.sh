@@ -97,6 +97,11 @@ if [[ ! -f ${CONTAINERFILE} ]]; then
     usage
 fi 
 
+if [[ (! -d ${DEPLOY_DIR}) && ( "${SLICE}" =~ -task$ ) ]]; then
+    # Provide a default for tasks - assume deployment config is slice without "-task"
+    DEPLOY_DIR=${SLICE%-task}
+fi
+
 if [[ -d ${DEPLOY_DIR} ]]; then
     if [[ -f "${DEPLOY_DIR}/slice.ref" ]]; then
         # Use the config of another slice
