@@ -13,6 +13,8 @@ function usage() {
   echo -e "\nNOTES:\n"
   echo -e "1) You must be in the container specific directory when running this script"
   echo -e "2) If no DEPLOYMENT_SLICE is provided, SLICE is used to obtain deployment information"
+  echo -e "3) The deployment configuration for one slice can refer to another slice"
+  echo -e "   via a \"slice.ref\" file containing the referred slice"
   echo -e ""
   exit 1
 }
@@ -96,6 +98,10 @@ if [[ ! -f ${CONTAINERFILE} ]]; then
 fi 
 
 if [[ -d ${DEPLOY_DIR} ]]; then
+    if [[ -f "${DEPLOY_DIR}/slice.ref" ]]; then
+        # Use the config of another slice
+        DEPLOY_DIR=$(cat "${DEPLOY_DIR}/slice.ref")
+    fi
     BUILDFILE="${DEPLOY_DIR}/build.ref"
     CONFIGURATIONFILE="${DEPLOY_DIR}/config.json"
 
