@@ -1217,9 +1217,10 @@
                                                     [#assign ipCount = 0]
                                                     "aws:SourceIp": [
                                                         [#list azList as zone]
-                                                            [#if ipCount > 0],[/#if]
-                                                            [#if (getKey("eipXmgmtXnatX" + zone + "Xip")??)]"${getKey("eipXmgmtXnatX" + zone + "Xip")}"[/#if]
-                                                            [#assign ipCount = ipCount + 1]
+                                                            [#if (getKey("eipXmgmtXnatX" + zone + "Xip")??)]
+                                                                [#if ipCount > 0],[/#if]"${getKey("eipXmgmtXnatX" + zone + "Xip")}"
+                                                                [#assign ipCount = ipCount + 1]
+                                                            [/#if]
 				                                        [/#list]
                                                     ]
                                                 }
