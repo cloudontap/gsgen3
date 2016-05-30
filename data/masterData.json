@@ -370,6 +370,19 @@
 			    "Expiration" : 90
 			}
 		},
+		"shared" : {
+			"Title" : "Shared Services Environment",
+			"Id" : "shared",
+			"Name" : "shared",
+			"Description" : "One shared environment per account. Entry mainly here for naming consistency",
+			"Category" : "alm",
+			"Logs" : {
+			    "Expiration" : 30
+			},
+			"Backups" : {
+			    "Expiration" : 90
+			}
+		},
 		"dev" : {
 			"Title" : "Development Environment",
 			"Id" : "dev",
