@@ -9,7 +9,7 @@ function usage() {
   echo -e "    -h shows this text"
   echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
   echo -e "\nNOTES:\n"
-  echo -e "1) You must be in the container specific directory when running this script"
+  echo -e "1) You must be in the segment specific directory when running this script"
   echo -e ""
   exit 1
 }
@@ -40,7 +40,7 @@ CURRENT_DIR="$(pwd)"
 PROJECT_DIR="$(cd ../../;pwd)"
 ROOT_DIR="$(cd ../../../../;pwd)"
 
-CONTAINER="$(basename ${CURRENT_DIR})"
+SEGMENT="$(basename ${CURRENT_DIR})"
 PID="$(basename ${PROJECT_DIR})"
 OAID="$(basename ${ROOT_DIR})"
 
@@ -49,14 +49,17 @@ INFRA_DIR="${ROOT_DIR}/infrastructure"
 
 ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"
 
-CF_DIR="${INFRA_DIR}/${PID}/aws/${CONTAINER}/cf"
+CF_DIR="${INFRA_DIR}/${PID}/aws/${SEGMENT}/cf"
 
-CREDS_DIR="${INFRA_DIR}/${PID}/credentials/${CONTAINER}"
+CREDS_DIR="${INFRA_DIR}/${PID}/credentials/${SEGMENT}"
 
 ORGANISATIONFILE="${ACCOUNT_DIR}/organisation.json"
 ACCOUNTFILE="${ACCOUNT_DIR}/account.json"
 PROJECTFILE="${PROJECT_DIR}/project.json"
-CONTAINERFILE="${CURRENT_DIR}/container.json"
+SEGMENTFILE="${CURRENT_DIR}/segment.json"
+if [[ -f "${CURRENT_DIR}/container.json" ]]; then
+    SEGMENTFILE="${CURRENT_DIR}/container.json"
+fi
 CREDENTIALSFILE="${CREDS_DIR}/credentials.json"
 
 if [[ -f solution.json ]]; then
@@ -65,8 +68,8 @@ else
 	SOLUTIONFILE="../solution.json"
 fi
 
-if [[ ! -f ${CONTAINERFILE} ]]; then
-    echo -e "\nNo \"${CONTAINERFILE}\" file in current directory. Are we in a container directory? Nothing to do."
+if [[ ! -f ${SEGMENTFILE} ]]; then
+    echo -e "\nNo \"${SEGMENTFILE}\" file in current directory. Are we in a segment directory? Nothing to do."
     usage
 fi 
 
@@ -80,7 +83,7 @@ if [[ "${ACCOUNTREGION}" == "" ]]; then
     usage
 fi
 
-REGION=$(grep '"Region"' ${CONTAINERFILE} | cut -d '"' -f 4)
+REGION=$(grep '"Region"' ${SEGMENTFILE} | cut -d '"' -f 4)
 if [[ "${REGION}" == "" && -e ${SOLUTIONFILE} ]]; then
   REGION=$(grep '"Region"' ${SOLUTIONFILE} | cut -d '"' -f 4)
 fi
@@ -89,7 +92,7 @@ if [[ "${REGION}" == "" && -e ${ACCOUNTFILE} ]]; then
 fi
 
 if [[ "${REGION}" == "" ]]; then
-    echo -e "\nThe region must be defined in the container/solution/account configuration files (in this preference order)."
+    echo -e "\nThe region must be defined in the segment/solution/account configuration files (in this preference order)."
     echo -e "Are we in the correct directory? Nothing to do."
     usage
 fi
@@ -111,13 +114,13 @@ ARGS="${ARGS} -v organisation=${ORGANISATIONFILE}"
 ARGS="${ARGS} -v account=${ACCOUNTFILE}"
 ARGS="${ARGS} -v project=${PROJECTFILE}"
 ARGS="${ARGS} -v solution=${SOLUTIONFILE}"
-ARGS="${ARGS} -v container=${CONTAINERFILE}"
+ARGS="${ARGS} -v segment=${SEGMENTFILE}"
 ARGS="${ARGS} -v credentials=${CREDENTIALSFILE}"
 ARGS="${ARGS} -v masterData=$BIN/data/masterData.json"
 
 pushd ${CF_DIR}  > /dev/null 2>&1
 STACKCOUNT=0
-for f in $( ls cont*-${REGION}-stack.json sol*-${REGION}-stack.json 2> /dev/null); do
+for f in $( ls cont*-${REGION}-stack.json seg*-${REGION}-stack.json sol*-${REGION}-stack.json 2> /dev/null); do
 	PREFIX=$(echo $f | awk -F "-${REGION}-stack.json" '{print $1}' | sed 's/-//g')
 	ARGS="${ARGS} -v ${PREFIX}Stack=${CF_DIR}/${f}"
 	if [[ ${STACKCOUNT} > 0 ]]; then

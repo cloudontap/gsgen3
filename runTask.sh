@@ -19,7 +19,7 @@ function usage() {
   echo -e "(o) -v VALUE is the value for the last environment value defined (via -e) for the task"
   echo -e "(m) -w TASK is the name of the task to be run"
   echo -e "\nNOTES:\n"
-  echo -e "1) The ECS cluster is found using the provided tier and component combined with the project and container"
+  echo -e "1) The ECS cluster is found using the provided tier and component combined with the project and segment"
   echo -e "2) ENV and VALUE should always appear in pairs" 
   echo -e ""
   exit 1
@@ -86,7 +86,10 @@ OAID="$(basename ${ROOT_DIR})"
 # Determine the Organisation Account Identifier, Project Identifier, and region
 # in which the task should be run.
 PID="$(basename $(cd ../../;pwd))"
-CONTAINER="$(basename $(pwd))"
+SEGMENT="$(basename $(pwd))"
+if [[ -e 'segment.json' ]]; then
+    REGION=$(grep '"Region"' segment.json | cut -d '"' -f 4)
+fi
 if [[ -e 'container.json' ]]; then
     REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
 fi
@@ -98,7 +101,7 @@ if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
 fi
 
 if [[ "${REGION}" == "" ]]; then
-    echo -e "\nThe region must be defined in the container/solution/account configuration files (in this preference order). Nothing to do."
+    echo -e "\nThe region must be defined in the segment/solution/account configuration files (in this preference order). Nothing to do."
     usage
 fi
 
@@ -110,14 +113,14 @@ if [[ "$?" -eq 0 ]]; then
 fi
 
 # Find the cluster
-CLUSTER_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PID}-${CONTAINER}.*ecsX${TIER}X${COMPONENT}.*)\").arn")
+CLUSTER_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsX${TIER}X${COMPONENT}.*)\").arn")
 if [[ "${CLUSTER_ARN}" == "" ]]; then
     echo -e "\nUnable to locate ECS cluster"
     usage
 fi
 
 # Find the task definition
-TASK_DEFINITION_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PID}-${CONTAINER}.*ecsTaskX${TIER}X${COMPONENT}X${TASK}.*)\").arn")
+TASK_DEFINITION_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsTaskX${TIER}X${COMPONENT}X${TASK}.*)\").arn")
 if [[ "${TASK_DEFINITION_ARN}" == "" ]]; then
     echo -e "\nUnable to locate task definition"
     usage

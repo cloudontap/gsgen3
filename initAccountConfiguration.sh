@@ -30,7 +30,7 @@ function usage() {
   echo -e "       - medium"
   echo -e "(m) -t TITLE is the organisation title e.g. \"Department of Environment\""
   echo -e "(o) -y ALMTYPE is the arrangement required for the ALM"
-  echo -e "       - nat      - if you want a NAT based ALM container"
+  echo -e "       - nat      - if you want a NAT based ALM segment"
   echo -e "       - external - if you want an externally exposed ALM server"
   echo -e "\nDEFAULTS:\n"
   echo -e "OAINDEX   = \"${OAINDEX_DEFAULT}\""
@@ -179,12 +179,12 @@ else
 fi
 rm ${PROJECT_DIR}/solution-*.json
 
-if [[ -e "${ALM_DIR}/container-${ALMSIZE}.json" ]]; then
-	mv ${ALM_DIR}/container-${ALMSIZE}.json ${ALM_DIR}/container.json
+if [[ -e "${ALM_DIR}/segment-${ALMSIZE}.json" ]]; then
+	mv ${ALM_DIR}/segment-${ALMSIZE}.json ${ALM_DIR}/segment.json
 else
-	mv ${ALM_DIR}/container-micro.json ${ALM_DIR}/container.json
+	mv ${ALM_DIR}/segment-micro.json ${ALM_DIR}/segment.json
 fi
-rm ${ALM_DIR}/container-*.json
+rm ${ALM_DIR}/segment-*.json
 
 cd ${SOLUTIONS_DIR}
 

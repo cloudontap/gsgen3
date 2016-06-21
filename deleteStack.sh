@@ -15,12 +15,14 @@ function usage() {
   echo -e "(o) -m (MONITOR ONLY) monitors but does not initiate the stack deletion process"
   echo -e "(o) -r REGION is the AWS region identifier for the region in which the stack should be deleted"
   echo -e "(o) -s SLICE is the slice of the solution to be deleted"
-  echo -e "(m) -t TYPE is the stack type - \"account\", \"project\", \"container\", \"solution\" or \"application\""
+  echo -e "(m) -t TYPE is the stack type - \"account\", \"project\", \"segment\", \"solution\" or \"application\""
   echo -e "(o) -x (DELETE ONLY) initiates but does not monitor the stack deletion process"
   echo -e "\nNOTES:\n"
   echo -e "1) You must be in the correct directory corresponding to the requested stack type"
   echo -e "2) REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
   echo -e "   in multiple regions"  
+  echo -e "3) \"segment\" is now used in preference to \"container\" to avoid confusion with docker, but"
+  echo -e "   \"container\" is still accepted to support legacy configurations"
   echo -e ""
   exit 1
 }
@@ -104,11 +106,14 @@ project)
   STACKNAME="$PID-$TYPE"
   STACK="${TYPE}-${REGION}-stack.json"
   ;;
-solution|container|application)
+solution|container|segment|application)
   PID="$(basename $(cd ../../;pwd))"
-  CONTAINER="$(basename $(pwd))"
+  SEGMENT="$(basename $(pwd))"
   if [[ -e "container.json" ]]; then
 	REGION=$(grep '"Region"' "container.json" | cut -d '"' -f 4)
+  fi
+  if [[ -e "segment.json" ]]; then
+	REGION=$(grep '"Region"' "segment.json" | cut -d '"' -f 4)
   fi
   if [[ "${REGION}" == "" && -e "../solution.json" ]]; then
 	REGION=$(grep '"Region"' "../solution.json" | cut -d '"' -f 4)
@@ -116,30 +121,30 @@ solution|container|application)
   if [[ "${REGION}" == "" && -e "../../../${OAID}/account.json" ]]; then
 	REGION=$(grep '"Region"' "../../../${OAID}/account.json" | cut -d '"' -f 4)
   fi
-  CF_DIR="${AWS_DIR}/${PID}/aws/${CONTAINER}/cf"
-  STACKNAME="$PID-$CONTAINER-$TYPE"
+  CF_DIR="${AWS_DIR}/${PID}/aws/${SEGMENT}/cf"
+  STACKNAME="$PID-$SEGMENT-$TYPE"
   STACK="${TYPE}-${REGION}-stack.json"
-  if [[ ("${SLICE}" != "") && ("${TYPE}" == "container") ]]; then
-    STACKNAME="$PID-$CONTAINER-cont-${SLICE}"
+  if [[ ("${SLICE}" != "") && (("${TYPE}" == "container") || ("${TYPE}" == "segment")) ]]; then
+    STACKNAME="$PID-$SEGMENT-cont-${SLICE}"
     STACK="cont-${SLICE}-${REGION}-stack.json"
   fi
   if [[ ("${SLICE}" != "") && ("${TYPE}" == "solution") ]]; then
-    STACKNAME="$PID-$CONTAINER-soln-${SLICE}"
+    STACKNAME="$PID-$SEGMENT-soln-${SLICE}"
     STACK="soln-${SLICE}-${REGION}-stack.json"
   fi
   if [[ ("${SLICE}" != "") && ("${TYPE}" == "application") ]]; then
-    STACKNAME="$PID-$CONTAINER-app-${SLICE}"
+    STACKNAME="$PID-$SEGMENT-app-${SLICE}"
     STACK="app-${SLICE}-${REGION}-stack.json"
   fi
   ;;
 *)
-  echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, container, solution, application). Nothing to do."
+  echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
   usage
   ;;
 esac
 
 if [[ "$REGION" == "" ]]; then
-    echo -e "\nThe region must be defined in the container/solution/account configuration files (in this preference order)."
+    echo -e "\nThe region must be defined in the segment/solution/account configuration files (in this preference order)."
     echo -e "For projects, it can also be provided as the fourth parameter. Are we in the correct directory? Nothing to do."
     usage
 fi

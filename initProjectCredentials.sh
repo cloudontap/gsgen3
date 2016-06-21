@@ -4,31 +4,28 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 
 function usage() {
   echo -e "\nCreate project credentials and install them in an AWS region" 
-  echo -e "\nUsage: $(basename $0) -a OAID -p PID -c CONTAINER -r REGION"
+  echo -e "\nUsage: $(basename $0) -a OAID -p PID -c SEGMENT -r REGION"
   echo -e "\nwhere\n"
   echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
-  echo -e "(o) -c CONTAINER is the container to be updated"
   echo -e "    -h shows this text"
   echo -e "(m) -p PID is the project id e.g. \"eticket\""
   echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
+  echo -e "(o) -s SEGMENT is the segment to be updated"
   echo -e "\nNOTES:\n"
   echo -e "1) The project credentials directory tree will be created if not present"
   echo -e "2) The script assumes we are in the OAID directory"
   echo -e "3) If ssh keys already exist, they are not recreated"
   echo -e "4) If a region is not provided, the organisation account/solution region will be used"
-  echo -e "5) If a container is not provided, all containers are updated"
+  echo -e "5) If a segment is not provided, all segments are updated"
   echo -e ""
   exit 1
 }
 
 # Parse options
-while getopts ":a:c:hp:r:" opt; do
+while getopts ":a:hp:r:s:" opt; do
   case $opt in
     a)
       OAID=$OPTARG
-      ;;
-    c)
-      CONTAINER=$OPTARG
       ;;
     h)
       usage
@@ -38,6 +35,9 @@ while getopts ":a:c:hp:r:" opt; do
       ;;
     r)
       REGION=$OPTARG
+      ;;
+    s)
+      SEGMENT=$OPTARG
       ;;
     \?)
       echo -e "\nInvalid option: -$OPTARG" 
@@ -102,22 +102,22 @@ fi
 
 if [[ ! -d "${CREDS_DIR}" ]]; then
   mkdir -p ${CREDS_DIR}
-  for CONTAINER in $(ls ${SOLUTIONS_DIR}); do
-  	CONTAINER_NAME="$(basename ${CONTAINER})"
-  	CONTAINER_DIR="${CREDS_DIR}/${CONTAINER_NAME}"
-    if [[ (-d ${SOLUTIONS_DIR}/${CONTAINER_NAME}) && (! -d ${CONTAINER_DIR}) ]]; then
-      mkdir ${CONTAINER_DIR}
+  for SEGMENT in $(ls ${SOLUTIONS_DIR}); do
+  	SEGMENT_NAME="$(basename ${SEGMENT})"
+  	SEGMENT_DIR="${CREDS_DIR}/${SEGMENT_NAME}"
+    if [[ (-d ${SOLUTIONS_DIR}/${SEGMENT_NAME}) && (! -d ${SEGMENT_DIR}) ]]; then
+      mkdir ${SEGMENT_DIR}
       
-      # Flag if a specific keypair is required for the container
-      if [[ -f ${SOLUTIONS_DIR}/${CONTAINER_NAME}/.sshpair ]]; then
-          touch ${CONTAINER_DIR}/.sshpair
+      # Flag if a specific keypair is required for the segment
+      if [[ -f ${SOLUTIONS_DIR}/${SEGMENT_NAME}/.sshpair ]]; then
+          touch ${SEGMENT_DIR}/.sshpair
       fi
 
-      # Generate the credentials for the container 
+      # Generate the credentials for the segment 
       PASSWORD="$(curl -s 'https://www.random.org/passwords/?num=1&len=20&format=plain&rnd=new')"
-      TEMPLATE="containerCredentials.ftl"
+      TEMPLATE="segmentCredentials.ftl"
       TEMPLATEDIR="${BIN}/templates"
-      OUTPUT="${CONTAINER_DIR}/credentials.json"
+      OUTPUT="${SEGMENT_DIR}/credentials.json"
 
       ARGS="-v password=${PASSWORD}"
 
@@ -170,25 +170,25 @@ function check_certificate () {
 }
 
 pushd ${CREDS_DIR} > /dev/null 2>&1
-if [[ "${CONTAINER}" == "" || (! -f "${CONTAINER}/.sshpair") ]]; then
+if [[ "${SEGMENT}" == "" || (! -f "${SEGMENT}/.sshpair") ]]; then
     KEYNAME=${PID} check_ssh_key
     CERTNAME=${PID} check_certificate
 fi
 
-if [[ "${CONTAINER}" == "" ]]; then
-    CONTAINER_LIST="$(ls -d */)"
+if [[ "${SEGMENT}" == "" ]]; then
+    SEGMENT_LIST="$(ls -d */)"
 else
-    CONTAINER_LIST="${CONTAINER}"
+    SEGMENT_LIST="${SEGMENT}"
 fi
 
-# Check if container specific keypair/certificate
-for CONTAINER in ${CONTAINER_LIST}; do
-  	CONTAINER_NAME="$(basename ${CONTAINER})"
-    pushd $CONTAINER_NAME > /dev/null 2>&1
+# Check if segment specific keypair/certificate
+for SEGMENT in ${SEGMENT_LIST}; do
+  	SEGMENT_NAME="$(basename ${SEGMENT})"
+    pushd $SEGMENT_NAME > /dev/null 2>&1
     if [[ -f .sshpair ]]; then 
-        KEYNAME=${PID}-${CONTAINER_NAME} check_ssh_key
+        KEYNAME=${PID}-${SEGMENT_NAME} check_ssh_key
     fi
-    CERTNAME=${PID}-${CONTAINER_NAME} check_certificate
+    CERTNAME=${PID}-${SEGMENT_NAME} check_certificate
     
     popd > /dev/null 2>&1
 done

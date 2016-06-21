@@ -66,6 +66,9 @@ BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 OAID="$(basename $(cd $BIN/../..;pwd))"
 
+if [[ -e 'segment.json' ]]; then
+  REGION=$(grep '"Region"' segment.json | cut -d '"' -f 4)
+fi
 if [[ -e 'container.json' ]]; then
   REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
 fi
@@ -77,7 +80,7 @@ if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
 fi
 
 if [[ "${REGION}" == "" ]]; then
-    echo -e "\nThe region must be defined in the container/solution/account configuration files (in this preference order). Nothing to do."
+    echo -e "\nThe region must be defined in the segment/solution/account configuration files (in this preference order). Nothing to do."
     usage
 fi
 

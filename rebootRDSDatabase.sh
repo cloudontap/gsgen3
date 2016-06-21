@@ -71,7 +71,10 @@ OAID="$(basename ${ROOT_DIR})"
 # Determine the Organisation Account Identifier, Project Identifier, and region
 # in which the stack should be created.
 PID="$(basename $(cd ../../;pwd))"
-CONTAINER="$(basename $(pwd))"
+SEGMENT="$(basename $(pwd))"
+if [[ -e 'segment.json' ]]; then
+    REGION=$(grep '"Region"' segment.json | cut -d '"' -f 4)
+fi
 if [[ -e 'container.json' ]]; then
     REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
 fi
@@ -83,7 +86,7 @@ if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
 fi
 
 if [[ "${REGION}" == "" ]]; then
-    echo -e "\nThe region must be defined in the container/solution/account configuration files (in this preference order). Nothing to do."
+    echo -e "\nThe region must be defined in the segment/solution/account configuration files (in this preference order). Nothing to do."
     usage
 fi
 
@@ -99,7 +102,7 @@ if [[ "${FORCE_FAILOVER}" == "true" ]]; then
     FAILOVER_OPTION="--no-force-failover"
 fi
 
-DB_INSTANCE_IDENTIFIER="${PID}-${CONTAINER}-${TIER}-${COMPONENT}"
+DB_INSTANCE_IDENTIFIER="${PID}-${SEGMENT}-${TIER}-${COMPONENT}"
 
 # Trigger the reboot
 aws ${PROFILE} --region ${REGION} rds reboot-db-instance --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}

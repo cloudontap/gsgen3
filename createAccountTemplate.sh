@@ -47,7 +47,7 @@ ROOT="$(basename ${ROOT_DIR})"
 
 ACCOUNT_DIR="${ROOT_DIR}/config/${OAID}"
 
-CF_DIR="${ROOT_DIR}/infrastructure/${OAID}/aws/${CONTAINER}/cf"
+CF_DIR="${ROOT_DIR}/infrastructure/${OAID}/aws/${SEGMENT}/cf"
 
 if [[ "${OAID}" != "${ROOT}" ]]; then
     echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
