@@ -1,0 +1,6 @@
+{
+	"Segment" : {
+		"Title" : "Staging Environment",
+		"Environment" : "stg"
+	}
+}
