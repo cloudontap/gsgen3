@@ -4,7 +4,7 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 
 function usage() {
   echo -e "\nCreate project credentials and install them in an AWS region" 
-  echo -e "\nUsage: $(basename $0) -a OAID -p PID -c SEGMENT -r REGION"
+  echo -e "\nUsage: $(basename $0) -a OAID -p PID -s SEGMENT -r REGION"
   echo -e "\nwhere\n"
   echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
   echo -e "    -h shows this text"
