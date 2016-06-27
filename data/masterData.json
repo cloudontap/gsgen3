@@ -726,6 +726,10 @@
 			"ECS" : {
 				"Volumes" : [
 				]
+			},
+			"ElasticSearch" : {
+				"Volumes" : [
+				]
 			}
 		}
 	},
