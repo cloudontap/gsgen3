@@ -13,7 +13,7 @@
 [#assign segmentObject = segment?eval]
 [#if segmentObject.Segment??]
     [#assign segmentObject = segmentObject.Segment]
-[#else
+[#else]
     [#assign segmentObject = segmentObject.Container]
 [/#if]
 [#assign credentialsObject = (credentials?eval).Credentials]
