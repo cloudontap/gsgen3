@@ -1232,6 +1232,12 @@
                                                                 [#assign ipCount = ipCount + 1]
                                                             [/#if]
 				                                        [/#list]
+				                                        [#list 1..20 as i]
+                                                            [#if (getKey("eipXmgmtXnatXexternalX" + i)??)]
+                                                                [#if ipCount > 0],[/#if]"${getKey("eipXmgmtXnatXexternalX" + i)}"
+                                                                [#assign ipCount = ipCount + 1]
+                                                            [/#if]
+				                                        [/#list]
                                                     ]
                                                 }
                                             }
