@@ -955,6 +955,10 @@
 			"Source" : "https",
 			"Destination" : "http"
 		},
+		"httpsalt" : {
+			"Source" : "https",
+			"Destination" : "httpalt"
+		},
 		"kibana" : {
 			"Source" : "https",
 			"Destination" : "kibana"
