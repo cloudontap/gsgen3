@@ -91,7 +91,7 @@ TEMPLATE="createSegment.ftl"
 TEMPLATEDIR="${BIN}/templates"
 
 LEGACY="false"
-for f in ${CF_DIR}/cont* do
+for f in ${CF_DIR}/cont*; do
     if [[ -e "$f" ]]; then
         LEGACY="true"
     fi
