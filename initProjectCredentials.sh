@@ -82,7 +82,7 @@ if [[ "${OAID}" != "${ROOT}" ]]; then
     usage
 fi
 
-if [[ ! -d ${SOLUTIONS_DIR} ]]; then
+if [[ (! -d ${SOLUTIONS_DIR}) && ("${OAID}" != "${PID}" ) ]]; then
     echo -e "\nProject needs to be configured before credentials are created. Nothing to do."
     usage
 fi
