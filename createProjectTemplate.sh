@@ -40,7 +40,7 @@ BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 PID="$(basename $(pwd))"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+ROOT_DIR="$(../..;pwd)"
 AWS_DIR="${ROOT_DIR}/infrastructure/aws"
 PROJECT_DIR="${AWS_DIR}/${PID}"
 CF_DIR="${PROJECT_DIR}/cf"

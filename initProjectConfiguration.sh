@@ -70,8 +70,8 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT="$(basename $(cd $BIN/../..;pwd))"
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+ROOT_DIR="$(../..;pwd)"
+ROOT="$(basename ${ROOT_DIR})"
 SOLUTIONS_DIR="${ROOT_DIR}/config/solutions"
 PROJECT_DIR="${SOLUTIONS_DIR}/${PID}"
 ALPHA_DIR="${PROJECT_DIR}/alpha"

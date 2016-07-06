@@ -77,7 +77,18 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+case $TYPE in
+    account|project)
+        ROOT_DIR="$(cd ../..;pwd)"
+        PID="$(basename $(pwd))"
+        ;;
+    solution|container|segment|application)
+        ROOT_DIR="$(cd ../../../..;pwd)"
+        PID="$(basename $(cd ../../;pwd))"
+        SEGMENT="$(basename $(pwd))"
+        ;;    
+esac
+
 OAID="$(basename ${ROOT_DIR})"
 
 AWS_DIR="${ROOT_DIR}/infrastructure"
@@ -95,7 +106,6 @@ account)
   STACK="${TYPE}-${REGION}-stack.json"
   ;;
 project)
-  PID="$(basename $(pwd))"
   if [[ "${REGION}" == "" && -e "solutions/solution.json" ]]; then
 	REGION=$(grep '"Region"' "solutions/solution.json" | cut -d '"' -f 4)
   fi
@@ -108,8 +118,6 @@ project)
   STACK="${TYPE}-${REGION}-stack.json"
   ;;
 solution|container|segment|application)
-  PID="$(basename $(cd ../../;pwd))"
-  SEGMENT="$(basename $(pwd))"
   if [[ -e "container.json" ]]; then
 	REGION=$(grep '"Region"' "container.json" | cut -d '"' -f 4)
   fi

@@ -10,12 +10,15 @@ function usage() {
   echo -e "\Reboot an RDS Database" 
   echo -e "\nUsage: $(basename $0) -t TIER -i COMPONENT -f -d DELAY\n"
   echo -e "\nwhere\n"
-  echo -e "(o) -d DELAY is the interval between checking the progress of reboot. Default is ${DELAY_DEFAULT} seconds"
+  echo -e "(o) -d DELAY is the interval between checking the progress of reboot"
   echo -e "(o) -f force reboot via failover"
   echo -e "    -h shows this text"
   echo -e "(m) -i COMPONENT is the name of the database component in the solution"
   echo -e "(o) -r (REBOOT ONLY) initiates but does not monitor the reboot process"
-  echo -e "(o) -t TIER is the name of the database tier in the solution. Default is \"${TIER_DEFAULT}\""
+  echo -e "(o) -t TIER is the name of the database tier in the solution"
+  echo -e "\nDEFAULTS:\n"
+  echo -e "DELAY     = ${DELAY_DEFAULT} seconds"
+  echo -e "TIER      = ${TIER_DEFAULT}"
   echo -e "\nNOTES:\n"
   echo -e ""
   exit 1
@@ -65,24 +68,41 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+CURRENT_DIR="$(pwd)"
+PROJECT_DIR="$(cd ../../;pwd)"
+ROOT_DIR="$(cd ../../../../;pwd)"
+
+SEGMENT="$(basename ${CURRENT_DIR})"
+PID="$(basename ${PROJECT_DIR})"
 OAID="$(basename ${ROOT_DIR})"
 
-# Determine the Organisation Account Identifier, Project Identifier, and region
-# in which the stack should be created.
-PID="$(basename $(cd ../../;pwd))"
-SEGMENT="$(basename $(pwd))"
-if [[ -e 'segment.json' ]]; then
-    REGION=$(grep '"Region"' segment.json | cut -d '"' -f 4)
+CONFIG_DIR="${ROOT_DIR}/config"
+
+ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"
+
+ACCOUNTFILE="${ACCOUNT_DIR}/account.json"
+SEGMENTFILE="${CURRENT_DIR}/segment.json"
+if [[ -f "${CURRENT_DIR}/container.json" ]]; then
+    SEGMENTFILE="${CURRENT_DIR}/container.json"
 fi
-if [[ -e 'container.json' ]]; then
-    REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
+
+if [[ -f solution.json ]]; then
+	SOLUTIONFILE="solution.json"
+else
+	SOLUTIONFILE="../solution.json"
 fi
-if [[ "${REGION}" == "" && -e '../solution.json' ]]; then
-    REGION=$(grep '"Region"' ../solution.json | cut -d '"' -f 4)
+
+if [[ ! -f ${SEGMENTFILE} ]]; then
+    echo -e "\nNo \"${SEGMENTFILE}\" file in current directory. Are we in a segment directory? Nothing to do."
+    usage
+fi 
+
+REGION=$(grep '"Region"' ${SEGMENTFILE} | cut -d '"' -f 4)
+if [[ -z "${REGION}" && -e ${SOLUTIONFILE} ]]; then
+  REGION=$(grep '"Region"' ${SOLUTIONFILE} | cut -d '"' -f 4)
 fi
-if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
-    REGION=$(grep '"Region"' ../../account.json | cut -d '"' -f 4)
+if [[ -z "${REGION}" && -e ${ACCOUNTFILE} ]]; then
+  REGION=$(grep '"Region"' ${ACCOUNTFILE} | cut -d '"' -f 4)
 fi
 
 if [[ "${REGION}" == "" ]]; then

@@ -113,8 +113,9 @@ OAID="${OID}${OAINDEX}"
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT="$(basename $(cd $BIN/../..;pwd))"
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+ROOT_DIR="$(../..;pwd)"
+ROOT="$(basename ${ROOT_DIR})"
+
 SOLUTIONS_DIR="${ROOT_DIR}/config/solutions"
 PROJECT_DIR="${SOLUTIONS_DIR}/${OAID}"
 ALM_DIR="${PROJECT_DIR}/alm"
