@@ -80,24 +80,41 @@ fi
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(cd $BIN/../..;pwd)"
+CURRENT_DIR="$(pwd)"
+PROJECT_DIR="$(cd ../../;pwd)"
+ROOT_DIR="$(cd ../../../../;pwd)"
+
+SEGMENT="$(basename ${CURRENT_DIR})"
+PID="$(basename ${PROJECT_DIR})"
 OAID="$(basename ${ROOT_DIR})"
 
-# Determine the Organisation Account Identifier, Project Identifier, and region
-# in which the task should be run.
-PID="$(basename $(cd ../../;pwd))"
-SEGMENT="$(basename $(pwd))"
-if [[ -e 'segment.json' ]]; then
-    REGION=$(grep '"Region"' segment.json | cut -d '"' -f 4)
+CONFIG_DIR="${ROOT_DIR}/config"
+
+ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"
+
+ACCOUNTFILE="${ACCOUNT_DIR}/account.json"
+SEGMENTFILE="${CURRENT_DIR}/segment.json"
+if [[ -f "${CURRENT_DIR}/container.json" ]]; then
+    SEGMENTFILE="${CURRENT_DIR}/container.json"
 fi
-if [[ -e 'container.json' ]]; then
-    REGION=$(grep '"Region"' container.json | cut -d '"' -f 4)
+
+if [[ -f solution.json ]]; then
+	SOLUTIONFILE="solution.json"
+else
+	SOLUTIONFILE="../solution.json"
 fi
-if [[ "${REGION}" == "" && -e '../solution.json' ]]; then
-    REGION=$(grep '"Region"' ../solution.json | cut -d '"' -f 4)
+
+if [[ ! -f ${SEGMENTFILE} ]]; then
+    echo -e "\nNo \"${SEGMENTFILE}\" file in current directory. Are we in a segment directory? Nothing to do."
+    usage
+fi 
+
+REGION=$(grep '"Region"' ${SEGMENTFILE} | cut -d '"' -f 4)
+if [[ -z "${REGION}" && -e ${SOLUTIONFILE} ]]; then
+  REGION=$(grep '"Region"' ${SOLUTIONFILE} | cut -d '"' -f 4)
 fi
-if [[ "${REGION}" == "" && -e '../../account.json' ]]; then
-    REGION=$(grep '"Region"' ../../account.json | cut -d '"' -f 4)
+if [[ -z "${REGION}" && -e ${ACCOUNTFILE} ]]; then
+  REGION=$(grep '"Region"' ${ACCOUNTFILE} | cut -d '"' -f 4)
 fi
 
 if [[ "${REGION}" == "" ]]; then
