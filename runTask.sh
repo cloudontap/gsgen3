@@ -164,7 +164,7 @@ done
 # Show the exit codes and return an error if they are not 0
 aws ${PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[].containers[] | {name: .name, exitCode: .exitCode}" > STATUS.txt
 cat STATUS.txt
-RESULT=$(cat STATUS.txt | jq ".exitCode" | grep -m 1 -v "\"0\"" | tr -d '"')
+RESULT=$(cat STATUS.txt | jq ".exitCode" | grep -m 1 -v "^0$" | tr -d '"')
 RESULT=${RESULT:-0}
 
 
