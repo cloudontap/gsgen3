@@ -161,3 +161,7 @@ while true; do
     sleep $DELAY
 done
 
+# Show the exit codes
+aws ${PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[].containers[] | {name: .name, exitCode: .exitCode}"
+
+
