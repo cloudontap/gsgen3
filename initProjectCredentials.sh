@@ -1,84 +1,66 @@
 #!/bin/bash
 
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+trap '${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-  echo -e "\nCreate project credentials and install them in an AWS region" 
-  echo -e "\nUsage: $(basename $0) -a OAID -p PID -s SEGMENT -r REGION"
-  echo -e "\nwhere\n"
-  echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
-  echo -e "    -h shows this text"
-  echo -e "(m) -p PID is the project id e.g. \"eticket\""
-  echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
-  echo -e "(o) -s SEGMENT is the segment to be updated"
-  echo -e "\nNOTES:\n"
-  echo -e "1) The project credentials directory tree will be created if not present"
-  echo -e "2) The script assumes we are in the OAID directory"
-  echo -e "3) If ssh keys already exist, they are not recreated"
-  echo -e "4) If a region is not provided, the organisation account/solution region will be used"
-  echo -e "5) If a segment is not provided, all segments are updated"
-  echo -e ""
-  exit 1
+    echo -e "\nCreate project credentials and install them in an AWS region" 
+    echo -e "\nUsage: $(basename $0) -a CHECK_OAID -p PID -s SEGMENT -r REGION"
+    echo -e "\nwhere\n"
+    echo -e "(m) -a CHECK_OAID is the organisation account id e.g. \"env01\""
+    echo -e "    -h shows this text"
+    echo -e "(m) -p PID is the project id e.g. \"eticket\""
+    echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
+    echo -e "(o) -s SEGMENT is the segment to be updated"
+    echo -e "\nNOTES:\n"
+    echo -e "1) The project credentials directory tree will be created if not present"
+    echo -e "2) The script assumes we are in the OAID directory"
+    echo -e "3) If ssh keys already exist, they are not recreated"
+    echo -e "4) If a region is not provided, the organisation account/solution region will be used"
+    echo -e "5) If a segment is not provided, all segments are updated"
+    echo -e ""
 }
 
 # Parse options
 while getopts ":a:hp:r:s:" opt; do
-  case $opt in
-    a)
-      OAID=$OPTARG
-      ;;
-    h)
-      usage
-      ;;
-    p)
-      PID=$OPTARG
-      ;;
-    r)
-      REGION=$OPTARG
-      ;;
-    s)
-      SEGMENT=$OPTARG
-      ;;
-    \?)
-      echo -e "\nInvalid option: -$OPTARG" 
-      usage
-      ;;
-    :)
-      echo -e "\nOption -$OPTARG requires an argument" 
-      usage
-      ;;
-   esac
+    case $opt in
+        a)
+            CHECK_OAID=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        p)
+            PID=$OPTARG
+            ;;
+        r)
+            REGION=$OPTARG
+            ;;
+        s)
+            SEGMENT=$OPTARG
+            ;;
+        \?)
+            echo -e "\nInvalid option: -$OPTARG" 
+            usage
+            ;;
+        :)
+            echo -e "\nOption -$OPTARG requires an argument" 
+            usage
+            ;;
+    esac
 done
 
-BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-ROOT_DIR="$(pwd)"
-ROOT="$(basename ${ROOT_DIR})"
-
-CREDS_DIR="${ROOT_DIR}/infrastructure/${PID}/credentials"
-
-SOLUTIONS_DIR="${ROOT_DIR}/config/${PID}/solutions"
-ACCOUNT_DIR="${ROOT_DIR}/config/${OAID}"
-
-# Region defaults to that configured in the account/solution files
-if [[ "${REGION}" == "" && -e ${SOLUTIONS_DIR}/solution.json ]]; then
-  REGION=$(grep '"Region"' ${SOLUTIONS_DIR}/solution.json | cut -d '"' -f 4)
-fi
-
-if [[ "${REGION}" == "" && -e ${ACCOUNT_DIR}/account.json ]]; then
-  REGION=$(grep '"Region"' ${ACCOUNT_DIR}/account.json | cut -d '"' -f 4)
-fi
-
 # Ensure mandatory arguments have been provided
-if [[ "${OAID}" == "" || 
+if [[ "${CHECK_OAID}" == "" || 
       "${REGION}" == "" || 
       "${PID}"  == "" ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
 
-if [[ "${OAID}" != "${ROOT}" ]]; then
-    echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
+if [[ "${OAID}" != "${CHECK_OAID}" ]]; then
+    echo -e "\nThe provided OAID (${CHECK_OAID}) doesn't match the root directory (${OAID}). Nothing to do."
     usage
 fi
 
@@ -87,24 +69,11 @@ if [[ (! -d ${SOLUTIONS_DIR}) && ("${OAID}" != "${PID}" ) ]]; then
     usage
 fi
 
-# Set the profile if on PC to pick up the IAM credentials to use to access the credentials bucket. 
-# For other platforms, assume the server has a service role providing access.
-uname | grep -iE "MINGW64|Darwin|FreeBSD" > /dev/null 2>&1
-if [[ "$?" -eq 0 ]]; then
-    PROFILE="--profile ${OAID}"
-fi
-
-# Handle some MINGW peculiarities
-uname | grep -i "MINGW64" > /dev/null 2>&1
-if [[ "$?" -eq 0 ]]; then
-	MINGW64="true"
-fi
-
-if [[ ! -d "${CREDS_DIR}" ]]; then
-  mkdir -p ${CREDS_DIR}
+if [[ ! -d "${CREDENTIALS_DIR}" ]]; then
+  mkdir -p ${CREDENTIALS_DIR}
   for SEGMENT in $(ls ${SOLUTIONS_DIR}); do
   	SEGMENT_NAME="$(basename ${SEGMENT})"
-  	SEGMENT_DIR="${CREDS_DIR}/${SEGMENT_NAME}"
+  	SEGMENT_DIR="${CREDENTIALS_DIR}/${SEGMENT_NAME}"
     if [[ (-d ${SOLUTIONS_DIR}/${SEGMENT_NAME}) && (! -d ${SEGMENT_DIR}) ]]; then
       mkdir ${SEGMENT_DIR}
       
@@ -193,3 +162,5 @@ for SEGMENT in ${SEGMENT_LIST}; do
     popd > /dev/null 2>&1
 done
 
+# All good
+RESULT=0

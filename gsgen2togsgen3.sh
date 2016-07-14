@@ -1,47 +1,48 @@
 #!/bin/bash
 
+trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+
 function usage() {
-  echo -e "\nConvert config/infrastructure trees used for gsgen2 to the format required for gsgen3" 
-  echo -e "\nUsage: $(basename $0) -a OAID -p PID"
-  echo -e "\nwhere\n"
-  echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
-  echo -e "    -h shows this text"
-  echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
-  echo -e "\nNOTES:\n"
-  echo -e "1) GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
-  echo -e "2) It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
-  echo -e ""
-  exit 1
+    echo -e "\nConvert config/infrastructure trees used for gsgen2 to the format required for gsgen3" 
+    echo -e "\nUsage: $(basename $0) -a OAID -p PID"
+    echo -e "\nwhere\n"
+    echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
+    echo -e "    -h shows this text"
+    echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
+    echo -e "\nNOTES:\n"
+    echo -e "1) GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
+    echo -e "2) It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
+    echo -e ""
 }
 
 # Parse options
 while getopts ":a:hl:p:r:s:t:" opt; do
-  case $opt in
-    a)
-      OAID=$OPTARG
-      ;;
-    h)
-      usage
-      ;;
-    p)
-      PID=$OPTARG
-      ;;
-    \?)
-      echo -e "\nInvalid option: -${OPTARG}" 
-      usage
-      ;;
-    :)
-      echo -e "\nOption -${OPTARG} requires an argument" 
-      usage
-      ;;
-   esac
+    case $opt in
+        a)
+            OAID=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        p)
+            PID=$OPTARG
+            ;;
+        \?)
+            echo -e "\nInvalid option: -${OPTARG}" 
+            usage
+            ;;
+        :)
+            echo -e "\nOption -${OPTARG} requires an argument" 
+            usage
+            ;;
+    esac
 done
 
 # Ensure mandatory arguments have been provided
 if [[ "${OAID}" == "" ||
       "${PID}"  == "" ]]; then
-  echo -e "\nInsufficient arguments"
-  usage
+    echo -e "\nInsufficient arguments"
+    usage
 fi
 
 OAID_DIR="$(basename $(cd ..;pwd))"
@@ -119,3 +120,6 @@ done
 if [[ -d .git ]]; then
     git commit -m "Convert directory structure to format required for gsgen3"
 fi
+
+# All good
+RESULT=0
