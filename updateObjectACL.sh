@@ -19,8 +19,9 @@ function usage() {
     echo -e "ACL    = \"${ACL_DEFAULT}\""
     echo -e "PREFIX = \"${PREFIX_DEFAULT}\""
     echo -e "\nNOTES:\n"
-    echo -e "1) PREFIX must start and end with a /"
+    echo -e "1. PREFIX must start and end with a /"
     echo -e ""
+    exit
 }
 
 ACL="${ACL_DEFAULT}"

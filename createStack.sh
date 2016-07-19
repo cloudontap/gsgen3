@@ -18,13 +18,14 @@ function usage() {
     echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
     echo -e "(m) -t TYPE is the stack type - \"account\", \"project\", \"segment\", \"solution\" or \"application\""
     echo -e "\nDEFAULTS:\n"
-    echo -e "DELAY     = ${DELAY_DEFAULT} seconds"
+    echo -e "DELAY = ${DELAY_DEFAULT} seconds"
     echo -e "\nNOTES:\n"
-    echo -e "1) You must be in the correct directory corresponding to the requested stack type"
-    echo -e "2) REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
+    echo -e "1. You must be in the correct directory corresponding to the requested stack type"
+    echo -e "2. REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
     echo -e "   in multiple regions"
-    echo -e "3) Slice is mandatory for all types except \"account\" and \"project\""
+    echo -e "3. Slice is mandatory for all types except \"account\" and \"project\""
     echo -e ""
+    exit
 }
 
 DELAY=${DELAY_DEFAULT}
@@ -80,18 +81,18 @@ if [[ ! -f "${TEMPLATE}" ]]; then
 fi
 
 if [[ "${CREATE}" == "true" ]]; then
-	DOCREATE="true"
-	if [[ "${CHECK}" == "false" ]]; then
-		aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
-		RESULT=$?
-		if [ "$RESULT" -eq 0 ]; then DOCREATE="false"; fi
-	fi
-	if [[ "${DOCREATE}" == "true" ]]; then
-	    cat $TEMPLATE | jq -c . > stripped_${TEMPLATE}
-	    aws ${PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://stripped-${TEMPLATE} --capabilities CAPABILITY_IAM
-		RESULT=$?
-		if [ "$RESULT" -ne 0 ]; then exit; fi
-	fi
+    DOCREATE="true"
+    if [[ "${CHECK}" == "false" ]]; then
+        aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
+        RESULT=$?
+        if [ "$RESULT" -eq 0 ]; then DOCREATE="false"; fi
+    fi
+    if [[ "${DOCREATE}" == "true" ]]; then
+        cat $TEMPLATE | jq -c '.' > stripped_${TEMPLATE}
+        aws ${PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://stripped_${TEMPLATE} --capabilities CAPABILITY_IAM
+        RESULT=$?
+        if [ "$RESULT" -ne 0 ]; then exit; fi
+    fi
 fi
 
 RESULT=1

@@ -14,12 +14,13 @@ function usage() {
     echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
     echo -e "(o) -s SEGMENT is the segment to be updated"
     echo -e "\nNOTES:\n"
-    echo -e "1) The project credentials directory tree will be created if not present"
-    echo -e "2) The script assumes we are in the OAID directory"
-    echo -e "3) If ssh keys already exist, they are not recreated"
-    echo -e "4) If a region is not provided, the organisation account/solution region will be used"
-    echo -e "5) If a segment is not provided, all segments are updated"
+    echo -e "1. The project credentials directory tree will be created if not present"
+    echo -e "2. The script assumes we are in the OAID directory"
+    echo -e "3. If ssh keys already exist, they are not recreated"
+    echo -e "4. If a region is not provided, the organisation account/solution region will be used"
+    echo -e "5. If a segment is not provided, all segments are updated"
     echo -e ""
+    exit
 }
 
 # Parse options
@@ -70,30 +71,30 @@ if [[ (! -d ${SOLUTIONS_DIR}) && ("${OAID}" != "${PID}" ) ]]; then
 fi
 
 if [[ ! -d "${CREDENTIALS_DIR}" ]]; then
-  mkdir -p ${CREDENTIALS_DIR}
-  for SEGMENT in $(ls ${SOLUTIONS_DIR}); do
-  	SEGMENT_NAME="$(basename ${SEGMENT})"
-  	SEGMENT_DIR="${CREDENTIALS_DIR}/${SEGMENT_NAME}"
-    if [[ (-d ${SOLUTIONS_DIR}/${SEGMENT_NAME}) && (! -d ${SEGMENT_DIR}) ]]; then
-      mkdir ${SEGMENT_DIR}
-      
-      # Flag if a specific keypair is required for the segment
-      if [[ -f ${SOLUTIONS_DIR}/${SEGMENT_NAME}/.sshpair ]]; then
-          touch ${SEGMENT_DIR}/.sshpair
-      fi
-
-      # Generate the credentials for the segment 
-      PASSWORD="$(curl -s 'https://www.random.org/passwords/?num=1&len=20&format=plain&rnd=new')"
-      TEMPLATE="segmentCredentials.ftl"
-      TEMPLATEDIR="${BIN}/templates"
-      OUTPUT="${SEGMENT_DIR}/credentials.json"
-
-      ARGS="-v password=${PASSWORD}"
-
-      CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
-      eval $CMD
-    fi  
-  done
+    mkdir -p ${CREDENTIALS_DIR}
+    for SEGMENT in $(ls ${SOLUTIONS_DIR}); do
+        SEGMENT_NAME="$(basename ${SEGMENT})"
+        SEGMENT_DIR="${CREDENTIALS_DIR}/${SEGMENT_NAME}"
+        if [[ (-d ${SOLUTIONS_DIR}/${SEGMENT_NAME}) && (! -d ${SEGMENT_DIR}) ]]; then
+            mkdir ${SEGMENT_DIR}
+            
+            # Flag if a specific keypair is required for the segment
+            if [[ -f ${SOLUTIONS_DIR}/${SEGMENT_NAME}/.sshpair ]]; then
+                touch ${SEGMENT_DIR}/.sshpair
+            fi
+            
+            # Generate the credentials for the segment 
+            PASSWORD="$(curl -s 'https://www.random.org/passwords/?num=1&len=20&format=plain&rnd=new')"
+            TEMPLATE="segmentCredentials.ftl"
+            TEMPLATEDIR="${BIN}/templates"
+            OUTPUT="${SEGMENT_DIR}/credentials.json"
+            
+            ARGS="-v password=${PASSWORD}"
+            
+            CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
+            eval $CMD
+        fi  
+    done
 fi
 
 # Assumes KEYNAME contains the desired name for the ssh key
@@ -152,7 +153,7 @@ fi
 
 # Check if segment specific keypair/certificate
 for SEGMENT in ${SEGMENT_LIST}; do
-  	SEGMENT_NAME="$(basename ${SEGMENT})"
+    SEGMENT_NAME="$(basename ${SEGMENT})"
     pushd $SEGMENT_NAME > /dev/null 2>&1
     if [[ -f .sshpair ]]; then 
         KEYNAME=${PID}-${SEGMENT_NAME} check_ssh_key

@@ -21,6 +21,7 @@ function usage() {
     echo -e "TIER      = ${TIER_DEFAULT}"
     echo -e "\nNOTES:\n"
     echo -e ""
+    exit
 }
 
 DELAY=${DELAY_DEFAULT}

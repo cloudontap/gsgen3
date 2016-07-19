@@ -17,14 +17,15 @@ function usage() {
     echo -e "(m) -t TYPE is the stack type - \"account\", \"project\", \"segment\", \"solution\" or \"application\""
     echo -e "(o) -u (UPDATE ONLY) initiates but does not monitor the stack update process"
     echo -e "\nDEFAULTS:\n"
-    echo -e "DELAY     = ${DELAY_DEFAULT} seconds"
+    echo -e "DELAY = ${DELAY_DEFAULT} seconds"
     echo -e "\nNOTES:\n"
-    echo -e "1) You must be in the correct directory corresponding to the requested stack type"
-    echo -e "2) REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
+    echo -e "1. You must be in the correct directory corresponding to the requested stack type"
+    echo -e "2. REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
     echo -e "   in multiple regions"  
-    echo -e "3) \"segment\" is now used in preference to \"container\" to avoid confusion with docker, but"
+    echo -e "3. \"segment\" is now used in preference to \"container\" to avoid confusion with docker, but"
     echo -e "   \"container\" is still accepted to support legacy configurations"
     echo -e ""
+    exit
 }
 
 DELAY=${DELAY_DEFAULT}
@@ -77,8 +78,8 @@ if [[ ! -f "$TEMPLATE" ]]; then
 fi
 
 if [[ "${UPDATE}" = "true" ]]; then
-    cat $TEMPLATE | jq -c . > stripped-${TEMPLATE}
-    aws ${PROFILE} --region ${REGION} cloudformation update-stack --stack-name $STACKNAME --template-body file://stripped-${TEMPLATE} --capabilities CAPABILITY_IAM
+    cat $TEMPLATE | jq -c '.' > stripped_${TEMPLATE}
+    aws ${PROFILE} --region ${REGION} cloudformation update-stack --stack-name $STACKNAME --template-body file://stripped_${TEMPLATE} --capabilities CAPABILITY_IAM
     RESULT=$?
     if [ "$RESULT" -ne 0 ]; then exit; fi
 fi

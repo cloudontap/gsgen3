@@ -155,7 +155,7 @@ eval $CMD
 
 # Create the "account" project
 if [[ ! -e ${PROJECT_DIR} ]]; then
-	mkdir ${PROJECT_DIR}
+    mkdir ${PROJECT_DIR}
 fi
 
 # Add any standard files
@@ -174,16 +174,16 @@ CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
 eval $CMD
 
 if [[ "${ALMTYPE}" == "nat" ]]; then
-	mv ${PROJECT_DIR}/solution-nat.json ${PROJECT_DIR}/solution.json
+    mv ${PROJECT_DIR}/solution-nat.json ${PROJECT_DIR}/solution.json
 else
-	mv ${PROJECT_DIR}/solution-external.json ${PROJECT_DIR}/solution.json
+    mv ${PROJECT_DIR}/solution-external.json ${PROJECT_DIR}/solution.json
 fi
 rm ${PROJECT_DIR}/solution-*.json
 
 if [[ -e "${ALM_DIR}/segment-${ALMSIZE}.json" ]]; then
-	mv ${ALM_DIR}/segment-${ALMSIZE}.json ${ALM_DIR}/segment.json
+    mv ${ALM_DIR}/segment-${ALMSIZE}.json ${ALM_DIR}/segment.json
 else
-	mv ${ALM_DIR}/segment-micro.json ${ALM_DIR}/segment.json
+    mv ${ALM_DIR}/segment-micro.json ${ALM_DIR}/segment.json
 fi
 rm ${ALM_DIR}/segment-*.json
 
@@ -191,7 +191,7 @@ cd ${SOLUTIONS_DIR}
 
 # Remove the placeholder file
 if [[ -e .placeholder ]]; then
-	git rm .placeholder
+    git rm .placeholder
 fi
 
 # Commit the results

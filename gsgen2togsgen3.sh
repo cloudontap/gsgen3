@@ -10,9 +10,10 @@ function usage() {
     echo -e "    -h shows this text"
     echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
     echo -e "\nNOTES:\n"
-    echo -e "1) GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
-    echo -e "2) It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
+    echo -e "1. GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
+    echo -e "2. It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
     echo -e ""
+    exit
 }
 
 # Parse options

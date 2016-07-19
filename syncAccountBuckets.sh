@@ -16,8 +16,9 @@ function usage() {
     echo -e "\nDEFAULTS:\n"
     echo -e "DOMAIN = {OAID}.gosource.com.au"
     echo -e "\nNOTES:\n"
-    echo -e "1) The CHECK_OAID is only used to ensure we are in the OAID directory"
+    echo -e "1. The CHECK_OAID is only used to ensure we are in the OAID directory"
     echo -e ""
+    exit
 }
 
 DRYRUN=

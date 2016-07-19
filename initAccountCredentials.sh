@@ -82,7 +82,7 @@ BINDPASSWORD="$(curl -s 'https://www.random.org/passwords/?num=1&len=20&format=p
 
 # Create the "account" level credentials directory
 if [[ ! -e ${PROJECT_DIR} ]]; then
-	mkdir ${PROJECT_DIR}
+    mkdir ${PROJECT_DIR}
 fi
 
 # Generate the account level credentials
@@ -96,7 +96,7 @@ CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
 eval $CMD
 
 if [[ ! -e ${ALM_DIR} ]]; then
-	mkdir ${ALM_DIR}
+    mkdir ${ALM_DIR}
 fi
 
 # Generate the alm level credentials
@@ -113,7 +113,7 @@ CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
 eval $CMD
 
 if [[ ! -e ${DOCKER_DIR} ]]; then
-	mkdir ${DOCKER_DIR}
+    mkdir ${DOCKER_DIR}
 fi
 
 # Generate the ECS credentials for docker access
@@ -131,7 +131,7 @@ cd ${CREDS_DIR}
 
 # Remove the placeholder file
 if [[ -e .placeholder ]]; then
-	git rm .placeholder
+    git rm .placeholder
 fi
 
 # Commit the results

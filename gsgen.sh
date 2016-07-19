@@ -14,10 +14,11 @@ function usage() {
     echo -e "(m) -t TEMPLATE is the filename of the Freemarker template to use"
     echo -e "(o) -v VARIABLE=VALUE (o) defines a variable and corresponding value to be made available in the template"
     echo -e "\nNOTES:\n"
-    echo -e "1) If the value of a variable defines a path to an existing file, the contents of the file are provided to the engine"
-    echo -e "2) Values that do not correspond to existing files are provided as is to the engine"
-    echo -e "3) Values containing spaces need to be quoted to ensure they are passed in as a single argument"
+    echo -e "1. If the value of a variable defines a path to an existing file, the contents of the file are provided to the engine"
+    echo -e "2. Values that do not correspond to existing files are provided as is to the engine"
+    echo -e "3. Values containing spaces need to be quoted to ensure they are passed in as a single argument"
     echo -e ""
+    exit
 }
 
 VARIABLES=()
@@ -59,7 +60,7 @@ if [[ -z "${TEMPLATE}" ||
     usage
 fi
 
-if [[ "${#VARIABLES[@]}" -gt 0]]; then
+if [[ "${#VARIABLES[@]}" -gt 0 ]]; then
   VARIABLES=("-v" "${VARIABLES[@]}")
 fi
 

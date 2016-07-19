@@ -88,7 +88,7 @@ fi
 
 # Create the project
 if [[ ! -e ${PROJECT_DIR} ]]; then
-	mkdir ${PROJECT_DIR}
+    mkdir ${PROJECT_DIR}
 fi
 
 cp -rp ${BIN}/patterns/configuration/project/* ${PROJECT_DIR} 
@@ -114,23 +114,22 @@ SOLUTIONDIR="${BIN}/patterns/solutions/${SOLUTION}"
 
 if [[ ("${SOLUTION}" != "") && (-d "${SOLUTIONDIR}") ]]; then
 
-  for f in ${SOLUTIONDIR}/*; do
-  	NAME=$(basename $f)
-	case $NAME in 
-	  solution.ftl)
-		TEMPLATEDIR="${SOLUTIONDIR}/"
-		TEMPLATE="$NAME"
-		OUTPUT="${PROJECT_DIR}/solution.json"
-	
-		CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
-		eval $CMD
-		;;
-	  
-	  *)
-		cp -p $f .
-		;;
-    esac
-  done
+    for f in ${SOLUTIONDIR}/*; do
+        NAME=$(basename $f)
+        case $NAME in 
+            solution.ftl)
+                TEMPLATEDIR="${SOLUTIONDIR}/"
+                TEMPLATE="$NAME"
+                OUTPUT="${PROJECT_DIR}/solution.json"
+                
+                CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
+                eval $CMD
+                ;;            
+            *)
+                cp -p $f .
+                ;;
+        esac
+    done
 fi
 
 # Generate the alpha solution template
@@ -141,21 +140,20 @@ if [[ ("${ALPHASOLUTION}" == "") || (! -d "${SOLUTIONDIR}") ]]; then
 fi
 
 for f in ${SOLUTIONDIR}/*; do
-  NAME=$(basename $f)
-  case $NAME in 
-	solution.ftl)
-	  TEMPLATEDIR="${SOLUTIONDIR}/"
-	  TEMPLATE="$NAME"
-	  OUTPUT="${ALPHA_DIR}/solution.json"
-	
-	  CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
-	  eval $CMD
-	  ;;
-	  
-	*)
-	  cp -p $f ${ALPHA_DIR}
-	  ;;
-  esac
+    NAME=$(basename $f)
+    case $NAME in 
+        solution.ftl)
+            TEMPLATEDIR="${SOLUTIONDIR}/"
+            TEMPLATE="$NAME"
+            OUTPUT="${ALPHA_DIR}/solution.json"
+            
+            CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
+            eval $CMD
+            ;;        
+        *)
+            cp -p $f ${ALPHA_DIR}
+            ;;
+    esac
 done
 
 # Commit the results
