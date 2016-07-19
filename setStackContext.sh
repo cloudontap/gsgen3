@@ -5,7 +5,7 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TYPE}") || \
-        ((-z "${SLICE}") && (! ("${TYPE}" ~= "account|project"))) ]]; then
+        ((-z "${SLICE}") && (! ("${TYPE}" =~ account|project ))) ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -15,14 +15,14 @@ fi
 
 case $TYPE in
     account|project)
-        if [[ ! ("${TYPE}" ~= "${LOCATION}") ]]; then
-            echo "Current directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
+        if [[ ! ("${TYPE}" =~ ${LOCATION} ) ]]; then
+            echo -e "\nCurrent directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
         fi
         ;;
     solution|segment|application)
-        if [[ ! ("segment" ~= "${LOCATION}") ]]; then
-            echo "Current directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
+        if [[ ! ("segment" =~ ${LOCATION} ) ]]; then
+            echo -e "\nCurrent directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
         fi
         ;;
@@ -52,9 +52,9 @@ case $TYPE in
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        PREFIX="seq"
+        PREFIX="seg"
         if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
-            # Stick with old prefix for existing stacks so they can be updated 
+            # Stick with old prefix for existing stacks so they can be updated in AWS
             PREFIX="cont"
         fi
         STACKNAME="${PID}-${SEGMENT}-${PREFIX}-${SLICE}"
