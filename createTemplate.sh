@@ -5,10 +5,10 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 trap '${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-    echo -e "\nCreate a CloudFormation (CF)  template" 
+    echo -e "\nCreate a CloudFormation (CF) template" 
     echo -e "\nUsage: $(basename $0) -t TYPE -r REGION -s SLICE"
     echo -e "\nwhere\n"
-    echo -e "(m) -c CONFIGURATION_REFERENCE is the id of the configuration (commit id, branch id, tag)"
+    echo -e "(o) -c CONFIGURATION_REFERENCE is the id of the configuration (commit id, branch id, tag)"
     echo -e "    -h shows this text"
     echo -e "(o) -r REGION is the AWS region identifier"
     echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
@@ -17,9 +17,11 @@ function usage() {
     echo -e "1. You must be in the directory specific to the type"
     echo -e "2. REGION is only relevant for the \"project\" type"
     echo -e "3. SLICE is mandatory for the \"segment\", \"solution\" or \"application\" type"
-    echo -e "4. SLICE may be one of \"eip\", \"s3\", \"key\" or \"vpc\" for \"segment\" type "
-    echo -e "3. CONFIGURATION is mandatory for the \"application\" type"
+    echo -e "4. SLICE may be one of \"eip\", \"s3\", \"key\", \"vpc\" or \"dns\" for \"segment\" type "
+    echo -e "5. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
+    echo -e "6. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
     echo -e ""
+    exit
 }
 
 # Parse options
@@ -57,17 +59,17 @@ if [[ (-z "${TYPE}") ]]; then
     usage
 fi
 if [[ (-z "${SLICE}") && 
-      (! ("${TYPE}" ~= "account|project")) ]]; then
+      (!("${TYPE}" =~ account|project)) ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
-if [[ ( "${TYPE}" == "segment") && 
-      (! ("${SLICE}" ~= "eip|s3|key|vpc")) ]]; then
+if [[ ("${TYPE}" == "segment") && 
+      (!("${SLICE}" =~ eip|s3|key|vpc|dns)) ]]; then
     echo -e "\nUnknown slice ${SLICE} for the segment type"
     usage
 fi
 if [[ (-z "${CONFIGURATION_REFERENCE}") && 
-      ("${TYPE}" == "application")) ]]; then
+      ("${TYPE}" == "application") ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -78,13 +80,13 @@ fi
 # Ensure we are in the right place
 case $TYPE in
     account|project)
-        if [[ ! ("${TYPE}" ~= "${LOCATION}") ]]; then
+        if [[ ! ("${TYPE}" =~ ${LOCATION}) ]]; then
             echo "Current directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
         fi
         ;;
     solution|segment|application)
-        if [[ ! ("segment" ~= "${LOCATION}") ]]; then
+        if [[ ! ("segment" =~ ${LOCATION}) ]]; then
             echo "Current directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
         fi
@@ -109,7 +111,7 @@ case $TYPE in
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        PREFIX="seq"
+        PREFIX="seg"
         if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
             # Stick with old prefix for existing stacks so they can be updated 
             PREFIX="cont"
@@ -119,11 +121,6 @@ case $TYPE in
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         OUTPUT="${CF_DIR}/app-${SLICE}-${REGION}-template.json"
-        if [[ -f ${TEMPLATE} ]]; then
-            TEMPLATE_DIR="./"
-        else
-            TEMPLATE_DIR="../"
-        fi
         ;;
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
@@ -135,9 +132,10 @@ esac
 if [[ ! -d ${CF_DIR} ]]; then mkdir -p ${CF_DIR}; fi
 
 ARGS=()
-if [[ (-n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
-if [[ (-n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
-if [[ (-n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
+if [[ -n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
+if [[ -n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
+if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
+if [[ -f "${AGGREGATE_CONTAINERS}"    ]]; then ARGS+=("-v","containerList=${AGGREGATE_CONTAINERS}"); fi
 ARGS+=("-v" "region=${REGION}")
 ARGS+=("-v" "projectRegion=${PROJECT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
@@ -147,5 +145,9 @@ ARGS+=("-v" "configuration=${AGGREGATE_CONFIGURATION}")
 ARGS+=("-v" "stackOutputs=${AGGREGATE_STACK_OUTPUTS}")
 ARGS+=("-v" "masterData=${BIN_DIR}/data/masterData.json")
 
-${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $OUTPUT "${ARGS[@]}"
+${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o temp_$OUTPUT "${ARGS[@]}"
 RESULT=$?
+if [[ "${RESULT}" -eq 0 ]]; then
+    # Tidy up the result
+    cat temp_$OUTPUT | jq --indent 4 '.' > $OUTPUT
+fi
