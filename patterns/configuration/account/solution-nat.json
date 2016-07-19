@@ -1,87 +1,87 @@
 {
-	"Solution" : {
-		"Title" : "Standalone ALM server exposed via load balancer",
-		"Id" : "almnat",
-		"Name" : "almnat",
-		"Description" : "",
-		"SSHPerSegment" : false,
-		"Segment" : {
-			"BClass" : "10.0",
-			"InternetAccess" : true,
-			"DNSSupport" : true,
-			"DNSHostnames" : false,
-			"NAT" : {
-				"MultiAZ" : false
-			}
-		},
-		"CapacityProfile" : "default",
-		"Tiers" : [
-			{
-				"Id" : "elb",
-				"Components" : [
-					{
-						"Title" : "Port 443 protection",
-						"Id" : "alm",
-						"Name" : "alm",
-						"ELB" : {
-							"PortMappings" : ["https"]
-						}
-					}
-				]
-			},
-			{
-				"Id" : "web",
-				"Components" : [
-					{
-						"Title" : "ALM Server",
-						"Id" : "alm",
-						"Name" : "alm",
-						"Role" : "ALM",
-						"EC2" : {
-							"Ports" : ["https"],
-							"LoadBalanced" : true,
-							"FixedIP" : false,
-							"Storage" : {
-								"Volumes" : [
-									{
-										"Device" : "/dev/sdp",
-										"Size" : "100"
-									}
-								]
-							}
-						}
-					}
-				]
-			},
-			{
-				"Id" : "mgmt"
-			}
-		],
-		"SharedComponents" : [
-			{
-				"Title" : "Contractor performance metrics",
-				"Id" : "metrics",
-				"Name" : "metrics",
-				"SharedRegion" : "ap-southeast-2",
-				"S3" : {
-				}
-			},
-			{
-				"Title" : "Docker images",
-				"Id" : "docker",
-				"Name" : "docker",
-				"SharedRegion" : "ap-southeast-2",
-				"S3" : {
-				}
-			},
-			{
-				"Title" : "Binary images",
-				"Id" : "binaries",
-				"Name" : "binaries",
-				"SharedRegion" : "ap-southeast-2",
-				"S3" : {
-				}
-			}
-		]
-	}
+    "Solution": {
+        "Title": "Standalone ALM server exposed via load balancer",
+        "Id": "almnat",
+        "Name": "almnat",
+        "Description": "",
+        "Tiers": [
+            {
+                "Id": "elb",
+                "Components": [
+                    {
+                        "Title": "Port 443 protection",
+                        "Id": "alm",
+                        "Name": "alm",
+                        "ELB": {
+                            "PortMappings": [
+                                "https"
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "Id": "web",
+                "Components": [
+                    {
+                        "Title": "ALM Server",
+                        "Id": "alm",
+                        "Name": "alm",
+                        "Role": "ALM",
+                        "EC2": {
+                            "Ports": [
+                                "https"
+                            ],
+                            "LoadBalanced": true,
+                            "FixedIP": false,
+                            "Storage": {
+                                "Volumes": [
+                                    {
+                                        "Device": "/dev/sdp",
+                                        "Size": "100"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "Id": "mgmt"
+            }
+        ],
+        "SharedComponents": [
+            {
+                "Title": "Contractor performance metrics",
+                "Id": "metrics",
+                "Name": "metrics",
+                "SharedRegion": "ap-southeast-2",
+                "S3": {}
+            },
+            {
+                "Title": "Docker images",
+                "Id": "docker",
+                "Name": "docker",
+                "SharedRegion": "ap-southeast-2",
+                "S3": {}
+            },
+            {
+                "Title": "Binary images",
+                "Id": "binaries",
+                "Name": "binaries",
+                "SharedRegion": "ap-southeast-2",
+                "S3": {}
+            }
+        ]
+    },
+    "Segment": {
+        "BClass": "10.0",
+        "InternetAccess": true,
+        "DNSSupport": true,
+        "DNSHostnames": true,
+        "SSHPerSegment": false,
+        "NAT": {
+            "MultiAZ": false
+        }
+    }
 }

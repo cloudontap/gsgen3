@@ -1,6 +1,6 @@
 {
-	"Segment" : {
-		"Title" : "Beta Environment",
-		"Environment" : "beta"
-	}
+    "Segment" : {
+        "Title" : "Beta Environment",
+        "Environment" : "beta"
+    }
 }

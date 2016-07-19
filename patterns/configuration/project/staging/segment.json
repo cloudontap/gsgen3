@@ -1,6 +1,6 @@
 {
-	"Segment" : {
-		"Title" : "Staging Environment",
-		"Environment" : "stg"
-	}
+    "Segment" : {
+        "Title" : "Staging Environment",
+        "Environment" : "stg"
+    }
 }

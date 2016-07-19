@@ -1,21 +1,6 @@
 {
-	"Profile" : {
-		"Type" : "Container",
-		"Schema" : {
-			"Name" : "Container",
-			"MinimumVersion" : {
-				"Major" : 1
-			}
-		},
-		"Title" : "Alpha Environment",
-		"Version" :	{
-				"Major" : 1,
-				"Minor" : 0
-		}
-	},
-	
-	"Container" : {
-		"Title" : "Alpha Environment",
-		"Environment" : "alpha"
-	}
+    "Segment" : {
+        "Title" : "Alpha Environment",
+        "Environment" : "alpha"
+    }
 }

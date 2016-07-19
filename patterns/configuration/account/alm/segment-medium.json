@@ -1,11 +1,13 @@
 {
-	"Segment" : {
-		"Title" : "Application Lifecycle Management Environment",
-		"Environment" : "alm",
-		"Processor" : {
-			"web-alm" : {
-				"Processor" : "t2.medium"
-			}
-		}
-	}
+    "Solution": {
+        "Processor": {
+            "EC2": {
+                "Processor": "t2.medium"
+            }
+        }
+    },
+    "Segment": {
+        "Title": "Application Lifecycle Management Environment",
+        "Environment": "alm"
+    }
 }

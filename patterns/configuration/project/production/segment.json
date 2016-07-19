@@ -1,6 +1,6 @@
 {
-	"Segment" : {
-		"Title" : "Production Environment",
-		"Environment" : "prod"
-	}
+    "Segment" : {
+        "Title" : "Production Environment",
+        "Environment" : "prod"
+    }
 }

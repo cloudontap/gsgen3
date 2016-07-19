@@ -1,6 +1,6 @@
 {
-	"Segment" : {
-		"Title" : "Preproduction Environment",
-		"Environment" : "preprod"
-	}
+    "Segment" : {
+        "Title" : "Preproduction Environment",
+        "Environment" : "preprod"
+    }
 }
