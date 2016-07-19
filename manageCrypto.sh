@@ -4,33 +4,58 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 trap '${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
-OPERATION_DEFAULT="encrypt"
+BASE64_REGEX="^[A-Za-z0-9+/=\n]\+$"
+
+CRYPTO_OPERATION_DEFAULT="decrypt"
+CRYPTO_FILENAME_DEFAULT="credentials.json"
 function usage() {
   echo -e "\nManage cryptographic operations using KMS" 
-  echo -e "\nUsage: $(basename $0) -e -d -f FILE -t TEXT -a ALIAS -k KEYID -b\n"
+  echo -e "\nUsage: $(basename $0) -e -d -f CRYPTO_FILE -p JSON_PATH -t CRYPTO_TEXT -a ALIAS -k KEYID -b -u -v\n"
   echo -e "\nwhere\n"
   echo -e "(o) -a ALIAS for the master key to be used"
-  echo -e "(o) -b base64 decode the input before processing"
+  echo -e "(o) -b force base64 decode of the input before processing"
   echo -e "(o) -d decrypt operation"
   echo -e "(o) -e encrypt operation"
-  echo -e "(o) -f FILE contains the plaintext or ciphertext to be processed"
+  echo -e "(o) -f CRYPTO_FILE specifies a file which contains the plaintext or ciphertext to be processed"
   echo -e "    -h shows this text"
   echo -e "(o) -k KEYID for the master key to be used"
+  echo -e "(o) -p JSON_PATH is the path to the attribute within FILE_PATH to be processed"
   echo -e "(o) -t TEXT is the plaintext or ciphertext to be processed"
+  echo -e "    -u update the attribute at JSON_PATH"
+  echo -e "    -v result is base64 decoded (visible)"
   echo -e "\nDEFAULTS:\n"
-  echo -e "OPERATION = ${OPERATION_DEFAULT}"
+  echo -e "OPERATION = ${CRYPTO_OPERATION_DEFAULT}"
+  echo -e "FILENAME = ${CRYPTO_FILENAME_DEFAULT}"
   echo -e "\nNOTES:\n"
-  echo -e "1) Result is sent to stdout and is always base64 encoded"
-  echo -e "2) Don't include \"alias/\" in any provided alias"
-  echo -e "3) One of FILE or TEXT must be provided"
-  echo -e "3) One of ALIAS or KEYID must be provided if encrypting"
+  echo -e "1. If a file is required but not provided, the default filename"
+  echo -e "     will be expected in the equivalent directory of the infrastructure tree"
+  echo -e "2. If JSON_PATH is provided,"
+  echo -e "   - a CRYPTO_FILE is required"
+  echo -e "   - the targetted file must be JSON format"
+  echo -e "   - encrypt requires CRYPTO_TEXT to be provided, or for the attribute to"
+  echo -e "     to present" 
+  echo -e "   - attribute is updated with the operation result if update flag is set"
+  echo -e "3. If JSON_PATH is NOT provided,"
+  echo -e "   - one of CRYPTO_FILE or CRYPTO_TEXT must be provided"
+  echo -e "   - CRYPTO_TEXT takes precedence over CRYPTO_FILE"
+  echo -e "4. If a file at CRYPTO_FILE can't be located based on current directory, it will be"
+  echo -e "   treated as a relative directory using the default filename"
+  echo -e "5. Don't include \"alias/\" in any provided alias"
+  echo -e "6. If decrypting, the key is located as follows,"
+  echo -e "   - use KEYID if provided"
+  echo -e "   - use ALIAS if provided"
+  echo -e "   - if in segment directory, use segment keyid if available"
+  echo -e "   - if in project directory, use project keyid if available"
+  echo -e "   - if in account directory, use account keyid if available"
+  echo -e "   - otherwise error"
+  echo -e "7. The result is sent to stdout and is base64 encoded unless the"
+  echo -e "   visibility flag is set"
   echo -e ""
+  exit
 }
 
-ALIAS="${ALIAS_DEFAULT}"
-OPERATION="${OPERATION_DEFAULT}"
 # Parse options
-while getopts ":a:bdef:hk:t:" opt; do
+while getopts ":a:bdef:hk:p:t:uv" opt; do
     case $opt in
         a)
             ALIAS=$OPTARG
@@ -39,10 +64,10 @@ while getopts ":a:bdef:hk:t:" opt; do
             CRYPTO_DECODE="true"
             ;;
         d)
-            OPERATION="decrypt"
+            CRYPTO_OPERATION="decrypt"
             ;;
         e)
-            OPERATION="encrypt"
+            CRYPTO_OPERATION="encrypt"
             ;;
         f)
             CRYPTO_FILE=$OPTARG
@@ -53,8 +78,17 @@ while getopts ":a:bdef:hk:t:" opt; do
         k)
             KEYID=$OPTARG
             ;;
+        p)
+            JSON_PATH=$OPTARG
+            ;;
         t)
             CRYPTO_TEXT=$OPTARG
+            ;;
+        u)
+            JSON_UPDATE="true"
+            ;;
+        v)
+            CRYPTO_VISIBLE="true"
             ;;
         \?)
             echo -e "\nInvalid option: -$OPTARG" 
@@ -67,45 +101,138 @@ while getopts ":a:bdef:hk:t:" opt; do
     esac
 done
 
-# Ensure mandatory arguments have been provided
-if [[ (-z "${CRYPTO_TEXT}") && (-z "${CRYPTO_FILE}") ]]; then
-    echo -e "\nInsufficient arguments"
-    usage
-fi
-if [[ ("${OPERATION}" == "encrypt") && (-z "${ALIAS}") && (-z "${KEYID}") ]]; then
-    echo -e "\nInsufficient arguments"
-    usage
-fi
-KEYID="${KEYID:-alias/$ALIAS}"
+CRYPTO_OPERATION="${CRYPTO_OPERATION:-$CRYPTO_OPERATION_DEFAULT}"
 
-# Set up the context
+# Set up the context - LOCATION will tell us where we are
 . ${BIN_DIR}/setContext.sh
 
-# Get the input 
+# Set up the list of files to check
+FILES=()
+if [[ (-n "${CRYPTO_FILE}") ]]; then
+    FILES+=("${CRYPTO_FILE}")
+    FILES+=("./${CRYPTO_FILE}/${CRYPTO_FILENAME_DEFAULT}")
+fi
+
+# Try and locate the key material
+if [[ (-z "${KEYID}") && (-n "${ALIAS}") ]]; then
+    KEYID="alias/${ALIAS}"
+fi
+if [[ "segment" =~ ${LOCATION} ]]; then
+    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXsegmentXcmk") | .OutputValue | select (.!=null)')}
+    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILENAME_DEFAULT}")
+fi
+if [[ "project" =~ ${LOCATION} ]]; then
+    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXprojectXcmk") | .OutputValue | select (.!=null)')}
+    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
+fi
+if [[ "account" =~ ${LOCATION} ]]; then
+    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
+    FILES+=("${INFRASTRUCTURE_DIR}/${OAID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
+fi
+if [[ "root" =~ ${LOCATION} ]]; then
+    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
+fi
+
+# Try and locate  file 
+for F in "${FILES[@]}"; do
+    if [[ -f "${F}" ]]; then
+        TARGET_FILE="${F}"
+        break
+    fi 
+done
+
+# Ensure mandatory arguments have been provided
+if [[ (-n "${JSON_PATH}") ]]; then
+    if [[ -z "${TARGET_FILE}" ]]; then
+        echo -e "\nCan't locate target file"
+        usage
+    fi
+    # Default cipherdata to that in the element    
+    JSON_TEXT=$(cat "${TARGET_FILE}" | jq -r "${JSON_PATH} | select (.!=null)" )
+    CRYPTO_TEXT="${CRYPTO_TEXT:-$JSON_TEXT}"
+
+    if [[ (("${CRYPTO_OPERATION}" == "encrypt") && (-z "${CRYPTO_TEXT}")) ]]; then
+        echo -e "\nNothing to encrypt"
+        usage
+    fi
+else
+    # Ensure no update attempted
+    JSON_UPDATE="false"
+    
+    if [[ -z "${CRYPTO_TEXT}" ]]; then
+        if [[ -z "${CRYPTO_FILE}" ]]; then
+            echo -e "\nInsufficient arguments"
+            usage
+        else
+            if [[ -z "${TARGET_FILE}" ]]; then
+                echo -e "\nCan't locate file based on provided path"
+                usage
+            fi
+        fi
+    fi
+fi
+    
+if [[ ("${CRYPTO_OPERATION}" == "encrypt") && (-z "${KEYID}") ]]; then
+    echo -e "\nNo key material available"
+    usage
+fi
+
 if [[ -n "${CRYPTO_TEXT}" ]]; then
     echo -n "${CRYPTO_TEXT}" > ./ciphertext.src
 else
-    cp ${CRYPTO_FILE} ./ciphertext.src
+    cp ${TARGET_FILE} ./ciphertext.src
 fi
+
 
 # base64 decode if necessary
 if [[ -n "${CRYPTO_DECODE}" ]]; then
-    dos2unix < ./ciphertext.src | base64 -d  > ./ciphertext.bin
+    # Sanity check on input
+    dos2unix < ./ciphertext.src | grep -q "${BASE64_REGEX}"
+    RESULT=$?
+    if [[ "${RESULT}" -eq 0 ]]; then
+        dos2unix < ./ciphertext.src | base64 -d  > ./ciphertext.bin
+    else
+        echo -e "\nInput doesn't appear to be base64 encoded"
+        usage
+    fi
 else
     mv ./ciphertext.src ./ciphertext.bin
 fi
         
 # Perform the operation
-case ${OPERATION} in
+case ${CRYPTO_OPERATION} in
     encrypt)
-        aws ${PROFILE} --region ${REGION} --output text kms ${OPERATION} \
+        CRYPTO_TEXT=$(aws ${PROFILE} --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
             --key-id "${KEYID}" --query CiphertextBlob \
-            --plaintext "fileb://ciphertext.bin" | dos2unix
+            --plaintext "fileb://ciphertext.bin") 
         ;;
+
     decrypt)
-        aws ${PROFILE} --region ${REGION} --output text kms ${OPERATION} \
+        CRYPTO_TEXT=$(aws ${PROFILE} --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
             --query Plaintext \
-            --ciphertext-blob "fileb://ciphertext.bin" | dos2unix
+            --ciphertext-blob "fileb://ciphertext.bin")
         ;;
 esac
 RESULT=$?
+
+if [[ "${RESULT}" -eq 0 ]]; then
+    # Decode if required
+    if [[ "${CRYPTO_VISIBLE}" == "true" ]]; then
+        CRYPTO_TEXT=$(echo -n "${CRYPTO_TEXT}" | dos2unix | base64 -d)
+    fi
+
+    # Update JSON if required
+    if [[ "${JSON_UPDATE}" == "true" ]]; then
+        cat "${TARGET_FILE}" | jq "${JSON_PATH}=\"${CRYPTO_TEXT}\"" > "temp_${CRYPTO_FILENAME_DEFAULT}"
+        RESULT=$?
+        if [[ "${RESULT}" -eq 0 ]]; then
+            mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+        fi
+    fi
+fi
+
+if [[ "${RESULT}" -eq 0 ]]; then
+    # Display result
+    echo -n "${CRYPTO_TEXT}"
+
+fi
