@@ -17,6 +17,7 @@ function usage() {
   echo -e "2. Any positional arguments will be appended to the existing value"
   echo -e "   (if any) of JSON_LIST"
   echo -e ""
+  exit
 }
 
 # Parse options
@@ -42,7 +43,7 @@ while getopts ":f:ho:" opt; do
    esac
 done
 
-# Determine the file list
+# Determine the file list                                   
 shift $((OPTIND-1))
 JSON_ARRAY=(${JSON_LIST})
 JSON_ARRAY+=("$@")
@@ -52,6 +53,17 @@ if [[ (-z "${JSON_OUTPUT}") || ("${#JSON_ARRAY[@]}" -eq 0) ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
+
+# Temporary hack to get around segmentation fault
+JSON_ARRAY_SHORT=()
+JSON_INDEX=0
+for F in "${JSON_ARRAY[@]}"; do
+    TEMP="./temp_${JSON_INDEX}.json"
+    cp $F "${TEMP}"
+    JSON_ARRAY_SHORT+=("$TEMP")
+    JSON_INDEX=$(( $JSON_INDEX + 1 ))
+done
+
 
 # Merge the files
 if [[ -z "${JSON_FILTER}" ]]; then
@@ -64,5 +76,8 @@ if [[ -z "${JSON_FILTER}" ]]; then
         FILTER_INDEX=$(( $FILTER_INDEX + 1 ))
     done
 fi
-jq --indent 4 -s "${JSON_FILTER}" "${JSON_ARRAY[@]}" > ${JSON_OUTPUT} 
+# jq --indent 4 -s "${JSON_FILTER}" "${JSON_ARRAY[@]}" > ${JSON_OUTPUT} 
+jq --indent 4 -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" > ${JSON_OUTPUT} 
 RESULT=$?
+rm -f "${JSON_ARRAY_SHORT[@]}"
+#
