@@ -8,6 +8,7 @@ export CURRENT_DIR="$(pwd)"
 # Generate the list of files constituting the aggregate solution
 pushd ${CURRENT_DIR} >/dev/null
 SOLUTION_LIST=
+CONTAINERS_LIST=()
 
 if [[ (-f "segment.json") || (-f "container.json") ]]; then
     # segment directory
@@ -25,6 +26,10 @@ if [[ (-f "segment.json") || (-f "container.json") ]]; then
         SOLUTION_LIST="${SEGMENT_DIR}/solution.json ${SOLUTION_LIST}"
     fi
     
+    for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
+        CONTAINERS_LIST+=("${SEGMENT_DIR}/${CONTAINER}")
+    done
+    
     cd ..    
 
     # solutions directory
@@ -32,6 +37,10 @@ if [[ (-f "segment.json") || (-f "container.json") ]]; then
     if [[ -f "solution.json" ]]; then
         SOLUTION_LIST="${SOLUTIONS_DIR}/solution.json ${SOLUTION_LIST}"
     fi
+    
+    for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
+        CONTAINERS_LIST+=("${SOLUTIONS_DIR}/${CONTAINER}")
+    done
 
     cd ..
 fi
@@ -48,10 +57,10 @@ fi
 
 if [[ -f "project.json" ]]; then
     # project directory
-    if [[ -n "${LOCATION}" ]]; then
-        export LOCATION="${LOCATION}|project"
+    if [[ "${LOCATION}" == "account" ]]; then
+        export LOCATION="${LOCATION:-account|project}"
     else
-        export LOCATION="project"
+        export LOCATION="${LOCATION:-project}"
     fi
     export PROJECT_DIR="$(pwd)"
     export PID="$(basename $(pwd))"
@@ -109,6 +118,15 @@ if [[ -z "${REGION}" ]]; then
     usage
 fi
 
+# Build the aggregate containers list
+export AGGREGATE_CONTAINERS="${CONFIG_DIR}/aggregate_containers.json"
+for CONTAINER in $(find ${BIN_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
+    CONTAINERS_LIST+=("${CONTAINER}")
+done
+
+if [[ "${#CONTAINERS_LIST[@]}" -gt 0 ]]; then
+    cat "${CONTAINERS_LIST[@]}" > ${AGGREGATE_CONTAINERS}
+fi
 
 # Project specific context if the project is known
 DEPLOYMENT_LIST=
@@ -179,11 +197,14 @@ fi
 
 # Create the aggregate stack outputs
 STACK_LIST=()
-if [[ (-n "{OAID}") && (-d "${INFRASTRUCTURE_DIR}/${OAID}/aws") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${OAID}/aws" -name account-*-stack.json))
+if [[ (-n "{OAID}") && (-d "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf" -name account-*-stack.json))
 fi
-if [[ (-n "{PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws" -name *-${REGION}-stack.json))
+if [[ (-n "{PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name *-${REGION}-stack.json))
+fi
+if [[ (-n "{SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf" -name *-${REGION}-stack.json))
 fi
 
 export AGGREGATE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/aggregate_stack_outputs.json"
@@ -193,20 +214,21 @@ else
     echo "[]" > ${AGGREGATE_STACK_OUTPUTS}
 fi
 
-# Set the profile if on PC to pick up the IAM credentials to use to access the credentials bucket. 
-# For other platforms, assume the server has a service role providing access.
-if [[ -n "${OAID}" ]]; then
-    uname | grep -iE "MINGW64|Darwin|FreeBSD" > /dev/null 2>&1
-    if [[ "$?" -eq 0 ]]; then
-        export PROFILE="--profile ${OAID}"
-    fi
+# Set AWS credentials if available (hook from Jenkins framework)
+AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${!OAID_AWS_ACCESS_KEY_ID_VAR}}"
+AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!OAID_AWS_SECRET_ACCESS_KEY_VAR}}"
+    
+# Set the profile for IAM access if AWS credentials not in the environment
+if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${OAID}") ]]; then
+    export PROFILE="--profile ${OAID}"
 fi
 
 # Handle some MINGW peculiarities
 uname | grep -i "MINGW64" > /dev/null 2>&1
 if [[ "$?" -eq 0 ]]; then
-	MINGW64="true"
+    MINGW64="true"
 fi
+
 
 
 
