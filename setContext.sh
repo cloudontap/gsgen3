@@ -89,6 +89,7 @@ export INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure"
 export ORGANISATION_DIR="${CONFIG_DIR}/${OAID}"    
 export ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"    
 export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${OAID}/credentials" 
+export ACCOUNT_DEPLOYMENTS_DIR="${ACCOUNT_DIR}/deployments" 
 export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"    
     
 if [[ -f "${ACCOUNT_DIR}/account.json" ]]; then
@@ -172,6 +173,11 @@ if [[ -n "${PID}" ]]; then
     # project level credentials
     if [[ -f "${CREDENTIALS_DIR}/credentials.json" ]]; then
         CREDENTIALS_LIST="${CREDENTIALS_DIR}/credentials.json ${CREDENTIALS_LIST}"
+    fi
+
+    # account level configuration
+    if [[ -f "${ACCOUNT_DEPLOYMENTS_DIR}/config.json" ]]; then
+        DEPLOYMENT_LIST="${ACCOUNT_DEPLOYMENTS_DIR}/config.json ${DEPLOYMENT_LIST}"
     fi
 fi
 
