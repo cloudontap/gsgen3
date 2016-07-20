@@ -104,7 +104,7 @@
 [#assign internetAccess = segmentObject.InternetAccess]
 [#assign dnsSupport = segmentObject.DNSSupport]
 [#assign dnsHostnames = segmentObject.DNSHostnames]
-[#assign jumpServer = internetAccess && (segmentObject.NAT??)]
+[#assign jumpServer = internetAccess && segmentObject.NAT.Enabled]
 [#assign jumpServerPerAZ = jumpServer && segmentObject.NAT.MultiAZ]
 [#assign sshPerSegment = segmentObject.SSHPerSegment]
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
