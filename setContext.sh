@@ -8,7 +8,7 @@ export CURRENT_DIR="$(pwd)"
 # Generate the list of files constituting the aggregate solution
 pushd ${CURRENT_DIR} >/dev/null
 SOLUTION_LIST=
-CONTAINERS_LIST=()
+CONTAINERS_LIST=("${BIN_DIR}/templates/containers/switch_start.ftl")
 
 if [[ (-f "segment.json") || (-f "container.json") ]]; then
     # segment directory
@@ -123,8 +123,9 @@ export AGGREGATE_CONTAINERS="${CONFIG_DIR}/aggregate_containers.json"
 for CONTAINER in $(find ${BIN_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
     CONTAINERS_LIST+=("${CONTAINER}")
 done
+CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
 
-if [[ "${#CONTAINERS_LIST[@]}" -gt 0 ]]; then
+if [[ "${#CONTAINERS_LIST[@]}" -gt 2 ]]; then
     cat "${CONTAINERS_LIST[@]}" > ${AGGREGATE_CONTAINERS}
 fi
 
@@ -177,7 +178,7 @@ fi
 # Build the aggregate configuration
 export AGGREGATE_CONFIGURATION="${CONFIG_DIR}/aggregate_configuration.json"
 if [[ -n "${DEPLOYMENT_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${AGGREGATE_CONFIGURATION} ${DEPLOYMENT_LIST}
+    ${BIN_DIR}/manageJSON.sh -o ${AGGREGATE_CONFIGURATION} -c ${DEPLOYMENT_LIST}
 else
     echo "{}" > ${AGGREGATE_CONFIGURATION}
 fi    

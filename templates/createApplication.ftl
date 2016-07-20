@@ -1,7 +1,7 @@
 [#ftl]
 [#-- Standard inputs --]
 [#assign blueprintObject = blueprint?eval]
-[#assign credentialsObject = credentials?eval]
+[#assign credentialsObject = (credentials?eval).Credentials]
 [#assign configurationObject = configuration?eval]
 [#assign stackOutputsObject = stackOutputs?eval]
 [#assign masterDataObject = masterData?eval]
@@ -82,6 +82,7 @@
 [#-- Application --]
 [#assign docker = configurationObject.Docker]
 [#assign solnMultiAZ = solutionObject.MultiAZ!environmentObject.MultiAZ!false]
+[#assign containers=(containerList?eval).File]
 
 [#if buildReference??]
     [#assign buildCommit = buildReference]
@@ -133,9 +134,7 @@
                     [/#if]
                     {
                         [#assign containerListMode = "definition"]
-                        [#switch container.Id]
-                            [#include containerList]
-                        [/#switch]
+                        [#include containers]
                         "Memory" : "${container.Memory?c}",
                         "Cpu" : "${container.Cpu?c}",
                         [#if container.Ports??]
@@ -157,7 +156,7 @@
                                 "LogDriver" : "json-file"
                             [#else]
                                 "LogDriver" : "fluentd",
-                                "Options" : { "tag" : "docker.${projectId}.${containerId}.${tier.Id}.${component.Id}.${container.Id}"}
+                                "Options" : { "tag" : "docker.${projectId}.${segmentId}.${tier.Id}.${component.Id}.${container.Id}"}
                             [/#if]
                         }
                     }[#if container.Id != (task.Containers?last).Id],[/#if]
@@ -166,18 +165,14 @@
             [#assign volumeCount = 0]
             [#list task.Containers as container]
                 [#assign containerListMode = "volumeCount"]
-                [#switch container.Id]
-                    [#include containerList]
-                [/#switch]
+                [#include containers]
             [/#list]
             [#if volumeCount > 0]
                 ,"Volumes" : [
                     [#assign volumeCount = 0]
                     [#list task.Containers as container]
                         [#assign containerListMode = "volumes"]
-                        [#switch container.Id]
-                            [#include containerList]
-                        [/#switch]
+                        [#include containers]
                     [/#list]
                 ]
             [/#if]
@@ -269,9 +264,7 @@
                                         }
                                         [#list service.Containers as container]
                                             [#assign containerListMode = "supplemental"]
-                                            [#switch container.Id]
-                                                [#include containerList]
-                                            [/#switch]
+                                            [#include containers]
                                         [/#list]
                                         [#assign count = count + 1]
                                     [/#if]
@@ -285,9 +278,7 @@
                                         [@createTask tier=tier component=component task=task /]
                                         [#list task.Containers as container]
                                             [#assign containerListMode = "supplemental"]
-                                            [#switch container.Id]
-                                                [#include containerList]
-                                            [/#switch]
+                                            [#include containers]
                                         [/#list]
                                         [#assign count = count + 1]
                                     [/#if]
@@ -341,7 +332,7 @@
                         [/#if]
                     [/#if]
                 [/#list]
-            [#if]
+            [/#if]
         [/#list]
     }
 }
