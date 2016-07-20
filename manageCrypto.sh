@@ -118,19 +118,19 @@ if [[ (-z "${KEYID}") && (-n "${ALIAS}") ]]; then
     KEYID="alias/${ALIAS}"
 fi
 if [[ "segment" =~ ${LOCATION} ]]; then
-    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXsegmentXcmk") | .OutputValue | select (.!=null)')}
+    KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXsegmentXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ "project" =~ ${LOCATION} ]]; then
-    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXprojectXcmk") | .OutputValue | select (.!=null)')}
+    KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXprojectXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ "account" =~ ${LOCATION} ]]; then
-    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
+    KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${OAID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ "root" =~ ${LOCATION} ]]; then
-    KEYID=${KEYID:-$(cat ${AGGREGATE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
+    KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
 fi
 
 # Try and locate  file 

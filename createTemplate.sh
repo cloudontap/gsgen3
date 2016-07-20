@@ -126,16 +126,16 @@ case $TYPE in
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         OUTPUT="${CF_DIR}/app-${SLICE}-${REGION}-template.json"
         TEMP_OUTPUT="${CF_DIR}/temp_app-${SLICE}-${REGION}-template.json"
-        if [[ -n "${AGGREGATE_CONTAINERS}" ]]; then
+        if [[ -n "${COMPOSITE_CONTAINERS}" ]]; then
             # Copy files locally to get around path issues with include
             LOCAL_TEMPLATE="./temp_${TEMPLATE}"
             cp "${TEMPLATE_DIR}/${TEMPLATE}" "${LOCAL_TEMPLATE}"
             TEMPLATE_DIR="."
             TEMPLATE="${LOCAL_TEMPLATE}"
-            LOCAL_AGGREGATE_CONTAINERS="./aggregate_containers.json"
-            cp "${AGGREGATE_CONTAINERS}" "${LOCAL_AGGREGATE_CONTAINERS}"
-            LOCAL_AGGREGATE_CONTAINERS_REFERENCE="./aggregate_containers_reference.json"
-            echo "{\"File\":\"${LOCAL_AGGREGATE_CONTAINERS}\"}" > "${LOCAL_AGGREGATE_CONTAINERS_REFERENCE}"
+            LOCAL_COMPOSITE_CONTAINERS="./composite_containers.json"
+            cp "${COMPOSITE_CONTAINERS}" "${LOCAL_COMPOSITE_CONTAINERS}"
+            LOCAL_COMPOSITE_CONTAINERS_REFERENCE="./composite_containers_reference.json"
+            echo "{\"File\":\"${LOCAL_COMPOSITE_CONTAINERS}\"}" > "${LOCAL_COMPOSITE_CONTAINERS_REFERENCE}"
         fi
         ;;
     *)
@@ -151,14 +151,14 @@ ARGS=()
 if [[ -n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
 if [[ -n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
 if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
-if [[ -n "${AGGREGATE_CONTAINERS}"    ]]; then ARGS+=("-v" "containerList=${LOCAL_AGGREGATE_CONTAINERS_REFERENCE}"); fi
+if [[ -n "${COMPOSITE_CONTAINERS}"    ]]; then ARGS+=("-v" "containerList=${LOCAL_COMPOSITE_CONTAINERS_REFERENCE}"); fi
 ARGS+=("-v" "region=${REGION}")
 ARGS+=("-v" "projectRegion=${PROJECT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
-ARGS+=("-v" "blueprint=${AGGREGATE_SOLUTION}")
-ARGS+=("-v" "credentials=${AGGREGATE_CREDENTIALS}")
-ARGS+=("-v" "configuration=${AGGREGATE_CONFIGURATION}")
-ARGS+=("-v" "stackOutputs=${AGGREGATE_STACK_OUTPUTS}")
+ARGS+=("-v" "blueprint=${COMPOSITE_SOLUTION}")
+ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
+ARGS+=("-v" "configuration=${COMPOSITE_CONFIGURATION}")
+ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
 ARGS+=("-v" "masterData=${BIN_DIR}/data/masterData.json")
 
 ${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"

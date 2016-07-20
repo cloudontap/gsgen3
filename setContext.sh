@@ -5,7 +5,7 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export CURRENT_DIR="$(pwd)"
 
-# Generate the list of files constituting the aggregate solution
+# Generate the list of files constituting the composite solution
 pushd ${CURRENT_DIR} >/dev/null
 SOLUTION_LIST=
 CONTAINERS_LIST=("${BIN_DIR}/templates/containers/switch_start.ftl")
@@ -100,17 +100,17 @@ if [[ -f "${ORGANISATION_DIR}/organisation.json" ]]; then
     SOLUTION_LIST="${ORGANISATION_DIR}/organisation.json ${SOLUTION_LIST}"
 fi
 
-# Build the aggregate solution
-export AGGREGATE_SOLUTION="${CONFIG_DIR}/aggregate_blueprint.json"
+# Build the composite solution
+export COMPOSITE_SOLUTION="${CONFIG_DIR}/composite_blueprint.json"
 if [[ -n "${SOLUTION_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${AGGREGATE_SOLUTION} ${SOLUTION_LIST}
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_SOLUTION} ${SOLUTION_LIST}
 else
-    echo "{}" > ${AGGREGATE_SOLUTION}
+    echo "{}" > ${COMPOSITE_SOLUTION}
 fi
     
-# Extract and default key region settings from the aggregate solution
-export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${AGGREGATE_SOLUTION} | jq -r '.Account.Region | select(.!=null)')}
-export PROJECT_REGION=${PROJECT_REGION:-$(cat ${AGGREGATE_SOLUTION} | jq -r '.Project.Region | select(.!=null)')}
+# Extract and default key region settings from the composite solution
+export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Account.Region | select(.!=null)')}
+export PROJECT_REGION=${PROJECT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Project.Region | select(.!=null)')}
 export PROJECT_REGION="${PROJECT_REGION:-$ACCOUNT_REGION}"
 export REGION="${REGION:-$PROJECT_REGION}"
 
@@ -119,15 +119,15 @@ if [[ -z "${REGION}" ]]; then
     usage
 fi
 
-# Build the aggregate containers list
-export AGGREGATE_CONTAINERS="${CONFIG_DIR}/aggregate_containers.json"
+# Build the composite containers list
+export COMPOSITE_CONTAINERS="${CONFIG_DIR}/composite_containers.json"
 for CONTAINER in $(find ${BIN_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
     CONTAINERS_LIST+=("${CONTAINER}")
 done
 CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
 
 if [[ "${#CONTAINERS_LIST[@]}" -gt 2 ]]; then
-    cat "${CONTAINERS_LIST[@]}" > ${AGGREGATE_CONTAINERS}
+    cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 fi
 
 # Project specific context if the project is known
@@ -181,12 +181,12 @@ if [[ -n "${PID}" ]]; then
     fi
 fi
 
-# Build the aggregate configuration
-export AGGREGATE_CONFIGURATION="${CONFIG_DIR}/aggregate_configuration.json"
+# Build the composite configuration
+export COMPOSITE_CONFIGURATION="${CONFIG_DIR}/composite_configuration.json"
 if [[ -n "${DEPLOYMENT_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${AGGREGATE_CONFIGURATION} -c ${DEPLOYMENT_LIST}
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_CONFIGURATION} -c ${DEPLOYMENT_LIST}
 else
-    echo "{}" > ${AGGREGATE_CONFIGURATION}
+    echo "{}" > ${COMPOSITE_CONFIGURATION}
 fi    
 
 # Check for account level credentials
@@ -194,15 +194,15 @@ if [[ -f "${ACCOUNT_CREDENTIALS_DIR}/credentials.json" ]]; then
     CREDENTIALS_LIST="${ACCOUNT_CREDENTIALS_DIR}/credentials.json ${CREDENTIALS_LIST}"
 fi
 
-# Build the aggregate credentials
-export AGGREGATE_CREDENTIALS="${INFRASTRUCTURE_DIR}/aggregate_credentials.json"
+# Build the composite credentials
+export COMPOSITE_CREDENTIALS="${INFRASTRUCTURE_DIR}/composite_credentials.json"
 if [[ -n "${CREDENTIALS_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${AGGREGATE_CREDENTIALS} ${CREDENTIALS_LIST}
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_CREDENTIALS} ${CREDENTIALS_LIST}
 else
-    echo "{}" > ${AGGREGATE_CREDENTIALS}
+    echo "{}" > ${COMPOSITE_CREDENTIALS}
 fi    
 
-# Create the aggregate stack outputs
+# Create the composite stack outputs
 STACK_LIST=()
 if [[ (-n "{OAID}") && (-d "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf") ]]; then
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf" -name account-*-stack.json))
@@ -214,11 +214,11 @@ if [[ (-n "{SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf" -name *-${REGION}-stack.json))
 fi
 
-export AGGREGATE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/aggregate_stack_outputs.json"
+export COMPOSITE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/composite_stack_outputs.json"
 if [[ "${#STACK_LIST[@]}" -gt 0 ]]; then
-    ${BIN_DIR}/manageJSON.sh -f "[.[].Stacks[].Outputs[]]" -o ${AGGREGATE_STACK_OUTPUTS} "${STACK_LIST[@]}"
+    ${BIN_DIR}/manageJSON.sh -f "[.[].Stacks[].Outputs[]]" -o ${COMPOSITE_STACK_OUTPUTS} "${STACK_LIST[@]}"
 else
-    echo "[]" > ${AGGREGATE_STACK_OUTPUTS}
+    echo "[]" > ${COMPOSITE_STACK_OUTPUTS}
 fi
 
 # Set AWS credentials if available (hook from Jenkins framework)
