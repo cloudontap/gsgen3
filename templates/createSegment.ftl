@@ -144,7 +144,7 @@
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Resources" : {
         [#assign sliceCount = 0]
-        [#if !(slice??) || (slice?contains("eip"))]
+        [#if slice?contains("eip")]
             [#-- Define EIPs --]
             [#assign eipCount = 0]
             [#if jumpServer]
@@ -228,7 +228,7 @@
             [#assign sliceCount = sliceCount + 1]
         [/#if]
         
-        [#if !(slice??) || (slice?contains("vpc"))]
+        [#if slice?contains("vpc")]
             [#-- Define VPC --]
             [#if sliceCount > 0],[/#if]
             "vpc" : {
@@ -621,20 +621,28 @@
                                                 "01ExecuteRouteUpdateScript" : {
                                                     "command" : "/opt/gosource/bootstrap/nat.sh",
                                                     "ignoreErrors" : "false"
-                                                },
-                                                "02ExecuteAllocateEIPScript" : {
-                                                    "command" : "/opt/gosource/bootstrap/eip.sh",
-                                                    "env" : { 
-                                                        [#if !(slice??) || (slice?contains("eip"))]
-                                                            [#-- Legacy code to support definition of eip and vpc in one template (slice not provided, or = "vpceip" depending on how S3 to be defined)  --]
-                                                            "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
-                                                        [#else]
-                                                            [#-- Normally assume eip defined in a separate template to the vpc --]
-                                                            "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
-                                                       [/#if]
-                                                    },
-                                                    "ignoreErrors" : "false"
                                                 }
+                                                [#if slice?contains("eip")]
+                                                    ,"02ExecuteAllocateEIPScript" : {
+                                                        "command" : "/opt/gosource/bootstrap/eip.sh",
+                                                        "env" : { 
+                                                            [#-- Legacy code to support definition of eip and vpc in one template (slice = "eipvpc" or "eips3vpc" depending on how S3 to be defined)  --]
+                                                            "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                                                        },
+                                                        "ignoreErrors" : "false"
+                                                    }
+                                                [#else]
+                                                    [#if getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")??]
+                                                        ,"02ExecuteAllocateEIPScript" : {
+                                                            "command" : "/opt/gosource/bootstrap/eip.sh",
+                                                            "env" : { 
+                                                                [#-- Normally assume eip defined in a separate template to the vpc --]
+                                                                "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
+                                                            },
+                                                            "ignoreErrors" : "false"
+                                                        }
+                                                    [/#if]
+                                                [/#if]
                                             }
                                         }
                                     }
@@ -698,7 +706,7 @@
             [#assign sliceCount = sliceCount + 1]
         [/#if]
         
-        [#if !(slice??) || (slice?contains("s3"))]
+        [#if slice?contains("s3")]
             [#-- Create logs bucket --]
             [#if sliceCount > 0],[/#if]
             "s3Xlogs" : {
@@ -769,7 +777,7 @@
     "Outputs" : 
     {
         [#assign sliceCount = 0]
-        [#if !(slice??) || (slice?contains("eip"))]
+        [#if slice?contains("eip")]
             [#-- Define EIPs --]
             [#assign eipCount = 0]
             [#if jumpServer]
@@ -805,7 +813,7 @@
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]
-        [#if !(slice??) || (slice?contains("vpc"))]
+        [#if slice?contains("vpc")]
             [#if sliceCount > 0],[/#if]
             "vpcXsegmentXvpc" : {
                 "Value" : { "Ref" : "vpc" }
@@ -832,7 +840,7 @@
             [/#list]
             [#assign sliceCount = sliceCount + 1]
         [/#if]
-        [#if !(slice??) || (slice?contains("s3"))]
+        [#if slice?contains("s3")]
             [#if sliceCount > 0],[/#if]
             "s3XsegmentXlogs" : {
                 "Value" : { "Ref" : "s3Xlogs" }
