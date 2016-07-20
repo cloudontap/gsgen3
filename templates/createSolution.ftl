@@ -437,6 +437,26 @@
                                                         ],
                                                         "Effect": "Allow"
                                                     }
+                                                    [#if getKey("cmkXsegmentXcmk")??]
+                                                    ,{
+                                                        "Resource": [
+                                                            { 
+                                                                "Fn::Join" : [
+                                                                    "", 
+                                                                    [
+                                                                        "arn:aws:kms:${regionId}:", 
+                                                                        {"Ref" : "AWS::AccountId"}, 
+                                                                        ":key/${getKey("cmkXsegmentXcmk")}"
+                                                                    ]
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "Action": [
+                                                            "kms:Decrypt"
+                                                        ],
+                                                        "Effect": "Allow"
+                                                    }
+                                                    [/#if]
                                                 ]
                                             }
                                         }
@@ -757,13 +777,30 @@
                                                             "arn:aws:s3:::${logsBucket}/*"
                                                         ],
                                                         "Action": [
-                                                            [#if (processorProfile.ConfigSet)?? && (processorProfile.ConfigSet == "log")]
-                                                                "s3:GetObject",
-                                                            [/#if]
                                                             "s3:PutObject"
                                                         ],
                                                         "Effect": "Allow"
                                                     }
+                                                    [#if getKey("cmkXsegmentXcmk")??]
+                                                    ,{
+                                                        "Resource": [
+                                                            { 
+                                                                "Fn::Join" : [
+                                                                    "", 
+                                                                    [
+                                                                        "arn:aws:kms:${regionId}:", 
+                                                                        {"Ref" : "AWS::AccountId"}, 
+                                                                        ":key/${getKey("cmkXsegmentXcmk")}"
+                                                                    ]
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "Action": [
+                                                            "kms:Decrypt"
+                                                        ],
+                                                        "Effect": "Allow"
+                                                    }
+                                                    [/#if]
                                                 ]
                                             }
                                         }
