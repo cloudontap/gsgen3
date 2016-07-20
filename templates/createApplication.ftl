@@ -82,7 +82,6 @@
 [#-- Application --]
 [#assign docker = configurationObject.Docker]
 [#assign solnMultiAZ = solutionObject.MultiAZ!environmentObject.MultiAZ!false]
-[#assign containers=(containerList?eval).File]
 
 [#if buildReference??]
     [#assign buildCommit = buildReference]
@@ -134,7 +133,7 @@
                     [/#if]
                     {
                         [#assign containerListMode = "definition"]
-                        [#include containers]
+                        [#include containerList]
                         "Memory" : "${container.Memory?c}",
                         "Cpu" : "${container.Cpu?c}",
                         [#if container.Ports??]
@@ -165,14 +164,14 @@
             [#assign volumeCount = 0]
             [#list task.Containers as container]
                 [#assign containerListMode = "volumeCount"]
-                [#include containers]
+                [#include containerList]
             [/#list]
             [#if volumeCount > 0]
                 ,"Volumes" : [
                     [#assign volumeCount = 0]
                     [#list task.Containers as container]
                         [#assign containerListMode = "volumes"]
-                        [#include containers]
+                        [#include containerList]
                     [/#list]
                 ]
             [/#if]
@@ -264,7 +263,7 @@
                                         }
                                         [#list service.Containers as container]
                                             [#assign containerListMode = "supplemental"]
-                                            [#include containers]
+                                            [#include containerList]
                                         [/#list]
                                         [#assign count = count + 1]
                                     [/#if]
@@ -278,7 +277,7 @@
                                         [@createTask tier=tier component=component task=task /]
                                         [#list task.Containers as container]
                                             [#assign containerListMode = "supplemental"]
-                                            [#include containers]
+                                            [#include containerList]
                                         [/#list]
                                         [#assign count = count + 1]
                                     [/#if]

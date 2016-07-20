@@ -20,6 +20,9 @@ function usage() {
     echo -e "4. SLICE may be one of \"eip\", \"s3\", \"key\", \"vpc\" or \"dns\" for \"segment\" type "
     echo -e "5. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
     echo -e "6. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
+    echo -e "7. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
+    echo -e "   \"eips3vpc\" are also supported but for new projects, individual "
+    echo -e "   templates for each slice should be created"
     echo -e ""
     exit
 }
@@ -64,7 +67,7 @@ if [[ (-z "${SLICE}") &&
     usage
 fi
 if [[ ("${TYPE}" == "segment") && 
-      (!("${SLICE}" =~ eip|s3|key|vpc|dns)) ]]; then
+      (!("${SLICE}" =~ eip|s3|key|vpc|dns|eipvpc|eips3vpc)) ]]; then
     echo -e "\nUnknown slice ${SLICE} for the segment type"
     usage
 fi
@@ -114,29 +117,24 @@ case $TYPE in
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        PREFIX="seg"
+        TYPE_PREFIX="seg-"
+        SLICE_PREFIX="${SLICE}-"
         if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
-            # Stick with old prefix for existing stacks so they can be updated 
-            PREFIX="cont"
+            # LEGACY: Stick with old prefix for existing stacks so they can be updated 
+            TYPE_PREFIX="cont-"
         fi
-        OUTPUT="${CF_DIR}/${PREFIX}-${SLICE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${PREFIX}-${SLICE}-${REGION}-template.json"
+        if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
+            # LEGACY: Project where multiple segment slices in one template
+            TYPE_PREFIX="container-"
+            SLICE_PREFIX=""
+        fi
+        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION}-template.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         OUTPUT="${CF_DIR}/app-${SLICE}-${REGION}-template.json"
         TEMP_OUTPUT="${CF_DIR}/temp_app-${SLICE}-${REGION}-template.json"
-        if [[ -n "${COMPOSITE_CONTAINERS}" ]]; then
-            # Copy files locally to get around path issues with include
-            LOCAL_TEMPLATE="./temp_${TEMPLATE}"
-            cp "${TEMPLATE_DIR}/${TEMPLATE}" "${LOCAL_TEMPLATE}"
-            TEMPLATE_DIR="."
-            TEMPLATE="${LOCAL_TEMPLATE}"
-            LOCAL_COMPOSITE_CONTAINERS="./composite_containers.json"
-            cp "${COMPOSITE_CONTAINERS}" "${LOCAL_COMPOSITE_CONTAINERS}"
-            LOCAL_COMPOSITE_CONTAINERS_REFERENCE="./composite_containers_reference.json"
-            echo "{\"File\":\"${LOCAL_COMPOSITE_CONTAINERS}\"}" > "${LOCAL_COMPOSITE_CONTAINERS_REFERENCE}"
-        fi
         ;;
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
@@ -151,7 +149,8 @@ ARGS=()
 if [[ -n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
 if [[ -n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
 if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
-if [[ -n "${COMPOSITE_CONTAINERS}"    ]]; then ARGS+=("-v" "containerList=${LOCAL_COMPOSITE_CONTAINERS_REFERENCE}"); fi
+# Removal of /c/ is specifically for MINGW. It shouldn't affect other platforms as it won't be found
+if [[ -n "${COMPOSITE_CONTAINERS}"    ]]; then ARGS+=("-r" "containerList=${COMPOSITE_CONTAINERS#/c/}"); fi
 ARGS+=("-v" "region=${REGION}")
 ARGS+=("-v" "projectRegion=${PROJECT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
