@@ -100,14 +100,17 @@ case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${OAID}/aws/cf"
         OUTPUT="${CF_DIR}/account-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_account-${REGION}-template.json"
         ;;
     project)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
         OUTPUT="${CF_DIR}/project-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_project-${REGION}-template.json"
         ;;
     solution)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         OUTPUT="${CF_DIR}/soln-${SLICE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_soln-${SLICE}-${REGION}-template.json"
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
@@ -117,10 +120,12 @@ case $TYPE in
             PREFIX="cont"
         fi
         OUTPUT="${CF_DIR}/${PREFIX}-${SLICE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${PREFIX}-${SLICE}-${REGION}-template.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         OUTPUT="${CF_DIR}/app-${SLICE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_app-${SLICE}-${REGION}-template.json"
         ;;
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
@@ -145,9 +150,9 @@ ARGS+=("-v" "configuration=${AGGREGATE_CONFIGURATION}")
 ARGS+=("-v" "stackOutputs=${AGGREGATE_STACK_OUTPUTS}")
 ARGS+=("-v" "masterData=${BIN_DIR}/data/masterData.json")
 
-${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o temp_$OUTPUT "${ARGS[@]}"
+${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
 RESULT=$?
 if [[ "${RESULT}" -eq 0 ]]; then
     # Tidy up the result
-    cat temp_$OUTPUT | jq --indent 4 '.' > $OUTPUT
+    cat $TEMP_OUTPUT | jq --indent 4 '.' > $OUTPUT
 fi
