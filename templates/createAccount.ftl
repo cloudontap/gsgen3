@@ -4,15 +4,14 @@
 [#assign credentialsObject = credentials?eval]
 [#assign configurationObject = configuration?eval]
 [#assign stackOutputsObject = stackOutputs?eval]
-[#assign masterDataObject = masterData?eval]
 
 [#-- High level objects --]
 [#assign organisationObject = blueprintObject.Organisation]
 [#assign accountObject = blueprintObject.Account]
 
 [#-- Reference data --]
-[#assign regions = masterDataObject.Regions]
-[#assign categories = masterDataObject.Categories]
+[#assign regions = blueprintObject.Regions]
+[#assign categories = blueprintObject.Categories]
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[accountRegion]]

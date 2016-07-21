@@ -165,7 +165,6 @@ ARGS+=("-v" "blueprint=${COMPOSITE_SOLUTION}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
 ARGS+=("-v" "configuration=${COMPOSITE_CONFIGURATION}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
-ARGS+=("-v" "masterData=${BIN_DIR}/data/masterData.json")
 
 ${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
 RESULT=$?

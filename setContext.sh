@@ -5,7 +5,7 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export CURRENT_DIR="$(pwd)"
 
-# Generate the list of files constituting the composite solution
+# Generate the list of files constituting the composite solution ( aka blueprint)
 pushd ${CURRENT_DIR} >/dev/null
 SOLUTION_LIST=
 CONTAINERS_LIST=("${BIN_DIR}/templates/containers/switch_start.ftl")
@@ -100,10 +100,10 @@ if [[ -f "${ORGANISATION_DIR}/organisation.json" ]]; then
     SOLUTION_LIST="${ORGANISATION_DIR}/organisation.json ${SOLUTION_LIST}"
 fi
 
-# Build the composite solution
+# Build the composite solution ( aka blueprint)
 export COMPOSITE_SOLUTION="${CONFIG_DIR}/composite_blueprint.json"
 if [[ -n "${SOLUTION_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_SOLUTION} ${SOLUTION_LIST}
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_SOLUTION} "${BIN_DIR}/data/masterData.json" ${SOLUTION_LIST}
 else
     echo "{}" > ${COMPOSITE_SOLUTION}
 fi
