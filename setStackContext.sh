@@ -73,7 +73,7 @@ case $TYPE in
                 TYPE_PREFIX="${SEGMENT}-container-"
                 TYPE_SUFFIX="container"
                 SLICE_PREFIX=""
-                SLICE_PREFIX=""
+                SLICE_SUFFIX=""
                 REGION_PREFIX=""
             fi
         fi
