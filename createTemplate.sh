@@ -157,7 +157,7 @@ if [[ -n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
 if [[ -n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
 if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
 # Removal of /c/ is specifically for MINGW. It shouldn't affect other platforms as it won't be found
-if [[ -n "${COMPOSITE_CONTAINERS}"    ]]; then ARGS+=("-r" "containerList=${COMPOSITE_CONTAINERS#/c/}"); fi
+if [[ "${TYPE}" == "segment"          ]]; then ARGS+=("-r" "containerList=${COMPOSITE_CONTAINERS#/c/}"); fi
 ARGS+=("-v" "region=${REGION}")
 ARGS+=("-v" "projectRegion=${PROJECT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")

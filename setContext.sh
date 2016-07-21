@@ -125,10 +125,7 @@ for CONTAINER in $(find ${BIN_DIR}/templates/containers/container_*.ftl -maxdept
     CONTAINERS_LIST+=("${CONTAINER}")
 done
 CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
-
-if [[ "${#CONTAINERS_LIST[@]}" -gt 2 ]]; then
-    cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
-fi
+cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 
 # Project specific context if the project is known
 DEPLOYMENT_LIST=
