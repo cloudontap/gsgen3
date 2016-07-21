@@ -33,15 +33,7 @@
                                 "https"
                             ],
                             "LoadBalanced": true,
-                            "FixedIP": false,
-                            "Storage": {
-                                "Volumes": [
-                                    {
-                                        "Device": "/dev/sdp",
-                                        "Size": "100"
-                                    }
-                                ]
-                            }
+                            "FixedIP": false
                         }
                     }
                 ]
@@ -74,14 +66,16 @@
             }
         ]
     },
-    "Segment": {
-        "BClass": "10.0",
-        "InternetAccess": true,
-        "DNSSupport": true,
-        "DNSHostnames": true,
-        "SSHPerSegment": false,
-        "NAT": {
-            "MultiAZ": false
+    "Storage" : {
+        "default" : {
+            "EC2" : {
+                "Volumes" : [
+                    {
+                        "Device" : "/dev/sdp",
+                        "Size" : "100
+                    }
+                ]
+            }
         }
     }
 }

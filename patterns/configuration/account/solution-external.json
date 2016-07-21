@@ -20,15 +20,7 @@
                                 "ssh"
                             ],
                             "LoadBalanced": false,
-                            "FixedIP": true,
-                            "Storage": {
-                                "Volumes": [
-                                    {
-                                        "Device": "/dev/sdp",
-                                        "Size": "100"
-                                    }
-                                ]
-                            }
+                            "FixedIP": true
                         }
                     }
                 ]
@@ -59,13 +51,20 @@
         ]
     },
     "Segment": {
-        "BClass": "10.0",
-        "InternetAccess": true,
-        "DNSSupport": true,
-        "DNSHostnames": true,
-        "SSHPerSegment": false,
         "NAT": {
-            "MultiAZ": false
+            "Enabled": false
+        }
+    },
+    "Storage" : {
+        "default" : {
+            "EC2" : {
+                "Volumes" : [
+                    {
+                        "Device" : "/dev/sdp",
+                        "Size" : "100
+                    }
+                ]
+            }
         }
     }
 }

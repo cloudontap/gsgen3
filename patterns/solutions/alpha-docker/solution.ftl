@@ -4,9 +4,6 @@
         "Title" : "Docker based alpha stage project system",
         "Id" : "alpha-docker",
         "Name" : "alpha-docker",
-        [#if region??]
-            "Region" : "${region}",
-        [/#if]
         "Tiers" : [
             {
                 "Id" : "elb",
@@ -33,34 +30,36 @@
                         "Slices" : ["website"],
                         "Role" : "ECS",
                         "ECS" : {
-                            "Ports" : ["http", "ssh"],
-                            "Processor" : {
-                            "Processor" : "t2.small",
-                            "MinPerZone" : 1,
-                            "MaxPerZone" : 1,
-                            "DesiredPerZone" : 1,
-                            "Cpu" : 1024,
-                            "Memory" : 2048
-                            },
-                            "Storage" : {
-                            "Volumes" : [
-                            {
-                            "Device" : "/dev/sdp",
-                            "Size" : "20"
-                            }
-                            ]
-                            }
-                            }
-                            }
+                            "Ports" : ["http", "ssh"]
+                        }
+                    }
                 ]
             }
         ]
     },
     "Segment" : {
-        "BClass" : "10.0",
-        "InternetAccess" : true,
-        "DNSSupport" : true,
-        "DNSHostnames" : true,
-        "SSHPerSegment" : false
+        "SSHPerSegment" : true,
+        "NAT" : {
+            "Enabled" : false
+        }
+    },
+    "Processors" : {
+        "default" : {
+            "ECS" : {
+                "Processor" : "t2.small",
+            }
+        }
+    },
+    "Storage" : {
+        "default" : {
+            "ECS" : {
+                "Volumes" : [
+                    {
+                        "Device" : "/dev/sdp",
+                        "Size" : "20"
+                    }
+                ]
+            }
+        }
     }
 }
