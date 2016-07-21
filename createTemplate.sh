@@ -102,13 +102,13 @@ TEMPLATE="create${TYPE^}.ftl"
 case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${OAID}/aws/cf"
-        OUTPUT="${CF_DIR}/account-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_account-${REGION}-template.json"
+        OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
         ;;
     project)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
-        OUTPUT="${CF_DIR}/project-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_project-${REGION}-template.json"
+        OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
         ;;
     solution)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
@@ -119,17 +119,24 @@ case $TYPE in
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
         SLICE_PREFIX="${SLICE}-"
-        if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
-            # LEGACY: Stick with old prefix for existing stacks so they can be updated 
-            TYPE_PREFIX="cont-"
+        REGION_PREFIX="${REGION}-"
+        # LEGACY: Support old formats for existing stacks so they can be updated 
+        if [[ !("${SLICE}" =~ key|dns ) ]]; then
+            if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
+                TYPE_PREFIX="cont-"
+            fi
+            if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
+                TYPE_PREFIX="container-"
+                SLICE_PREFIX=""
+            fi
+            if [[ -f "${CF_DIR}/${SEGMENT}-container-template.json" ]]; then
+                TYPE_PREFIX="${SEGMENT}-container-"
+                SLICE_PREFIX=""
+                REGION_PREFIX=""
+            fi
         fi
-        if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
-            # LEGACY: Project where multiple segment slices in one template
-            TYPE_PREFIX="container-"
-            SLICE_PREFIX=""
-        fi
-        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION}-template.json"
+        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"

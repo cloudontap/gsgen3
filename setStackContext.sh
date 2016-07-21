@@ -52,14 +52,34 @@ case $TYPE in
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        PREFIX="seg"
-        if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
-            # Stick with old prefix for existing stacks so they can be updated in AWS
-            PREFIX="cont"
+        TYPE_PREFIX="seg-"
+        TYPE_SUFFIX="seg"
+        SLICE_PREFIX="${SLICE}-"
+        SLICE_SUFFIX="-${SLICE}"
+        REGION_PREFIX="${REGION}-"
+        # LEGACY: Support old formats for existing stacks so they can be updated 
+        if [[ !("${SLICE}" =~ key|dns ) ]]; then
+            if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
+                TYPE_PREFIX="cont-"
+                TYPE_SUFFIX="cont"
+            fi
+            if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
+                TYPE_PREFIX="container-"
+                TYPE_SUFFIX="container"
+                SLICE_PREFIX=""
+                SLICE_SUFFIX=""
+            fi
+            if [[ -f "${CF_DIR}/${SEGMENT}-container-template.json" ]]; then
+                TYPE_PREFIX="${SEGMENT}-container-"
+                TYPE_SUFFIX="container"
+                SLICE_PREFIX=""
+                SLICE_PREFIX=""
+                REGION_PREFIX=""
+            fi
         fi
-        STACKNAME="${PID}-${SEGMENT}-${PREFIX}-${SLICE}"
-        TEMPLATE="${PREFIX}-${SLICE}-${REGION}-template.json"
-        STACK="${PREFIX}-${SLICE}-${REGION}-stack.json"
+        STACKNAME="${PID}-${SEGMENT}-${TYPE_SUFFIX}${SLICE_SUFFIX}"
+        TEMPLATE="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+        STACK="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}stack.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
