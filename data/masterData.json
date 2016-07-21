@@ -768,9 +768,7 @@
                 "Processor": "t2.micro",
                 "MinPerZone": 1,
                 "MaxPerZone": 1,
-                "DesiredPerZone": 1,
-                "Cpu": 1024,
-                "Memory": 1024
+                "DesiredPerZone": 1
             },
             "ElastiCache": {
                 "Processor": "cache.t2.micro",
