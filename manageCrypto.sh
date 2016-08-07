@@ -20,7 +20,7 @@ function usage() {
   echo -e "    -h shows this text"
   echo -e "(o) -k KEYID for the master key to be used"
   echo -e "(o) -p JSON_PATH is the path to the attribute within CRYPTO_FILE to be processed"
-  echo -e "(o) -t TEXT is the plaintext or ciphertext to be processed"
+  echo -e "(o) -t CRYPTO_TEXT is the plaintext or ciphertext to be processed"
   echo -e "    -u update the attribute at JSON_PATH"
   echo -e "    -v result is base64 decoded (visible)"
   echo -e "\nDEFAULTS:\n"
