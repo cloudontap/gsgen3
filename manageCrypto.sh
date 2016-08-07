@@ -10,7 +10,7 @@ CRYPTO_OPERATION_DEFAULT="decrypt"
 CRYPTO_FILENAME_DEFAULT="credentials.json"
 function usage() {
   echo -e "\nManage cryptographic operations using KMS" 
-  echo -e "\nUsage: $(basename $0) -e -d -f CRYPTO_FILE -p JSON_PATH -t CRYPTO_TEXT -a ALIAS -k KEYID -b -u -v\n"
+  echo -e "\nUsage: $(basename $0) -e -d -n -f CRYPTO_FILE -p JSON_PATH -t CRYPTO_TEXT -a ALIAS -k KEYID -b -u -v\n"
   echo -e "\nwhere\n"
   echo -e "(o) -a ALIAS for the master key to be used"
   echo -e "(o) -b force base64 decode of the input before processing"
@@ -19,6 +19,7 @@ function usage() {
   echo -e "(o) -f CRYPTO_FILE specifies a file which contains the plaintext or ciphertext to be processed"
   echo -e "    -h shows this text"
   echo -e "(o) -k KEYID for the master key to be used"
+  echo -e "(o) -n no alteration to CRYPTO_TEXT (pass through as is)"
   echo -e "(o) -p JSON_PATH is the path to the attribute within CRYPTO_FILE to be processed"
   echo -e "(o) -t CRYPTO_TEXT is the plaintext or ciphertext to be processed"
   echo -e "    -u update the attribute at JSON_PATH"
@@ -55,7 +56,7 @@ function usage() {
 }
 
 # Parse options
-while getopts ":a:bdef:hk:p:t:uv" opt; do
+while getopts ":a:bdef:hk:np:t:uv" opt; do
     case $opt in
         a)
             ALIAS=$OPTARG
@@ -77,6 +78,9 @@ while getopts ":a:bdef:hk:p:t:uv" opt; do
             ;;
         k)
             KEYID=$OPTARG
+            ;;
+        n)
+            CRYPTO_OPERATION="noop"
             ;;
         p)
             JSON_PATH=$OPTARG
@@ -211,6 +215,10 @@ case ${CRYPTO_OPERATION} in
         CRYPTO_TEXT=$(aws ${PROFILE} --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
             --query Plaintext \
             --ciphertext-blob "fileb://ciphertext.bin")
+        ;;
+    noop)
+        # Don't touch CRYPTO_TEXT so either existing value will be displayed, or
+        # unchanged value will be saved. This is mainly for the account id at the moment.
         ;;
 esac
 RESULT=$?
