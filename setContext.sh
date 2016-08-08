@@ -47,25 +47,25 @@ fi
 
 if [[ -f "account.json" ]]; then
     # account directory
-    # We check it before checking for a project as the account directory
-    # also acts as a project directory for shared infrastructure
-    # An account directory may also have no project information e.g.
+    # We check it before checking for a product as the account directory
+    # also acts as a product directory for shared infrastructure
+    # An account directory may also have no product information e.g.
     # in the case of production environments in dedicated accounts.
     export LOCATION="${LOCATION:-account}"
     export ROOT_DIR="$(cd ../..;pwd)"
 fi
 
-if [[ -f "project.json" ]]; then
-    # project directory
+if [[ -f "product.json" ]]; then
+    # product directory
     if [[ "${LOCATION}" == "account" ]]; then
-        export LOCATION="${LOCATION:-account|project}"
+        export LOCATION="${LOCATION:-account|product}"
     else
-        export LOCATION="${LOCATION:-project}"
+        export LOCATION="${LOCATION:-productf}"
     fi
-    export PROJECT_DIR="$(pwd)"
+    export PRODUCT_DIR="$(pwd)"
     export PID="$(basename $(pwd))"
 
-    SOLUTION_LIST="${PROJECT_DIR}/project.json ${SOLUTION_LIST}"
+    SOLUTION_LIST="${PRODUCT_DIR}/product.json ${SOLUTION_LIST}"
     export ROOT_DIR="$(cd ../..;pwd)"
 fi
 
@@ -81,14 +81,14 @@ fi
 
 # root directory
 cd "${ROOT_DIR}"
-export OAID="$(basename $(pwd))"
+export AID="$(basename $(pwd))"
 popd >/dev/null
 
 export CONFIG_DIR="${ROOT_DIR}/config"
 export INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure"
-export ORGANISATION_DIR="${CONFIG_DIR}/${OAID}"    
-export ACCOUNT_DIR="${CONFIG_DIR}/${OAID}"    
-export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${OAID}/credentials" 
+export TENANT_DIR="${CONFIG_DIR}/${AID}"    
+export ACCOUNT_DIR="${CONFIG_DIR}/${AID}"    
+export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${AID}/credentials" 
 export ACCOUNT_DEPLOYMENTS_DIR="${ACCOUNT_DIR}/deployments" 
 export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"    
     
@@ -96,8 +96,8 @@ if [[ -f "${ACCOUNT_DIR}/account.json" ]]; then
     SOLUTION_LIST="${ACCOUNT_DIR}/account.json ${SOLUTION_LIST}"
 fi
 
-if [[ -f "${ORGANISATION_DIR}/organisation.json" ]]; then
-    SOLUTION_LIST="${ORGANISATION_DIR}/organisation.json ${SOLUTION_LIST}"
+if [[ -f "${TENANT_DIR}/tenant.json" ]]; then
+    SOLUTION_LIST="${TENANT_DIR}/tenant.json ${SOLUTION_LIST}"
 fi
 
 # Build the composite solution ( aka blueprint)
@@ -110,12 +110,12 @@ fi
     
 # Extract and default key region settings from the composite solution
 export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Account.Region | select(.!=null)')}
-export PROJECT_REGION=${PROJECT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Project.Region | select(.!=null)')}
-export PROJECT_REGION="${PROJECT_REGION:-$ACCOUNT_REGION}"
-export REGION="${REGION:-$PROJECT_REGION}"
+export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Product.Region | select(.!=null)')}
+export PRODUCT_REGION="${PRODUCT_REGION:-$ACCOUNT_REGION}"
+export REGION="${REGION:-$PRODUCT_REGION}"
 
 if [[ -z "${REGION}" ]]; then
-    echo -e "\nThe region must be defined in the Account or Project blueprint section. Nothing to do."
+    echo -e "\nThe region must be defined in the Account or Product blueprint section. Nothing to do."
     usage
 fi
 
@@ -127,7 +127,7 @@ done
 CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
 cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 
-# Project specific context if the project is known
+# Product specific context if the product is known
 DEPLOYMENT_LIST=
 CREDENTIALS_LIST=
 if [[ -n "${PID}" ]]; then
@@ -162,12 +162,12 @@ if [[ -n "${PID}" ]]; then
         fi
     fi
     
-    # project level configuration
+    # product level configuration
     if [[ -f "${DEPLOYMENTS_DIR}/config.json" ]]; then
         DEPLOYMENT_LIST="${DEPLOYMENTS_DIR}/config.json ${DEPLOYMENT_LIST}"
     fi
 
-    # project level credentials
+    # product level credentials
     if [[ -f "${CREDENTIALS_DIR}/credentials.json" ]]; then
         CREDENTIALS_LIST="${CREDENTIALS_DIR}/credentials.json ${CREDENTIALS_LIST}"
     fi
@@ -201,8 +201,8 @@ fi
 
 # Create the composite stack outputs
 STACK_LIST=()
-if [[ (-n "{OAID}") && (-d "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${OAID}/aws/cf" -name account-*-stack.json))
+if [[ (-n "{AID}") && (-d "${INFRASTRUCTURE_DIR}/${AID}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${AID}/aws/cf" -name account-*-stack.json))
 fi
 if [[ (-n "{PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name *-${REGION}-stack.json))
@@ -219,12 +219,12 @@ else
 fi
 
 # Set AWS credentials if available (hook from Jenkins framework)
-export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${!OAID_AWS_ACCESS_KEY_ID_VAR}}"
-export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!OAID_AWS_SECRET_ACCESS_KEY_VAR}}"
+export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${!AID_AWS_ACCESS_KEY_ID_VAR}}"
+export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!AID_AWS_SECRET_ACCESS_KEY_VAR}}"
     
 # Set the profile for IAM access if AWS credentials not in the environment
-if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${OAID}") ]]; then
-    export PROFILE="--profile ${OAID}"
+if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${AID}") ]]; then
+    export PROFILE="--profile ${AID}"
 fi
 
 # Handle some MINGW peculiarities

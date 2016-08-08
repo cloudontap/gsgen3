@@ -16,14 +16,14 @@ function usage() {
     echo -e "(o) -m (MONITOR ONLY) monitors but does not initiate the stack creation process"
     echo -e "(o) -r REGION is the AWS region identifier for the region in which the stack should be created"
     echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
-    echo -e "(m) -t TYPE is the stack type - \"account\", \"project\", \"segment\", \"solution\" or \"application\""
+    echo -e "(m) -t TYPE is the stack type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
     echo -e "\nDEFAULTS:\n"
     echo -e "DELAY = ${DELAY_DEFAULT} seconds"
     echo -e "\nNOTES:\n"
     echo -e "1. You must be in the correct directory corresponding to the requested stack type"
-    echo -e "2. REGION is only relevant for the \"project\" type, where multiple project stacks are necessary if the project uses resources"
-    echo -e "   in multiple regions"
-    echo -e "3. Slice is mandatory for all types except \"account\" and \"project\""
+    echo -e "2. REGION is only relevant for the \"product\" type, where multiple product stacks are necessary"
+    echo -e "   if the product uses resources in multiple regions"
+    echo -e "3. Slice is mandatory for all types except \"account\" and \"product\""
     echo -e ""
     exit
 }

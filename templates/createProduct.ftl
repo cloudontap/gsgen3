@@ -6,9 +6,9 @@
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
-[#assign organisationObject = blueprintObject.Organisation]
+[#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
-[#assign projectObject = blueprintObject.Project]
+[#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
 [#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
@@ -27,35 +27,35 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign projectRegionObject = regions[projectRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
 [#-- Key ids/names --]
-[#assign organisationId = organisationObject.Id]
+[#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
-[#assign projectId = projectObject.Id]
-[#assign projectName = projectObject.Name]
+[#assign productId = productObject.Id]
+[#assign productName = productObject.Name]
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign projectRegionId = projectRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
-[#assign projectDomainStem = (projectObject.Domain.Stem)!"gosource.com.au"]
-[#assign projectDomainBehaviour = (projectObject.Domain.ProjectBehaviour)!""]
-[#switch projectDomainBehaviour]
+[#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
+[#assign productDomainBehaviour = (productObject.Domain.ProductBehaviour)!""]
+[#switch productDomainBehaviour]
     [#case "naked"]
-        [#assign projectDomain = projectDomainStem]
+        [#assign productDomain = productDomainStem]
         [#break]
-    [#case "includeProjectId"]
+    [#case "includeProductId"]
     [#default]
-        [#assign projectDomain = projectId + "." + projectDomainStem]
+        [#assign productDomain = productId + "." + productDomainStem]
 [/#switch]
 
 [#-- Get stack output --]
@@ -67,23 +67,23 @@
     [/#list]
 [/#function]
 
-[#-- Project --]
+[#-- Product --]
 [#assign snsEnabled = false]
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Resources" : { 
         [#assign count = 0]
-        [#-- SNS for project --]
+        [#-- SNS for product --]
         [#if snsEnabled]
             "snsXalerts" : {
                 "Type": "AWS::SNS::Topic",
                 "Properties" : {
-                    "DisplayName" : "${(projectName + "-alerts")[0..9]}",
-                    "TopicName" : "${projectName}-alerts",
+                    "DisplayName" : "${(productName + "-alerts")[0..9]}",
+                    "TopicName" : "${productName}-alerts",
                     "Subscription" : [
                         {
-                            "Endpoint" : "alerts@${projectDomain}", 
+                            "Endpoint" : "alerts@${productDomain}", 
                             "Protocol" : "email"
                         }
                     ]
@@ -91,8 +91,8 @@
             } 
             [#assign count = count + 1]
         [/#if]
-        [#-- Shared project level resources if we are in the project region --]
-        [#if (regionId == projectRegionId)]
+        [#-- Shared product level resources if we are in the product region --]
+        [#if (regionId == productRegionId)]
             [#if solutionObject.SharedComponents??]
                 [#list solutionObject.SharedComponents as component] 
                     [#if component.S3??]
@@ -102,12 +102,12 @@
                             "Type" : "AWS::S3::Bucket",
                             "Properties" : {
                                 [#if s3.Name??]
-                                    "BucketName" : "${s3.Name}.${projectDomain}",
+                                    "BucketName" : "${s3.Name}.${productDomain}",
                                 [#else]
-                                    "BucketName" : "${component.Name}.${projectDomain}",
+                                    "BucketName" : "${component.Name}.${productDomain}",
                                 [/#if]
                                 "Tags" : [ 
-                                    { "Key" : "gs:project", "Value" : "${projectId}" },
+                                    { "Key" : "gs:product", "Value" : "${productId}" },
                                     { "Key" : "gs:category", "Value" : "${categoryId}" }
                                 ]
                                 [#if s3.Lifecycle??]
@@ -135,20 +135,20 @@
     "Outputs" : {
         [#assign count = 0]
         [#if snsEnabled]
-            "snsXprojectXalertsX${regionId?replace("-","")}" : {
+            "snsXproductXalertsX${regionId?replace("-","")}" : {
                 "Value" : { "Ref" : "snsXalerts" }
             }
             [#assign count = count + 1]
         [/#if]
-        [#if (regionId == projectRegionId)]
+        [#if (regionId == productRegionId)]
             [#if count > 0],[/#if]
-            "domainXprojectXdomain" : {
-                "Value" : "${projectDomain}"
+            "domainXproductXdomain" : {
+                "Value" : "${productDomain}"
             }
             [#if solutionObject.SharedComponents??]
                 [#list solutionObject.SharedComponents as component] 
                     [#if component.S3??]
-                        ,"s3XprojectX${component.Id}" : {
+                        ,"s3XproductX${component.Id}" : {
                             "Value" : { "Ref" : "s3X${component.Id}" }
                         }
                     [/#if]

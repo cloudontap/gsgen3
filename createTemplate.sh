@@ -12,16 +12,16 @@ function usage() {
     echo -e "    -h shows this text"
     echo -e "(o) -r REGION is the AWS region identifier"
     echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
-    echo -e "(m) -t TYPE is the template type - \"account\", \"project\", \"segment\", \"solution\" or \"application\""
+    echo -e "(m) -t TYPE is the template type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
     echo -e "\nNOTES:\n"
     echo -e "1. You must be in the directory specific to the type"
-    echo -e "2. REGION is only relevant for the \"project\" type"
+    echo -e "2. REGION is only relevant for the \"product\" type"
     echo -e "3. SLICE is mandatory for the \"segment\", \"solution\" or \"application\" type"
     echo -e "4. SLICE may be one of \"eip\", \"s3\", \"key\", \"vpc\" or \"dns\" for \"segment\" type "
     echo -e "5. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
     echo -e "6. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
     echo -e "7. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
-    echo -e "   \"eips3vpc\" are also supported but for new projects, individual "
+    echo -e "   \"eips3vpc\" are also supported but for new products, individual "
     echo -e "   templates for each slice should be created"
     echo -e ""
     exit
@@ -62,7 +62,7 @@ if [[ (-z "${TYPE}") ]]; then
     usage
 fi
 if [[ (-z "${SLICE}") && 
-      (!("${TYPE}" =~ account|project)) ]]; then
+      (!("${TYPE}" =~ account|product)) ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -82,7 +82,7 @@ fi
 
 # Ensure we are in the right place
 case $TYPE in
-    account|project)
+    account|product)
         if [[ ! ("${TYPE}" =~ ${LOCATION}) ]]; then
             echo "Current directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
@@ -101,11 +101,11 @@ TEMPLATE_DIR="${BIN_DIR}/templates"
 TEMPLATE="create${TYPE^}.ftl"
 case $TYPE in
     account)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${OAID}/aws/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
         OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
         TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
         ;;
-    project)
+    product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
         OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
         TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
@@ -144,7 +144,7 @@ case $TYPE in
         TEMP_OUTPUT="${CF_DIR}/temp_app-${SLICE}-${REGION}-template.json"
         ;;
     *)
-        echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
+        echo -e "\n\"$TYPE\" is not one of the known stack types (account, product, segment, solution, application). Nothing to do."
         usage
         ;;
 esac
@@ -159,7 +159,7 @@ if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUI
 # Removal of /c/ is specifically for MINGW. It shouldn't affect other platforms as it won't be found
 if [[ "${TYPE}" == "application"      ]]; then ARGS+=("-r" "containerList=${COMPOSITE_CONTAINERS#/c/}"); fi
 ARGS+=("-v" "region=${REGION}")
-ARGS+=("-v" "projectRegion=${PROJECT_REGION}")
+ARGS+=("-v" "productRegion=${PRODUCT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
 ARGS+=("-v" "blueprint=${COMPOSITE_SOLUTION}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")

@@ -23,7 +23,7 @@ function usage() {
     echo -e "TIER      = ${TIER_DEFAULT}"
     echo -e "COMPONENT = ${COMPONENT_DEFAULT}"
     echo -e "\nNOTES:\n"
-    echo -e "1. The ECS cluster is found using the provided tier and component combined with the project and segment"
+    echo -e "1. The ECS cluster is found using the provided tier and component combined with the product and segment"
     echo -e "2. ENV and VALUE should always appear in pairs"
     echo -e ""
     exit

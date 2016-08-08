@@ -3,21 +3,21 @@
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 
 function usage() {
-  echo -e "\nCreate the configuration directory structure for a project" 
-  echo -e "\nUsage: $(basename $0) -a OAID -t TITLE -p PID -r REGION -s SOLUTION -l ALPHASOLUTION"
+  echo -e "\nCreate the configuration directory structure for a product" 
+  echo -e "\nUsage: $(basename $0) -a AID -t TITLE -p PID -r REGION -s SOLUTION -l ALPHASOLUTION"
   echo -e "\nwhere\n"
-  echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
+  echo -e "(m) -a AID is the tenant account id e.g. \"env01\""
   echo -e "    -h shows this text"
   echo -e "(o) -l ALPHASOLUTION is the solution template used for prototyping"
-  echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
-  echo -e "(o) -r REGION is the AWS region identifier where project resources will be created"
-  echo -e "(o) -s SOLUTION is the target solution template for the project"
-  echo -e "(m) -t TITLE is the title for the project e.g. \"Parks E-Ticketing\""
+  echo -e "(m) -p PID is the product id for the product e.g. \"eticket\""
+  echo -e "(o) -r REGION is the AWS region identifier where product resources will be created"
+  echo -e "(o) -s SOLUTION is the target solution template for the product"
+  echo -e "(m) -t TITLE is the title for the product e.g. \"Parks E-Ticketing\""
   echo -e "\nNOTES:\n"
-  echo -e "1) The project directory tree will be created and populated"
-  echo -e "2) If the project directory already exists, no action is performed"
-  echo -e "3) The OAID is only used to ensure we are in the correct directory tree"
-  echo -e "4) If a region is not provided, the organisation account region will be used"
+  echo -e "1) The product directory tree will be created and populated"
+  echo -e "2) If the product directory already exists, no action is performed"
+  echo -e "3) The AID is only used to ensure we are in the correct directory tree"
+  echo -e "4) If a region is not provided, the tenant account region will be used"
   echo -e "5) The ALPHASOLUTION template overrides the SOLUTION template in the alpha environment"
   echo -e "6) If ALPHASOLUTION is not provided, a default alpha solution is provided, which"
   echo -e "   provides a basic VPC with a publically accessible subnet" 
@@ -29,7 +29,7 @@ function usage() {
 while getopts ":a:hl:p:r:s:t:" opt; do
   case $opt in
     a)
-      OAID=$OPTARG
+      AID=$OPTARG
       ;;
     h)
       usage
@@ -47,7 +47,7 @@ while getopts ":a:hl:p:r:s:t:" opt; do
       SOLUTION=$OPTARG
       ;;
     t)
-      PRJ=$OPTARG
+      PRD=$OPTARG
       ;;
     \?)
       echo -e "\nInvalid option: -$OPTARG" 
@@ -61,8 +61,8 @@ while getopts ":a:hl:p:r:s:t:" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ "${OAID}" == "" ||
-      "${PRJ}"  == "" ||
+if [[ "${AID}" == "" ||
+      "${PRD}"  == "" ||
       "${PID}"  == "" ]]; then
   echo -e "\nInsufficient arguments"
   usage
@@ -73,32 +73,32 @@ BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="$(../..;pwd)"
 ROOT="$(basename ${ROOT_DIR})"
 SOLUTIONS_DIR="${ROOT_DIR}/config/solutions"
-PROJECT_DIR="${SOLUTIONS_DIR}/${PID}"
-ALPHA_DIR="${PROJECT_DIR}/alpha"
+PRODUCT_DIR="${SOLUTIONS_DIR}/${PID}"
+ALPHA_DIR="${PRODUCT_DIR}/alpha"
 
-if [[ "${OAID}" != "${ROOT}" ]]; then
-    echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
+if [[ "${AID}" != "${ROOT}" ]]; then
+    echo -e "\nThe provided AID (${AID}) doesn't match the root directory (${ROOT}). Nothing to do."
     usage
 fi
 
-if [[ -d ${PROJECT_DIR} ]]; then
-    echo -e "\nLooks like the project directory tree already exists. Nothing to do."
+if [[ -d ${PRODUCT_DIR} ]]; then
+    echo -e "\nLooks like the product directory tree already exists. Nothing to do."
     usage
 fi
 
-# Create the project
-if [[ ! -e ${PROJECT_DIR} ]]; then
-    mkdir ${PROJECT_DIR}
+# Create the product
+if [[ ! -e ${PRODUCT_DIR} ]]; then
+    mkdir ${PRODUCT_DIR}
 fi
 
-cp -rp ${BIN}/patterns/configuration/project/* ${PROJECT_DIR} 
+cp -rp ${BIN}/patterns/configuration/product/* ${PRODUCT_DIR} 
 
-# Generate the project profile
-TEMPLATE="project.ftl"
+# Generate the product profile
+TEMPLATE="product.ftl"
 TEMPLATEDIR="${BIN}/templates"
-OUTPUT="${PROJECT_DIR}/project.json"
+OUTPUT="${PRODUCT_DIR}/product.json"
 
-ARGS="-v \"project=${PRJ}\""
+ARGS="-v \"product=${PRD}\""
 ARGS="${ARGS} -v id=${PID}"
 ARGS="${ARGS} -v name=${PID}"
 
@@ -120,7 +120,7 @@ if [[ ("${SOLUTION}" != "") && (-d "${SOLUTIONDIR}") ]]; then
             solution.ftl)
                 TEMPLATEDIR="${SOLUTIONDIR}/"
                 TEMPLATE="$NAME"
-                OUTPUT="${PROJECT_DIR}/solution.json"
+                OUTPUT="${PRODUCT_DIR}/solution.json"
                 
                 CMD="${BIN}/gsgen.sh -t $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT $ARGS"
                 eval $CMD
@@ -157,7 +157,7 @@ for f in ${SOLUTIONDIR}/*; do
 done
 
 # Commit the results
-cd ${PROJECT_DIR}
+cd ${PRODUCT_DIR}
 git add *
-git commit -m "Configure project ${PID} solution"
+git commit -m "Configure product ${PID} solution"
 

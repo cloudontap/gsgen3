@@ -6,9 +6,9 @@
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
-[#assign organisationObject = blueprintObject.Organisation]
+[#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
-[#assign projectObject = blueprintObject.Project]
+[#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
 [#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
@@ -27,43 +27,43 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign projectRegionObject = regions[projectRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
 [#-- Key ids/names --]
-[#assign organisationId = organisationObject.Id]
+[#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
-[#assign projectId = projectObject.Id]
-[#assign projectName = projectObject.Name]
+[#assign productId = productObject.Id]
+[#assign productName = productObject.Name]
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign projectRegionId = projectRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
-[#assign projectDomainStem = (projectObject.Domain.Stem)!"gosource.com.au"]
-[#assign segmentDomainBehaviour = (projectObject.Domain.SegmentBehaviour)!""]
+[#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
+[#assign segmentDomainBehaviour = (productObject.Domain.SegmentBehaviour)!""]
 [#switch segmentDomainBehaviour]
     [#case "naked"]
-        [#assign segmentDomain = projectDomainStem]
+        [#assign segmentDomain = productDomainStem]
         [#break]
     [#case "includeSegmentName"]
-        [#assign segmentDomain = segmentName + "." + projectDomainStem]
+        [#assign segmentDomain = segmentName + "." + productDomainStem]
         [#break]
-    [#case "includeProjectId"]
+    [#case "includeProductId"]
     [#default]
-        [#assign segmentDomain = segmentName + "." + projectId + "." + projectDomainStem]
+        [#assign segmentDomain = segmentName + "." + productId + "." + productDomainStem]
 [/#switch]
-[#if (projectObject.Domain.CertificateId)??]
+[#if (productObject.Domain.CertificateId)??]
     [#assign certificateId = segmentObject.Domain.CertificateId]
-[#elseif projectDomainStem != "gosource.com.au"]
-    [#assign certificateId = projectId]
+[#elseif productDomainStem != "gosource.com.au"]
+    [#assign certificateId = productId]
 [#else]
     [#assign certificateId = accountId]
 [/#if]
@@ -166,7 +166,7 @@
             "cmk" : {
                 "Type" : "AWS::KMS::Key",
                 "Properties" : {
-                    "Description" : "${projectName}-${segmentName}",
+                    "Description" : "${productName}-${segmentName}",
                     "Enabled" : true,
                     "EnableKeyRotation" : ${(rotateKeys)?string("true","false")},
                     "KeyPolicy" : {
@@ -203,16 +203,16 @@
                 "Type" : "AWS::Route53::HostedZone",
                 "Properties" : {
                     "HostedZoneConfig" : {
-                        "Comment" : "${projectName}-${segmentName}" 
+                        "Comment" : "${productName}-${segmentName}" 
                     },
                     "HostedZoneTags" : [ 
                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                        { "Key" : "gs:product", "Value" : "${productId}" },
                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                         { "Key" : "gs:category", "Value" : "${categoryId}" }
                     ],
-                    "Name" : "${segmentName}.${projectName}.internal",
+                    "Name" : "${segmentName}.${productName}.internal",
                     "VPCs" : [                
                         { "VPCId" : "${getKey("vpcXsegmentXvpc")}", "VPCRegion" : "${regionId}" }
                     ]
@@ -232,11 +232,11 @@
                     "EnableDnsHostnames" : ${(dnsHostnames)?string("true","false")},
                     "Tags" : [ 
                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                        { "Key" : "gs:product", "Value" : "${productId}" },
                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                         { "Key" : "gs:category", "Value" : "${categoryId}" },
-                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}" } 
+                        { "Key" : "Name", "Value" : "${productName}-${segmentName}" } 
                     ]
                 }
             }
@@ -248,11 +248,11 @@
                     "Properties" : {
                         "Tags" : [ 
                             { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:project", "Value" : "${projectId}" },
+                            { "Key" : "gs:product", "Value" : "${productId}" },
                             { "Key" : "gs:segment", "Value" : "${segmentId}" },
                             { "Key" : "gs:environment", "Value" : "${environmentId}" },
                             { "Key" : "gs:category", "Value" : "${categoryId}" },
-                            { "Key" : "Name", "Value" : "${projectName}-${segmentName}" } 
+                            { "Key" : "Name", "Value" : "${productName}-${segmentName}" } 
                         ]
                     }
                 },
@@ -282,14 +282,14 @@
                                     "VpcId" : { "Ref" : "vpc" },
                                     "Tags" : [ 
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         [#if jumpServerPerAZ]
                                             { "Key" : "gs:zone", "Value" : "${zone.Id}" },
                                         [/#if]
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tableName}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tableName}" } 
                                     ]
                                 }
                             }
@@ -325,11 +325,11 @@
                             "VpcId" : { "Ref" : "vpc" },
                             "Tags" : [ 
                                 { "Key" : "gs:account", "Value" : "${accountId}" },
-                                { "Key" : "gs:project", "Value" : "${projectId}" },
+                                { "Key" : "gs:product", "Value" : "${productId}" },
                                 { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                 { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                 { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${networkACL.Name}" } 
+                                { "Key" : "Name", "Value" : "${productName}-${segmentName}-${networkACL.Name}" } 
                             ]
                         }
                     }                    
@@ -385,7 +385,7 @@
                                 "CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
                                 "Tags" : [
                                     { "Key" : "gs:account", "Value" : "${accountId}" },
-                                    { "Key" : "gs:project", "Value" : "${projectId}" },
+                                    { "Key" : "gs:product", "Value" : "${productId}" },
                                     { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                     { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                     { "Key" : "gs:category", "Value" : "${categoryId}" },
@@ -394,7 +394,7 @@
                                     [#if routeTable.Private!false]
                                         { "Key" : "network", "Value" : "private" },
                                     [/#if]
-                                    { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${zone.Name}" } 
+                                    { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${zone.Name}" } 
                                 ]
                             }
                         },
@@ -495,13 +495,13 @@
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
                             { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:project", "Value" : "${projectId}" },
+                            { "Key" : "gs:product", "Value" : "${productId}" },
                             { "Key" : "gs:segment", "Value" : "${segmentId}" },
                             { "Key" : "gs:environment", "Value" : "${environmentId}" },
                             { "Key" : "gs:category", "Value" : "${categoryId}" },
                             { "Key" : "gs:tier", "Value" : "${tier.Id}"},
                             { "Key" : "gs:component", "Value" : "nat"},
-                            { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-nat" }
+                            { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat" }
                         ],
                         "SecurityGroupIngress" : [
                             { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
@@ -516,13 +516,13 @@
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
                             { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:project", "Value" : "${projectId}" },
+                            { "Key" : "gs:product", "Value" : "${productId}" },
                             { "Key" : "gs:segment", "Value" : "${segmentId}" },
                             { "Key" : "gs:environment", "Value" : "${environmentId}" },
                             { "Key" : "gs:category", "Value" : "${categoryId}" },
                             { "Key" : "gs:tier", "Value" : "all"},
                             { "Key" : "gs:component", "Value" : "nat"},
-                            { "Key" : "Name", "Value" : "${projectName}-${segmentName}-all-nat" }
+                            { "Key" : "Name", "Value" : "${productName}-${segmentName}-all-nat" }
                         ],
                         "SecurityGroupIngress" : [
                             { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "SourceSecurityGroupId": { "Ref" : "securityGroupX${tier.Id}Xnat"} }
@@ -565,7 +565,7 @@
                                                                 "#!/bin/bash\n",
                                                                 "echo \"gs:accountRegion=${accountRegionId}\"\n",
                                                                 "echo \"gs:account=${accountId}\"\n",
-                                                                "echo \"gs:project=${projectId}\"\n",
+                                                                "echo \"gs:product=${productId}\"\n",
                                                                 "echo \"gs:region=${regionId}\"\n",
                                                                 "echo \"gs:segment=${segmentId}\"\n",
                                                                 "echo \"gs:environment=${environmentId}\"\n",
@@ -650,14 +650,14 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "gs:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
                                         { "Key" : "gs:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
                                     ]
                                 }
                             },
@@ -667,7 +667,7 @@
                             "launchConfigX${tier.Id}XnatX${zone.Id}": {
                                 "Type": "AWS::AutoScaling::LaunchConfiguration",
                                 "Properties": {
-                                    "KeyName": "${projectName + sshPerSegment?string("-" + segmentName,"")}",
+                                    "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
                                     "ImageId": "${regionObject.AMIs.Centos.NAT}",
                                     "InstanceType": "${processorProfile.Processor}",
                                     "SecurityGroups" : [ { "Ref": "securityGroupX${tier.Id}Xnat" } ],
@@ -707,7 +707,7 @@
                 "Properties" : {
                     "BucketName" : "${logsBucket}",
                     "Tags" : [ 
-                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                        { "Key" : "gs:product", "Value" : "${productId}" },
                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                         { "Key" : "gs:category", "Value" : "${categoryId}" }
@@ -748,7 +748,7 @@
                 "Properties" : {
                     "BucketName" : "${backupsBucket}",
                     "Tags" : [ 
-                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                        { "Key" : "gs:product", "Value" : "${productId}" },
                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                         { "Key" : "gs:category", "Value" : "${categoryId}" }

@@ -14,8 +14,8 @@
                     "Value" : "${regionId}"
                 },
                 {
-                    "Name" : "PROJECT",
-                    "Value" : "${projectId}"
+                    "Name" : "PRODUCT",
+                    "Value" : "${productId}"
                 },
                 {
                     "Name" : "CONTAINER",
@@ -36,7 +36,7 @@
             "MountPoints": [
                 {
                     "SourceVolume": "logstash",
-                    "ContainerPath": "/project/logstash",
+                    "ContainerPath": "/product/logstash",
                     "ReadOnly": false
                 }
             ],
@@ -51,7 +51,7 @@
             [#if volumeCount > 0],[/#if]
             {
                 "Host": {
-                    "SourcePath": "/project/logstash"
+                    "SourcePath": "/product/logstash"
                 },
                 "Name": "logstash"
             }

@@ -1,10 +1,10 @@
 [#ftl]
 {
-    "Organisation" : {
-        "Title" : "${organisation}",
+    "Product" : {
+        "Title" : "${product}",
         "Id" : "${id}",
         "Name" : "${name}"
-        [#if Description??],
+        [#if description??],
             "Description" : "${description}"
         [/#if]
     }

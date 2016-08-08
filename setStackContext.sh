@@ -5,7 +5,7 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TYPE}") || \
-        ((-z "${SLICE}") && (! ("${TYPE}" =~ account|project ))) ]]; then
+        ((-z "${SLICE}") && (! ("${TYPE}" =~ account|product ))) ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -14,7 +14,7 @@ fi
 . ${BIN_DIR}/setContext.sh
 
 case $TYPE in
-    account|project)
+    account|product)
         if [[ ! ("${TYPE}" =~ ${LOCATION} ) ]]; then
             echo -e "\nCurrent directory doesn't match requested type \"${TYPE}\". Are we in the right place?"
             usage
@@ -33,12 +33,12 @@ esac
 case $TYPE in
     account)
         REGION="${ACCOUNT_REGION}"
-        CF_DIR="${INFRASTRUCTURE_DIR}/${OAID}/aws/cf"
-        STACKNAME="${OAID}-${TYPE}"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
+        STACKNAME="${AID}-${TYPE}"
         TEMPLATE="${TYPE}-${REGION}-template.json"
         STACK="${TYPE}-${REGION}-stack.json"
         ;;
-    project)
+    product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
         STACKNAME="${PID}-${TYPE}"
         TEMPLATE="${TYPE}-${REGION}-template.json"
@@ -88,7 +88,7 @@ case $TYPE in
         STACK="app-${SLICE}-${REGION}-stack.json"
         ;;
     *)
-        echo -e "\n\"$TYPE\" is not one of the known stack types (account, project, segment, solution, application). Nothing to do."
+        echo -e "\n\"$TYPE\" is not one of the known stack types (account, product, segment, solution, application). Nothing to do."
         usage
         ;;
 esac

@@ -6,7 +6,7 @@
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
-[#assign organisationObject = blueprintObject.Organisation]
+[#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
 
 [#-- Reference data --]
@@ -18,7 +18,7 @@
 [#assign categoryObject = categories["alm"]]
 
 [#-- Key ids/names --]
-[#assign organisationId = organisationObject.Id]
+[#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
 [#assign accountName = accountObject.Name]
 [#assign regionId = regionObject.Id]
@@ -47,7 +47,7 @@
                 "Properties" : {
                     "BucketName" : "${bucket}.${accountDomain}",
                     "Tags" : [ 
-                        { "Key" : "gs:project", "Value" : "${accountId}" },
+                        { "Key" : "gs:product", "Value" : "${accountId}" },
                         { "Key" : "gs:category", "Value" : "${categoryId}" }
                     ]
                 }

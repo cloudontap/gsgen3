@@ -7,7 +7,7 @@
                 "Password" : "${ldapPassword}"
             },
             "Bind" : {
-                "BindDN" : "cn=alm,ou=${accountId},ou=accounts,ou=${organisationId},ou=organisations,dc=gosource,dc=com,dc=au",
+                "BindDN" : "cn=alm,ou=${accountId},ou=accounts,ou=${tenantId},ou=organisations,dc=gosource,dc=com,dc=au",
                 "Password" : "${bindPassword}"
             }
         }

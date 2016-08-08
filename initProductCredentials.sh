@@ -5,19 +5,19 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 trap '${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-    echo -e "\nCreate project credentials and install them in an AWS region" 
-    echo -e "\nUsage: $(basename $0) -a CHECK_OAID -p PID -s SEGMENT -r REGION"
+    echo -e "\nCreate product credentials and install them in an AWS region" 
+    echo -e "\nUsage: $(basename $0) -a CHECK_AID -p PID -s SEGMENT -r REGION"
     echo -e "\nwhere\n"
-    echo -e "(m) -a CHECK_OAID is the organisation account id e.g. \"env01\""
+    echo -e "(m) -a CHECK_AID is the tenant account id e.g. \"env01\""
     echo -e "    -h shows this text"
-    echo -e "(m) -p PID is the project id e.g. \"eticket\""
+    echo -e "(m) -p PID is the product id e.g. \"eticket\""
     echo -e "(o) -r REGION is the AWS region identifier for the region to be updated"
     echo -e "(o) -s SEGMENT is the segment to be updated"
     echo -e "\nNOTES:\n"
-    echo -e "1. The project credentials directory tree will be created if not present"
-    echo -e "2. The script assumes we are in the OAID directory"
+    echo -e "1. The product credentials directory tree will be created if not present"
+    echo -e "2. The script assumes we are in the AID directory"
     echo -e "3. If ssh keys already exist, they are not recreated"
-    echo -e "4. If a region is not provided, the organisation account/solution region will be used"
+    echo -e "4. If a region is not provided, the tenant account/solution region will be used"
     echo -e "5. If a segment is not provided, all segments are updated"
     echo -e ""
     exit
@@ -27,7 +27,7 @@ function usage() {
 while getopts ":a:hp:r:s:" opt; do
     case $opt in
         a)
-            CHECK_OAID=$OPTARG
+            CHECK_AID=$OPTARG
             ;;
         h)
             usage
@@ -53,20 +53,20 @@ while getopts ":a:hp:r:s:" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ "${CHECK_OAID}" == "" || 
+if [[ "${CHECK_AID}" == "" || 
       "${REGION}" == "" || 
       "${PID}"  == "" ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
 
-if [[ "${OAID}" != "${CHECK_OAID}" ]]; then
-    echo -e "\nThe provided OAID (${CHECK_OAID}) doesn't match the root directory (${OAID}). Nothing to do."
+if [[ "${AID}" != "${CHECK_AID}" ]]; then
+    echo -e "\nThe provided AID (${CHECK_AID}) doesn't match the root directory (${AID}). Nothing to do."
     usage
 fi
 
-if [[ (! -d ${SOLUTIONS_DIR}) && ("${OAID}" != "${PID}" ) ]]; then
-    echo -e "\nProject needs to be configured before credentials are created. Nothing to do."
+if [[ (! -d ${SOLUTIONS_DIR}) && ("${AID}" != "${PID}" ) ]]; then
+    echo -e "\nProduct needs to be configured before credentials are created. Nothing to do."
     usage
 fi
 

@@ -6,9 +6,9 @@
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
-[#assign organisationObject = blueprintObject.Organisation]
+[#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
-[#assign projectObject = blueprintObject.Project]
+[#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
 [#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
@@ -27,20 +27,20 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign projectRegionObject = regions[projectRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
 [#-- Key ids/names --]
-[#assign organisationId = organisationObject.Id]
+[#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
-[#assign projectId = projectObject.Id]
-[#assign projectName = projectObject.Name]
+[#assign productId = productObject.Id]
+[#assign productName = productObject.Name]
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign projectRegionId = projectRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
@@ -154,7 +154,7 @@
                                 "LogDriver" : "json-file"
                             [#else]
                                 "LogDriver" : "fluentd",
-                                "Options" : { "tag" : "docker.${projectId}.${segmentId}.${tier.Id}.${component.Id}.${container.Id}"}
+                                "Options" : { "tag" : "docker.${productId}.${segmentId}.${tier.Id}.${component.Id}.${container.Id}"}
                             [/#if]
                         }
                     }[#if container.Id != (task.Containers?last).Id],[/#if]

@@ -23,7 +23,7 @@ function usage() {
     echo -e "DELAY     = ${DELAY_DEFAULT} seconds"
     echo -e "TIER      = ${TIER_DEFAULT}"
     echo -e "\nNOTES:\n"
-    echo -e "1. Snapshot identifer takes the form {project}-{environment}-{tier}-{component}-datetime-{suffix}"
+    echo -e "1. Snapshot identifer takes the form {product}-{environment}-{tier}-{component}-datetime-{suffix}"
     echo -e "2. RETAIN and AGE may be used together. If both are present, RETAIN is applied first"
     echo -e ""
     exit

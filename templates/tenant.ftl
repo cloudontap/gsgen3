@@ -1,10 +1,10 @@
 [#ftl]
 {
-    "Project" : {
-        "Title" : "${project}",
+    "Tenant" : {
+        "Title" : "${tenant}",
         "Id" : "${id}",
         "Name" : "${name}"
-        [#if description??],
+        [#if Description??],
             "Description" : "${description}"
         [/#if]
     }

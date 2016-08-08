@@ -4,14 +4,14 @@ trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nConvert config/infrastructure trees used for gsgen2 to the format required for gsgen3" 
-    echo -e "\nUsage: $(basename $0) -a OAID -p PID"
+    echo -e "\nUsage: $(basename $0) -a AID -p PID"
     echo -e "\nwhere\n"
-    echo -e "(m) -a OAID is the organisation account id e.g. \"env01\""
+    echo -e "(m) -a AID is the tenant account id e.g. \"env01\""
     echo -e "    -h shows this text"
-    echo -e "(m) -p PID is the project id for the project e.g. \"eticket\""
+    echo -e "(m) -p PID is the product id for the product e.g. \"eticket\""
     echo -e "\nNOTES:\n"
-    echo -e "1. GSGEN3 expects project directories to be the immediate children of the config and infrastructure directories"
-    echo -e "2. It is assumed we are in the config or infrastructure directory under the OAID directory when the script is run"
+    echo -e "1. GSGEN3 expects product directories to be the immediate children of the config and infrastructure directories"
+    echo -e "2. It is assumed we are in the config or infrastructure directory under the AID directory when the script is run"
     echo -e ""
     exit
 }
@@ -20,7 +20,7 @@ function usage() {
 while getopts ":a:hl:p:r:s:t:" opt; do
     case $opt in
         a)
-            OAID=$OPTARG
+            AID=$OPTARG
             ;;
         h)
             usage
@@ -40,17 +40,17 @@ while getopts ":a:hl:p:r:s:t:" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ "${OAID}" == "" ||
+if [[ "${AID}" == "" ||
       "${PID}"  == "" ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
 
-OAID_DIR="$(basename $(cd ..;pwd))"
+AID_DIR="$(basename $(cd ..;pwd))"
 CURRENT_DIR="$(basename $(pwd))"
 
-if [[ "${OAID}" != "${OAID_DIR}" ]]; then
-    echo -e "\nThe provided OAID (${OAID}) doesn't match the root directory (${ROOT}). Nothing to do."
+if [[ "${AID}" != "${AID_DIR}" ]]; then
+    echo -e "\nThe provided AID (${AID}) doesn't match the root directory (${ROOT}). Nothing to do."
     usage
 fi
 
@@ -62,52 +62,52 @@ else
 fi
 
 # Deal with the aws/startup and aws/cf directories
-# They shouldn't be treated as a project
-# We also combine the account and project level cf directories for OAID
+# They shouldn't be treated as a product
+# We also combine the account and product level cf directories for AID
 if [[ -d aws ]]; then
-    mkdir -p ${OAID}/aws/
+    mkdir -p ${AID}/aws/
     pushd aws
     for DIRECTORY in startup cf ; do
         if [[ -d ${DIRECTORY} ]]; then
-            ${MVCMD} ${DIRECTORY} ../${OAID}/aws
+            ${MVCMD} ${DIRECTORY} ../${AID}/aws
         fi
     done
-    if [[ -d ${OAID}/cf ]]; then
-        ${MVCMD} ${OAID}/cf/* ../${OAID}/aws/cf
-        rm -rf ${OAID}/cf
+    if [[ -d ${AID}/cf ]]; then
+        ${MVCMD} ${AID}/cf/* ../${AID}/aws/cf
+        rm -rf ${AID}/cf
     fi
     popd
 fi
 
-# Move each project to its own directory
-# This will pick up the alm as a "project" as well
+# Move each product to its own directory
+# This will pick up the alm as a "product" as well
 for TREE in solutions deployments credentials aws; do
     if [[ -d ${TREE} ]]; then
         pushd ${TREE}
-        for PROJECT in $(ls -d */ 2>/dev/null); do
-            mkdir -p ../${PROJECT}/${TREE}
-            ${MVCMD} ${PROJECT}/* ../${PROJECT}/${TREE}
-            rm -rf ${PROJECT}
+        for PRODUCT in $(ls -d */ 2>/dev/null); do
+            mkdir -p ../${PRODUCT}/${TREE}
+            ${MVCMD} ${PRODUCT}/* ../${PRODUCT}/${TREE}
+            rm -rf ${PRODUCT}
         done
         popd
     fi
 done
 
-# Move the organisation.json and account.json files to the OAID directory
+# Move the tenant.json and account.json files to the AID directory
 for FILE in $(ls solutions/*.json  2>/dev/null); do
-    ${MVCMD} ${FILE} ${OAID}
+    ${MVCMD} ${FILE} ${AID}
 done
 
-# Move the project.json files to their respective project directories
-for PROJECT in $(ls -d */ 2>/dev/null); do
-    if [[ -f ${PROJECT}/solutions/project.json ]]; then
-    ${MVCMD} ${PROJECT}/solutions/project.json ${PROJECT}/${TREE}
+# Move the product.json files to their respective product directories
+for PRODUCT in $(ls -d */ 2>/dev/null); do
+    if [[ -f ${PRODUCT}/solutions/project.json ]]; then
+    ${MVCMD} ${PRODUCT}/solutions/project.json ${PRODUCT}/${TREE}/product.json
     fi
 done
 
 # Move the ALM solution file into the alm directory
-if [[ -f ${OAID}/solutions/solution.json ]]; then
-    ${MVCMD} ${OAID}/solutions/solution.json ${OAID}/solutions/alm
+if [[ -f ${AID}/solutions/solution.json ]]; then
+    ${MVCMD} ${AID}/solutions/solution.json ${AID}/solutions/alm
 fi
 
 # Final cleanup

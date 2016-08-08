@@ -6,9 +6,9 @@
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
-[#assign organisationObject = blueprintObject.Organisation]
+[#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
-[#assign projectObject = blueprintObject.Project]
+[#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
 [#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
@@ -27,43 +27,43 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign projectRegionObject = regions[projectRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
 [#-- Key ids/names --]
-[#assign organisationId = organisationObject.Id]
+[#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
-[#assign projectId = projectObject.Id]
-[#assign projectName = projectObject.Name]
+[#assign productId = productObject.Id]
+[#assign productName = productObject.Name]
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign projectRegionId = projectRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
-[#assign projectDomainStem = (projectObject.Domain.Stem)!"gosource.com.au"]
-[#assign segmentDomainBehaviour = (projectObject.Domain.SegmentBehaviour)!""]
+[#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
+[#assign segmentDomainBehaviour = (productObject.Domain.SegmentBehaviour)!""]
 [#switch segmentDomainBehaviour]
     [#case "naked"]
-        [#assign segmentDomain = projectDomainStem]
+        [#assign segmentDomain = productDomainStem]
         [#break]
     [#case "includeSegmentName"]
-        [#assign segmentDomain = segmentName + "." + projectDomainStem]
+        [#assign segmentDomain = segmentName + "." + productDomainStem]
         [#break]
-    [#case "includeProjectId"]
+    [#case "includeProductId"]
     [#default]
-        [#assign segmentDomain = segmentName + "." + projectId + "." + projectDomainStem]
+        [#assign segmentDomain = segmentName + "." + productId + "." + productDomainStem]
 [/#switch]
-[#if (projectObject.Domain.CertificateId)??]
+[#if (productObject.Domain.CertificateId)??]
     [#assign certificateId = segmentObject.Domain.CertificateId]
-[#elseif projectDomainStem != "gosource.com.au"]
-    [#assign certificateId = projectId]
+[#elseif productDomainStem != "gosource.com.au"]
+    [#assign certificateId = productId]
 [#else]
     [#assign certificateId = accountId]
 [/#if]
@@ -200,13 +200,13 @@
                                     "VpcId": "${vpc}",
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" }
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" }
                                     ]
                                 }
                             },
@@ -225,7 +225,7 @@
                                     [/#if]
                                     "Tags" : [ 
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
@@ -259,7 +259,7 @@
                                     [#if sqs.Name??]
                                         "QueueName" : "${sqs.Name}"
                                     [#else]
-                                        "QueueName" : "${projectId}-${environmentName}-${component.Name}"
+                                        "QueueName" : "${productId}-${environmentName}-${component.Name}"
                                     [/#if]
                                     [#if sqs.DelaySeconds??],"DelaySeconds" : ${sqs.DelaySeconds?c}[/#if]
                                     [#if sqs.MaximumMessageSize??],"MaximumMessageSize" : ${sqs.MaximumMessageSize?c}[/#if]
@@ -343,16 +343,16 @@
                                     [/#if]
                                     "Scheme" : "${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("internet-facing","internal")}",
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
-                                    "LoadBalancerName" : "${projectId}-${segmentId}-${tier.Id}-${component.Id}",
+                                    "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             }
@@ -495,14 +495,14 @@
                                                                         "#!/bin/bash\n",
                                                                         "echo \"gs:accountRegion=${accountRegionId}\"\n",
                                                                         "echo \"gs:account=${accountId}\"\n",
-                                                                        "echo \"gs:project=${projectId}\"\n",
+                                                                        "echo \"gs:product=${productId}\"\n",
                                                                         "echo \"gs:region=${regionId}\"\n",
                                                                         "echo \"gs:segment=${segmentId}\"\n",
                                                                         "echo \"gs:environment=${environmentId}\"\n",
                                                                         "echo \"gs:tier=${tier.Id}\"\n",
                                                                         "echo \"gs:component=${component.Id}\"\n",
                                                                         "echo \"gs:zone=${zone.Id}\"\n",
-                                                                        "echo \"gs:name=${projectName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}\"\n",
+                                                                        "echo \"gs:name=${productName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}\"\n",
                                                                         "echo \"gs:role=${component.Role}\"\n",
                                                                         "echo \"gs:credentials=${credentialsBucket}\"\n",
                                                                         "echo \"gs:code=${codeBucket}\"\n",
@@ -569,7 +569,7 @@
                                             "ImageId": "${regionObject.AMIs.Centos.EC2}",
                                             "InstanceInitiatedShutdownBehavior" : "stop",
                                             "InstanceType": "${processorProfile.Processor}",
-                                            "KeyName": "${projectName + sshPerSegment?string("-" + segmentName,"")}",
+                                            "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
                                             "Monitoring" : false,
                                             "NetworkInterfaces" : [
                                                 {
@@ -588,14 +588,14 @@
                                             "SourceDestCheck" : true,
                                             "Tags" : [
                                                 { "Key" : "gs:account", "Value" : "${accountId}" },
-                                                { "Key" : "gs:project", "Value" : "${projectId}" },
+                                                { "Key" : "gs:product", "Value" : "${productId}" },
                                                 { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                                 { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                                 { "Key" : "gs:category", "Value" : "${categoryId}" },
                                                 { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                                 { "Key" : "gs:component", "Value" : "${component.Id}" },
                                                 { "Key" : "gs:zone", "Value" : "${zone.Id}" },
-                                                { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}" }
+                                                { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}" }
                                             ],
                                             "UserData" : { 
                                                 "Fn::Base64" : { 
@@ -862,7 +862,7 @@
                                                                 "#!/bin/bash\n",
                                                                 "echo \"gs:accountRegion=${accountRegionId}\"\n",
                                                                 "echo \"gs:account=${accountId}\"\n",
-                                                                "echo \"gs:project=${projectId}\"\n",
+                                                                "echo \"gs:product=${productId}\"\n",
                                                                 "echo \"gs:region=${regionId}\"\n",
                                                                 "echo \"gs:segment=${segmentId}\"\n",
                                                                 "echo \"gs:environment=${environmentId}\"\n",
@@ -962,13 +962,13 @@
                                     [/#if]
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "gs:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}", "PropagateAtLaunch" : "True"},
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}", "PropagateAtLaunch" : "True" }
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}", "PropagateAtLaunch" : "True" }
                                     ]
                                 }
                             },
@@ -976,7 +976,7 @@
                             "launchConfigX${tier.Id}X${component.Id}": {
                                 "Type": "AWS::AutoScaling::LaunchConfiguration",
                                 "Properties": {
-                                    "KeyName": "${projectName + sshPerSegment?string("-" + segmentName,"")}",
+                                    "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
                                     "ImageId": "${regionObject.AMIs.Centos.ECS}",
                                     "InstanceType": "${processorProfile.Processor}",
                                     [@createBlockDevices storageProfile=storageProfile /]
@@ -1048,7 +1048,7 @@
                             "cacheSubnetGroupX${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::ElastiCache::SubnetGroup",
                                 "Properties" : {
-                                    "Description" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}",
+                                    "Description" : "${productName}-${segmentName}-${tier.Name}-${component.Name}",
                                     "SubnetIds" : [ 
                                         [#list azList as zone]
                                             "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
@@ -1108,13 +1108,13 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             }
@@ -1157,7 +1157,7 @@
                             "rdsSubnetGroupX${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::RDS::DBSubnetGroup",
                                 "Properties" : {
-                                    "DBSubnetGroupDescription" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}",
+                                    "DBSubnetGroupDescription" : "${productName}-${segmentName}-${tier.Name}-${component.Name}",
                                     "SubnetIds" : [ 
                                         [#list azList as zone]
                                             "${getKey("subnetX"+tier.Id+"X"+zone)}"
@@ -1166,13 +1166,13 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             },
@@ -1185,13 +1185,13 @@
                                     },
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             },
@@ -1205,13 +1205,13 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             },
@@ -1228,8 +1228,8 @@
                                     "MasterUsername": "${credentialsObject[tier.Id + "-" + component.Id].Login.Username}",
                                     "MasterUserPassword": "${credentialsObject[tier.Id + "-" + component.Id].Login.Password}",
                                     "BackupRetentionPeriod" : "${db.Backup.RetentionPeriod}",
-                                    "DBInstanceIdentifier": "${projectName}-${segmentName}-${tier.Name}-${component.Name}",
-                                    "DBName": "${projectName}",
+                                    "DBInstanceIdentifier": "${productName}-${segmentName}-${tier.Name}-${component.Name}",
+                                    "DBName": "${productName}",
                                     "DBSubnetGroupName": { "Ref" : "rdsSubnetGroupX${tier.Id}X${component.Id}" },
                                     "DBParameterGroupName": { "Ref" : "rdsParameterGroupX${tier.Id}X${component.Id}" },
                                     "OptionGroupName": { "Ref" : "rdsOptionGroupX${tier.Id}X${component.Id}" },
@@ -1247,13 +1247,13 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
                                         { "Key" : "gs:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${projectName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
                             }
@@ -1310,7 +1310,7 @@
                                             [/#list]
                                         },
                                     [/#if]
-                                    "DomainName" : "${projectName}-${segmentId}-${tier.Id}-${component.Id}",
+                                    "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}",
                                     [#if (storageProfile.Volumes)?? && (storageProfile.Volumes?size > 0)]
                                         [#assign volume = storageProfile.Volumes[0]]
                                         "EBSOptions" : {
@@ -1348,7 +1348,7 @@
                                     [/#if]
                                     "Tags" : [
                                         { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:project", "Value" : "${projectId}" },
+                                        { "Key" : "gs:product", "Value" : "${productId}" },
                                         { "Key" : "gs:segment", "Value" : "${segmentId}" },
                                         { "Key" : "gs:environment", "Value" : "${environmentId}" },
                                         { "Key" : "gs:category", "Value" : "${categoryId}" },
@@ -1501,7 +1501,7 @@
                                 "Value" : { "Fn::GetAtt" : ["rdsX${tier.Id}X${component.Id}", "Endpoint.Port"] }
                             },
                             "rdsX${tier.Id}X${component.Id}Xdatabasename" : {
-                                "Value" : "${projectName}"
+                                "Value" : "${productName}"
                             },
                             "rdsX${tier.Id}X${component.Id}Xusername" : {
                                 "Value" : "${credentialsObject[tier.Id + "-" + component.Id].Login.Username}"

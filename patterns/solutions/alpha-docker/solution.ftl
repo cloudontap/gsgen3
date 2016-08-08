@@ -1,7 +1,7 @@
 [#ftl]
 {
     "Solution" : {
-        "Title" : "Docker based alpha stage project system",
+        "Title" : "Docker based alpha stage product system",
         "Id" : "alpha-docker",
         "Name" : "alpha-docker",
         "Tiers" : [
