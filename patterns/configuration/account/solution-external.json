@@ -1,58 +1,49 @@
 {
-    "Solution": {
-        "Title": "Standalone ALM server hosted on an directly exposed single server",
-        "Id": "almext",
-        "Name": "almexternal",
-        "Description": "",
+    "Solution" : {
+        "Title" : "Standalone ALM server hosted on an directly exposed single server",
+        "Id" : "almext",
+        "Name" : "almexternal",
         "Tiers": [
             {
-                "Id": "web",
-                "RouteTable": "external",
-                "Components": [
+                "Id"  : "web",
+                "RouteTable" : "external",
+                "Components" : [
                     {
-                        "Title": "ALM Server",
-                        "Id": "alm",
-                        "Name": "alm",
-                        "Role": "ALM",
-                        "EC2": {
-                            "Ports": [
+                        "Title" : "ALM Server",
+                        "Id" : "alm",
+                        "Name" : "alm",
+                        "Slices" : ["alm"],
+                        "Role" : "ALM",
+                        "EC2" : {
+                            "Ports" : [
                                 "https",
                                 "ssh"
                             ],
                             "LoadBalanced": false,
                             "FixedIP": true
                         }
+                    },
+                    {
+                        "Title" : "Docker images",
+                        "Id" : "docker",
+                        "Name" : "docker",
+                        "Slices" : ["alm-s3"],
+                        "S3" : {}
+                    },
+                    {
+                        "Title" : "Binary images",
+                        "Id" : "binaries",
+                        "Name" : "binaries",
+                        "Slices" : ["alm-s3"],
+                        "S3" : {}
                     }
                 ]
             }
-        ],
-        "SharedComponents": [
-            {
-                "Title": "Contractor performance metrics",
-                "Id": "metrics",
-                "Name": "metrics",
-                "SharedRegion": "ap-southeast-2",
-                "S3": {}
-            },
-            {
-                "Title": "Docker images",
-                "Id": "docker",
-                "Name": "docker",
-                "SharedRegion": "ap-southeast-2",
-                "S3": {}
-            },
-            {
-                "Title": "Binary images",
-                "Id": "binaries",
-                "Name": "binaries",
-                "SharedRegion": "ap-southeast-2",
-                "S3": {}
-            }
         ]
     },
-    "Segment": {
-        "NAT": {
-            "Enabled": false
+    "Segment" : {
+        "NAT" : {
+            "Enabled" : false
         }
     },
     "Storage" : {
@@ -61,7 +52,7 @@
                 "Volumes" : [
                     {
                         "Device" : "/dev/sdp",
-                        "Size" : "100
+                        "Size" : "100"
                     }
                 ]
             }
