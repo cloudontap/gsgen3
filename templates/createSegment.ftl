@@ -206,11 +206,11 @@
                         "Comment" : "${productName}-${segmentName}" 
                     },
                     "HostedZoneTags" : [ 
-                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                        { "Key" : "gs:product", "Value" : "${productId}" },
-                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                        { "Key" : "gs:category", "Value" : "${categoryId}" }
+                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                        { "Key" : "cot:product", "Value" : "${productId}" },
+                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                        { "Key" : "cot:category", "Value" : "${categoryId}" }
                     ],
                     "Name" : "${segmentName}.${productName}.internal",
                     "VPCs" : [                
@@ -231,11 +231,11 @@
                     "EnableDnsSupport" : ${(dnsSupport)?string("true","false")},
                     "EnableDnsHostnames" : ${(dnsHostnames)?string("true","false")},
                     "Tags" : [ 
-                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                        { "Key" : "gs:product", "Value" : "${productId}" },
-                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                        { "Key" : "gs:category", "Value" : "${categoryId}" },
+                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                        { "Key" : "cot:product", "Value" : "${productId}" },
+                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                        { "Key" : "cot:category", "Value" : "${categoryId}" },
                         { "Key" : "Name", "Value" : "${productName}-${segmentName}" } 
                     ]
                 }
@@ -247,11 +247,11 @@
                     "Type" : "AWS::EC2::InternetGateway",
                     "Properties" : {
                         "Tags" : [ 
-                            { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:product", "Value" : "${productId}" },
-                            { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                            { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                            { "Key" : "gs:category", "Value" : "${categoryId}" },
+                            { "Key" : "cot:account", "Value" : "${accountId}" },
+                            { "Key" : "cot:product", "Value" : "${productId}" },
+                            { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                            { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                            { "Key" : "cot:category", "Value" : "${categoryId}" },
                             { "Key" : "Name", "Value" : "${productName}-${segmentName}" } 
                         ]
                     }
@@ -281,13 +281,13 @@
                                 "Properties" : {
                                     "VpcId" : { "Ref" : "vpc" },
                                     "Tags" : [ 
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
                                         [#if jumpServerPerAZ]
-                                            { "Key" : "gs:zone", "Value" : "${zone.Id}" },
+                                            { "Key" : "cot:zone", "Value" : "${zone.Id}" },
                                         [/#if]
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tableName}" } 
                                     ]
@@ -324,11 +324,11 @@
                         "Properties" : {
                             "VpcId" : { "Ref" : "vpc" },
                             "Tags" : [ 
-                                { "Key" : "gs:account", "Value" : "${accountId}" },
-                                { "Key" : "gs:product", "Value" : "${productId}" },
-                                { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                { "Key" : "gs:category", "Value" : "${categoryId}" },
+                                { "Key" : "cot:account", "Value" : "${accountId}" },
+                                { "Key" : "cot:product", "Value" : "${productId}" },
+                                { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                { "Key" : "cot:category", "Value" : "${categoryId}" },
                                 { "Key" : "Name", "Value" : "${productName}-${segmentName}-${networkACL.Name}" } 
                             ]
                         }
@@ -384,13 +384,13 @@
                                 "AvailabilityZone" : "${zone.AWSZone}",
                                 "CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
                                 "Tags" : [
-                                    { "Key" : "gs:account", "Value" : "${accountId}" },
-                                    { "Key" : "gs:product", "Value" : "${productId}" },
-                                    { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                    { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                    { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                    { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                    { "Key" : "gs:zone", "Value" : "${zone.Id}" },
+                                    { "Key" : "cot:account", "Value" : "${accountId}" },
+                                    { "Key" : "cot:product", "Value" : "${productId}" },
+                                    { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                    { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                    { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                    { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                    { "Key" : "cot:zone", "Value" : "${zone.Id}" },
                                     [#if routeTable.Private!false]
                                         { "Key" : "network", "Value" : "private" },
                                     [/#if]
@@ -494,13 +494,13 @@
                         "GroupDescription": "Security Group for HA NAT instances",
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
-                            { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:product", "Value" : "${productId}" },
-                            { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                            { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                            { "Key" : "gs:category", "Value" : "${categoryId}" },
-                            { "Key" : "gs:tier", "Value" : "${tier.Id}"},
-                            { "Key" : "gs:component", "Value" : "nat"},
+                            { "Key" : "cot:account", "Value" : "${accountId}" },
+                            { "Key" : "cot:product", "Value" : "${productId}" },
+                            { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                            { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                            { "Key" : "cot:category", "Value" : "${categoryId}" },
+                            { "Key" : "cot:tier", "Value" : "${tier.Id}"},
+                            { "Key" : "cot:component", "Value" : "nat"},
                             { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat" }
                         ],
                         "SecurityGroupIngress" : [
@@ -515,13 +515,13 @@
                         "GroupDescription": "Security Group for access from NAT",
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
-                            { "Key" : "gs:account", "Value" : "${accountId}" },
-                            { "Key" : "gs:product", "Value" : "${productId}" },
-                            { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                            { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                            { "Key" : "gs:category", "Value" : "${categoryId}" },
-                            { "Key" : "gs:tier", "Value" : "all"},
-                            { "Key" : "gs:component", "Value" : "nat"},
+                            { "Key" : "cot:account", "Value" : "${accountId}" },
+                            { "Key" : "cot:product", "Value" : "${productId}" },
+                            { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                            { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                            { "Key" : "cot:category", "Value" : "${categoryId}" },
+                            { "Key" : "cot:tier", "Value" : "all"},
+                            { "Key" : "cot:component", "Value" : "nat"},
                             { "Key" : "Name", "Value" : "${productName}-${segmentName}-all-nat" }
                         ],
                         "SecurityGroupIngress" : [
@@ -563,20 +563,20 @@
                                                             "", 
                                                             [
                                                                 "#!/bin/bash\n",
-                                                                "echo \"gs:accountRegion=${accountRegionId}\"\n",
-                                                                "echo \"gs:account=${accountId}\"\n",
-                                                                "echo \"gs:product=${productId}\"\n",
-                                                                "echo \"gs:region=${regionId}\"\n",
-                                                                "echo \"gs:segment=${segmentId}\"\n",
-                                                                "echo \"gs:environment=${environmentId}\"\n",
-                                                                "echo \"gs:tier=${tier.Id}\"\n",
-                                                                "echo \"gs:component=nat\"\n",
-                                                                "echo \"gs:zone=${zone.Id}\"\n",
-                                                                "echo \"gs:role=nat\"\n",
-                                                                "echo \"gs:credentials=${credentialsBucket}\"\n",
-                                                                "echo \"gs:code=${codeBucket}\"\n",
-                                                                "echo \"gs:logs=${logsBucket}\"\n",
-                                                                "echo \"gs:backups=${backupsBucket}\"\n"
+                                                                "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                                "echo \"cot:account=${accountId}\"\n",
+                                                                "echo \"cot:product=${productId}\"\n",
+                                                                "echo \"cot:region=${regionId}\"\n",
+                                                                "echo \"cot:segment=${segmentId}\"\n",
+                                                                "echo \"cot:environment=${environmentId}\"\n",
+                                                                "echo \"cot:tier=${tier.Id}\"\n",
+                                                                "echo \"cot:component=nat\"\n",
+                                                                "echo \"cot:zone=${zone.Id}\"\n",
+                                                                "echo \"cot:role=nat\"\n",
+                                                                "echo \"cot:credentials=${credentialsBucket}\"\n",
+                                                                "echo \"cot:code=${codeBucket}\"\n",
+                                                                "echo \"cot:logs=${logsBucket}\"\n",
+                                                                "echo \"cot:backups=${backupsBucket}\"\n"
                                                             ]
                                                         ]
                                                     },
@@ -589,8 +589,8 @@
                                                             [
                                                                 "#!/bin/bash -ex\n",
                                                                 "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                "REGION=$(/etc/gosource/facts.sh | grep gs:accountRegion | cut -d '=' -f 2)\n",
-                                                                "CODE=$(/etc/gosource/facts.sh | grep gs:code | cut -d '=' -f 2)\n",
+                                                                "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion | cut -d '=' -f 2)\n",
+                                                                "CODE=$(/etc/gosource/facts.sh | grep cot:code | cut -d '=' -f 2)\n",
                                                                 "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0500 /opt/gosource/bootstrap/*.sh\n"
                                                             ]
                                                         ]
@@ -649,14 +649,14 @@
                                         { "Ref" : "subnetX${tier.Id}X${zone.Id}"} 
                                     ],
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
-                                        { "Key" : "gs:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
+                                        { "Key" : "cot:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
                                     ]
                                 }
@@ -707,10 +707,10 @@
                 "Properties" : {
                     "BucketName" : "${logsBucket}",
                     "Tags" : [ 
-                        { "Key" : "gs:product", "Value" : "${productId}" },
-                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                        { "Key" : "gs:category", "Value" : "${categoryId}" }
+                        { "Key" : "cot:product", "Value" : "${productId}" },
+                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                        { "Key" : "cot:category", "Value" : "${categoryId}" }
                     ],
                     "LifecycleConfiguration" : {
                         "Rules" : [
@@ -748,10 +748,10 @@
                 "Properties" : {
                     "BucketName" : "${backupsBucket}",
                     "Tags" : [ 
-                        { "Key" : "gs:product", "Value" : "${productId}" },
-                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                        { "Key" : "gs:category", "Value" : "${categoryId}" }
+                        { "Key" : "cot:product", "Value" : "${productId}" },
+                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                        { "Key" : "cot:category", "Value" : "${categoryId}" }
                     ],
                     "LifecycleConfiguration" : {
                         "Rules" : [

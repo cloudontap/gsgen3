@@ -199,13 +199,13 @@
                                     "GroupDescription": "Security Group for ${tier.Name}-${component.Name}",
                                     "VpcId": "${vpc}",
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" }
                                     ]
                                 }
@@ -224,13 +224,13 @@
                                         "BucketName" : "${component.Name}.${segmentDomain}",
                                     [/#if]
                                     "Tags" : [ 
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" }
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" }
                                     ]
                                     [#if s3.Lifecycle??]
                                         ,"LifecycleConfiguration" : {
@@ -345,13 +345,13 @@
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -493,21 +493,21 @@
                                                                     "", 
                                                                     [
                                                                         "#!/bin/bash\n",
-                                                                        "echo \"gs:accountRegion=${accountRegionId}\"\n",
-                                                                        "echo \"gs:account=${accountId}\"\n",
-                                                                        "echo \"gs:product=${productId}\"\n",
-                                                                        "echo \"gs:region=${regionId}\"\n",
-                                                                        "echo \"gs:segment=${segmentId}\"\n",
-                                                                        "echo \"gs:environment=${environmentId}\"\n",
-                                                                        "echo \"gs:tier=${tier.Id}\"\n",
-                                                                        "echo \"gs:component=${component.Id}\"\n",
-                                                                        "echo \"gs:zone=${zone.Id}\"\n",
-                                                                        "echo \"gs:name=${productName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}\"\n",
-                                                                        "echo \"gs:role=${component.Role}\"\n",
-                                                                        "echo \"gs:credentials=${credentialsBucket}\"\n",
-                                                                        "echo \"gs:code=${codeBucket}\"\n",
-                                                                        "echo \"gs:logs=${logsBucket}\"\n",
-                                                                        "echo \"gs:backup=${backupsBucket}\"\n"
+                                                                        "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                                        "echo \"cot:account=${accountId}\"\n",
+                                                                        "echo \"cot:product=${productId}\"\n",
+                                                                        "echo \"cot:region=${regionId}\"\n",
+                                                                        "echo \"cot:segment=${segmentId}\"\n",
+                                                                        "echo \"cot:environment=${environmentId}\"\n",
+                                                                        "echo \"cot:tier=${tier.Id}\"\n",
+                                                                        "echo \"cot:component=${component.Id}\"\n",
+                                                                        "echo \"cot:zone=${zone.Id}\"\n",
+                                                                        "echo \"cot:name=${productName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}\"\n",
+                                                                        "echo \"cot:role=${component.Role}\"\n",
+                                                                        "echo \"cot:credentials=${credentialsBucket}\"\n",
+                                                                        "echo \"cot:code=${codeBucket}\"\n",
+                                                                        "echo \"cot:logs=${logsBucket}\"\n",
+                                                                        "echo \"cot:backup=${backupsBucket}\"\n"
                                                                     ]
                                                                 ]
                                                             },
@@ -520,8 +520,8 @@
                                                                     [
                                                                         "#!/bin/bash -ex\n",
                                                                         "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                        "REGION=$(/etc/gosource/facts.sh | grep gs:accountRegion= | cut -d '=' -f 2)\n",
-                                                                        "CODE=$(/etc/gosource/facts.sh | grep gs:code= | cut -d '=' -f 2)\n",
+                                                                        "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
+                                                                        "CODE=$(/etc/gosource/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
                                                                         "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0755 /opt/gosource/bootstrap/*.sh\n"
                                                                     ]
                                                                 ]
@@ -587,14 +587,14 @@
                                             ],
                                             "SourceDestCheck" : true,
                                             "Tags" : [
-                                                { "Key" : "gs:account", "Value" : "${accountId}" },
-                                                { "Key" : "gs:product", "Value" : "${productId}" },
-                                                { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                                { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                                { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                                { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                                { "Key" : "gs:component", "Value" : "${component.Id}" },
-                                                { "Key" : "gs:zone", "Value" : "${zone.Id}" },
+                                                { "Key" : "cot:account", "Value" : "${accountId}" },
+                                                { "Key" : "cot:product", "Value" : "${productId}" },
+                                                { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                                { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                                { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                                { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                                { "Key" : "cot:component", "Value" : "${component.Id}" },
+                                                { "Key" : "cot:zone", "Value" : "${zone.Id}" },
                                                 { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}-${zone.Name}" }
                                             ],
                                             "UserData" : { 
@@ -860,19 +860,19 @@
                                                             "", 
                                                             [
                                                                 "#!/bin/bash\n",
-                                                                "echo \"gs:accountRegion=${accountRegionId}\"\n",
-                                                                "echo \"gs:account=${accountId}\"\n",
-                                                                "echo \"gs:product=${productId}\"\n",
-                                                                "echo \"gs:region=${regionId}\"\n",
-                                                                "echo \"gs:segment=${segmentId}\"\n",
-                                                                "echo \"gs:environment=${environmentId}\"\n",
-                                                                "echo \"gs:tier=${tier.Id}\"\n",
-                                                                "echo \"gs:component=${component.Id}\"\n",
-                                                                "echo \"gs:role=${component.Role}\"\n",
-                                                                "echo \"gs:credentials=${credentialsBucket}\"\n",
-                                                                "echo \"gs:code=${codeBucket}\"\n",
-                                                                "echo \"gs:logs=${logsBucket}\"\n",
-                                                                "echo \"gs:backup=${backupsBucket}\"\n"
+                                                                "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                                "echo \"cot:account=${accountId}\"\n",
+                                                                "echo \"cot:product=${productId}\"\n",
+                                                                "echo \"cot:region=${regionId}\"\n",
+                                                                "echo \"cot:segment=${segmentId}\"\n",
+                                                                "echo \"cot:environment=${environmentId}\"\n",
+                                                                "echo \"cot:tier=${tier.Id}\"\n",
+                                                                "echo \"cot:component=${component.Id}\"\n",
+                                                                "echo \"cot:role=${component.Role}\"\n",
+                                                                "echo \"cot:credentials=${credentialsBucket}\"\n",
+                                                                "echo \"cot:code=${codeBucket}\"\n",
+                                                                "echo \"cot:logs=${logsBucket}\"\n",
+                                                                "echo \"cot:backup=${backupsBucket}\"\n"
                                                             ]
                                                         ]
                                                     },
@@ -885,8 +885,8 @@
                                                             [
                                                                 "#!/bin/bash -ex\n",
                                                                 "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                "REGION=$(/etc/gosource/facts.sh | grep gs:accountRegion= | cut -d '=' -f 2)\n",
-                                                                "CODE=$(/etc/gosource/facts.sh | grep gs:code= | cut -d '=' -f 2)\n",
+                                                                "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
+                                                                "CODE=$(/etc/gosource/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
                                                                 "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0755 /opt/gosource/bootstrap/*.sh\n"
                                                             ]
                                                         ]
@@ -961,13 +961,13 @@
                                         "VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+firstZone)}"],
                                     [/#if]
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}", "PropagateAtLaunch" : "True"},
+                                        { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}", "PropagateAtLaunch" : "True"},
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}", "PropagateAtLaunch" : "True" }
                                     ]
                                 }
@@ -1107,13 +1107,13 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -1165,13 +1165,13 @@
                                         [/#list]
                                     ],
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -1184,13 +1184,13 @@
                                     "Parameters" : {
                                     },
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -1204,13 +1204,13 @@
                                     "OptionConfigurations" : [
                                     ],
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -1246,13 +1246,13 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
                                         { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
                                     ]
                                 }
@@ -1347,13 +1347,13 @@
                                         },
                                     [/#if]
                                     "Tags" : [
-                                        { "Key" : "gs:account", "Value" : "${accountId}" },
-                                        { "Key" : "gs:product", "Value" : "${productId}" },
-                                        { "Key" : "gs:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "gs:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "gs:category", "Value" : "${categoryId}" },
-                                        { "Key" : "gs:tier", "Value" : "${tier.Id}" },
-                                        { "Key" : "gs:component", "Value" : "${component.Id}" }
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" }
                                     ]
                                 }
                             }

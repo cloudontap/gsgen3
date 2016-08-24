@@ -47,8 +47,8 @@
                 "Properties" : {
                     "BucketName" : "${bucket}.${accountDomain}",
                     "Tags" : [ 
-                        { "Key" : "gs:product", "Value" : "${accountId}" },
-                        { "Key" : "gs:category", "Value" : "${categoryId}" }
+                        { "Key" : "cot:product", "Value" : "${accountId}" },
+                        { "Key" : "cot:category", "Value" : "${categoryId}" }
                     ]
                 }
             }
