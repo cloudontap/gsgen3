@@ -1,13 +1,13 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
+if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi                           
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export CURRENT_DIR="$(pwd)"
 
-# Generate the list of files constituting the composite solution ( aka blueprint)
+# Generate the list of files constituting the blueprint
 pushd ${CURRENT_DIR} >/dev/null
-SOLUTION_LIST=
+BLUEPRINT_LIST=
 CONTAINERS_LIST=("${BIN_DIR}/templates/containers/switch_start.ftl")
 
 if [[ (-f "segment.json") || (-f "container.json") ]]; then
@@ -17,13 +17,13 @@ if [[ (-f "segment.json") || (-f "container.json") ]]; then
     export SEGMENT="$(basename $(pwd))"
 
     if [[ -f "segment.json" ]]; then
-        SOLUTION_LIST="${SEGMENT_DIR}/segment.json ${SOLUTION_LIST}"
+        BLUEPRINT_LIST="${SEGMENT_DIR}/segment.json ${BLUEPRINT_LIST}"
     fi
     if [[ -f "container.json" ]]; then
-        SOLUTION_LIST="${SEGMENT_DIR}/container.json ${SOLUTION_LIST}"
+        BLUEPRINT_LIST="${SEGMENT_DIR}/container.json ${BLUEPRINT_LIST}"
     fi
     if [[ -f "solution.json" ]]; then
-        SOLUTION_LIST="${SEGMENT_DIR}/solution.json ${SOLUTION_LIST}"
+        BLUEPRINT_LIST="${SEGMENT_DIR}/solution.json ${BLUEPRINT_LIST}"
     fi
     
     for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
@@ -35,7 +35,7 @@ if [[ (-f "segment.json") || (-f "container.json") ]]; then
     # solutions directory
     export SOLUTIONS_DIR="$(pwd)"
     if [[ -f "solution.json" ]]; then
-        SOLUTION_LIST="${SOLUTIONS_DIR}/solution.json ${SOLUTION_LIST}"
+        BLUEPRINT_LIST="${SOLUTIONS_DIR}/solution.json ${BLUEPRINT_LIST}"
     fi
     
     for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
@@ -58,15 +58,21 @@ fi
 if [[ -f "product.json" ]]; then
     # product directory
     if [[ "${LOCATION}" == "account" ]]; then
-        export LOCATION="${LOCATION:-account|product}"
+        export LOCATION="account|product"
     else
-        export LOCATION="${LOCATION:-productf}"
+        export LOCATION="${LOCATION:-product}"
     fi
     export PRODUCT_DIR="$(pwd)"
     export PID="$(basename $(pwd))"
 
-    SOLUTION_LIST="${PRODUCT_DIR}/product.json ${SOLUTION_LIST}"
+    BLUEPRINT_LIST="${PRODUCT_DIR}/product.json ${BLUEPRINT_LIST}"
     export ROOT_DIR="$(cd ../..;pwd)"
+fi
+
+if [[ -f "integrator.json" ]]; then
+    export LOCATION="${LOCATION:-integrator}"
+    export ROOT_DIR="$(pwd)"
+    export IID="$(basename $(pwd))"
 fi
 
 if [[ (-d config) && (-d infrastructure) ]]; then
@@ -75,7 +81,7 @@ if [[ (-d config) && (-d infrastructure) ]]; then
 fi
 
 if [[ -z "${ROOT_DIR}" ]]; then
-    echo "Can't locate the root of the directory tree. Are we in the right place?"
+    echo "\nCan't locate the root of the directory tree. Are we in the right place?"
     usage
 fi
 
@@ -93,24 +99,24 @@ export ACCOUNT_DEPLOYMENTS_DIR="${ACCOUNT_DIR}/deployments"
 export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"    
     
 if [[ -f "${ACCOUNT_DIR}/account.json" ]]; then
-    SOLUTION_LIST="${ACCOUNT_DIR}/account.json ${SOLUTION_LIST}"
+    BLUEPRINT_LIST="${ACCOUNT_DIR}/account.json ${BLUEPRINT_LIST}"
 fi
 
 if [[ -f "${TENANT_DIR}/tenant.json" ]]; then
-    SOLUTION_LIST="${TENANT_DIR}/tenant.json ${SOLUTION_LIST}"
+    BLUEPRINT_LIST="${TENANT_DIR}/tenant.json ${BLUEPRINT_LIST}"
 fi
 
 # Build the composite solution ( aka blueprint)
-export COMPOSITE_SOLUTION="${CONFIG_DIR}/composite_blueprint.json"
-if [[ -n "${SOLUTION_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_SOLUTION} "${BIN_DIR}/data/masterData.json" ${SOLUTION_LIST}
+export COMPOSITE_BLUEPRINT="${CONFIG_DIR}/composite_blueprint.json"
+if [[ -n "${BLUEPRINT_LIST}" ]]; then
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_BLUEPRINT} "${BIN_DIR}/data/masterData.json" ${BLUEPRINT_LIST}
 else
-    echo "{}" > ${COMPOSITE_SOLUTION}
+    echo "{}" > ${COMPOSITE_BLUEPRINT}
 fi
     
 # Extract and default key region settings from the composite solution
-export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Account.Region | select(.!=null)')}
-export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_SOLUTION} | jq -r '.Product.Region | select(.!=null)')}
+export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.AWS.Region | select(.!=null)')}
+export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.AWS.Region | select(.!=null)')}
 export PRODUCT_REGION="${PRODUCT_REGION:-$ACCOUNT_REGION}"
 export REGION="${REGION:-$PRODUCT_REGION}"
 
@@ -201,13 +207,13 @@ fi
 
 # Create the composite stack outputs
 STACK_LIST=()
-if [[ (-n "{AID}") && (-d "${INFRASTRUCTURE_DIR}/${AID}/aws/cf") ]]; then
+if [[ (-n "${AID}") && (-d "${INFRASTRUCTURE_DIR}/${AID}/aws/cf") ]]; then
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${AID}/aws/cf" -name account-*-stack.json))
 fi
-if [[ (-n "{PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name *-${REGION}-stack.json))
+if [[ (-n "${PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name product-${REGION}-stack.json))
 fi
-if [[ (-n "{SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf") ]]; then
+if [[ (-n "${SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf") ]]; then
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf" -name *-${REGION}-stack.json))
 fi
 
@@ -233,6 +239,12 @@ if [[ "$?" -eq 0 ]]; then
     export MINGW64="true"
 fi
 
-
-
+# Detect if within a git repo
+git status >/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    export WITHIN_GIT_REPO="true"
+    export FILE_MV="git mv"
+else
+    export FILE_MV="mv"
+fi
 

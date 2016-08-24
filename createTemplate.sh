@@ -161,7 +161,7 @@ if [[ "${TYPE}" == "application"      ]]; then ARGS+=("-r" "containerList=${COMP
 ARGS+=("-v" "region=${REGION}")
 ARGS+=("-v" "productRegion=${PRODUCT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
-ARGS+=("-v" "blueprint=${COMPOSITE_SOLUTION}")
+ARGS+=("-v" "blueprint=${COMPOSITE_BLUEPRINT}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
 ARGS+=("-v" "configuration=${COMPOSITE_CONFIGURATION}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
