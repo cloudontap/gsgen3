@@ -9,42 +9,27 @@
 [#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
 [#assign productObject = blueprintObject.Product]
-[#assign solutionObject = blueprintObject.Solution]
-[#assign solutionTiers = solutionObject.Tiers]
-[#assign segmentObject = blueprintObject.Segment]
-
+[#assign sharedComponentsPresent = (blueprintObject.Solution.SharedComponents)?? ]
+[#if sharedComponentsPresent]
+    [#assign sharedComponents = blueprintObject.Solution.sharedComponents]
+[/#if]
+    
 [#-- Reference data --]
 [#assign regions = blueprintObject.Regions]
-[#assign environments = blueprintObject.Environments]
-[#assign categories = blueprintObject.Categories]
-[#assign tiers = blueprintObject.Tiers]
-[#assign routeTables = blueprintObject.RouteTables]
-[#assign networkACLs = blueprintObject.NetworkACLs]
-[#assign storage = blueprintObject.Storage]
-[#assign processors = blueprintObject.Processors]
-[#assign ports = blueprintObject.Ports]
-[#assign portMappings = blueprintObject.PortMappings]
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
 [#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
-[#assign environmentObject = environments[segmentObject.Environment]]
-[#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
 [#-- Key ids/names --]
 [#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
 [#assign productId = productObject.Id]
 [#assign productName = productObject.Name]
-[#assign segmentId = segmentObject.Id!environmentObject.Id]
-[#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
 [#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
-[#assign environmentId = environmentObject.Id]
-[#assign environmentName = environmentObject.Name]
-[#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
 [#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
@@ -69,14 +54,45 @@
 
 [#-- Product --]
 [#assign snsEnabled = false]
+[#assign rotateKeys = (productObject.RotateKeys)!true]
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Resources" : { 
-        [#assign count = 0]
+        [#-- Key for product --]
+        "cmk" : {
+            "Type" : "AWS::KMS::Key",
+            "Properties" : {
+                "Description" : "${productName}",
+                "Enabled" : true,
+                "EnableKeyRotation" : ${(rotateKeys)?string("true","false")},
+                "KeyPolicy" : {
+                    "Version": "2012-10-17",
+                    "Statement": [ 
+                        {
+                            "Effect": "Allow",
+                            "Principal": { 
+                                "AWS": { 
+                                    "Fn::Join": [
+                                        "", 
+                                        [
+                                            "arn:aws:iam::",
+                                            { "Ref" : "AWS::AccountId" },
+                                            ":root"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "Action": [ "kms:*" ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        }
         [#-- SNS for product --]
         [#if snsEnabled]
-            "snsXalerts" : {
+            ,"snsXalerts" : {
                 "Type": "AWS::SNS::Topic",
                 "Properties" : {
                     "DisplayName" : "${(productName + "-alerts")[0..9]}",
@@ -89,16 +105,14 @@
                     ]
                 }
             } 
-            [#assign count = count + 1]
-        [/#if]
-        [#-- Shared product level resources if we are in the product region --]
+       [/#if]
+       [#-- Shared product level resources if we are in the product region --]
         [#if (regionId == productRegionId)]
-            [#if solutionObject.SharedComponents??]
-                [#list solutionObject.SharedComponents as component] 
+            [#if sharedComponentsPresent]
+                [#list sharedComponents as component] 
                     [#if component.S3??]
                         [#assign s3 = component.S3]
-                        [#if count > 0],[/#if]
-                        "s3X${component.Id}" : {
+                        ,"s3X${component.Id}" : {
                             "Type" : "AWS::S3::Bucket",
                             "Properties" : {
                                 [#if s3.Name??]
@@ -107,8 +121,8 @@
                                     "BucketName" : "${component.Name}.${productDomain}",
                                 [/#if]
                                 "Tags" : [ 
-                                    { "Key" : "gs:product", "Value" : "${productId}" },
-                                    { "Key" : "gs:category", "Value" : "${categoryId}" }
+                                    { "Key" : "cot:product", "Value" : "${productId}" },
+                                    { "Key" : "cot:category", "Value" : "${categoryId}" }
                                 ]
                                 [#if s3.Lifecycle??]
                                     ,"LifecycleConfiguration" : {
@@ -125,7 +139,6 @@
                                 [/#if]
                             }
                         }
-                        [#assign count = count + 1]
                     [/#if]
                 [/#list]
             [/#if]
@@ -133,20 +146,20 @@
     },
     
     "Outputs" : {
-        [#assign count = 0]
+        "cmkXproductXcmk" : {
+            "Value" : { "Ref" : "cmk" }
+        }
         [#if snsEnabled]
-            "snsXproductXalertsX${regionId?replace("-","")}" : {
+            ,"snsXproductXalertsX${regionId?replace("-","")}" : {
                 "Value" : { "Ref" : "snsXalerts" }
             }
-            [#assign count = count + 1]
         [/#if]
         [#if (regionId == productRegionId)]
-            [#if count > 0],[/#if]
-            "domainXproductXdomain" : {
+            ,"domainXproductXdomain" : {
                 "Value" : "${productDomain}"
             }
-            [#if solutionObject.SharedComponents??]
-                [#list solutionObject.SharedComponents as component] 
+            [#if sharedComponentsPresent]
+                [#list sharedComponents as component] 
                     [#if component.S3??]
                         ,"s3XproductX${component.Id}" : {
                             "Value" : { "Ref" : "s3X${component.Id}" }
