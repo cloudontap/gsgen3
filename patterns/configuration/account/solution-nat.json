@@ -72,7 +72,7 @@
                 "Volumes" : [
                     {
                         "Device" : "/dev/sdp",
-                        "Size" : "100
+                        "Size" : "100"
                     }
                 ]
             }

@@ -1,7 +1,7 @@
 {
-    "Segment": {
-        "Title": "Application Lifecycle Management Environment",
-        "Environment": "alm"
+    "Segment" : {
+        "Title" : "Application Lifecycle Management Environment",
+        "Environment" : "alm"
     },
     "Processors" : {
         "default" : {
