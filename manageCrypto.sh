@@ -10,7 +10,7 @@ CRYPTO_OPERATION_DEFAULT="decrypt"
 CRYPTO_FILENAME_DEFAULT="credentials.json"
 function usage() {
   echo -e "\nManage cryptographic operations using KMS" 
-  echo -e "\nUsage: $(basename $0) -e -d -n -f CRYPTO_FILE -p JSON_PATH -t CRYPTO_TEXT -a ALIAS -k KEYID -b -u -v\n"
+  echo -e "\nUsage: $(basename $0) -e -d -n -f CRYPTO_FILE -p JSON_PATH -t CRYPTO_TEXT -a ALIAS -k KEYID -b -u -v -q\n"
   echo -e "\nwhere\n"
   echo -e "(o) -a ALIAS for the master key to be used"
   echo -e "(o) -b force base64 decode of the input before processing"
@@ -21,8 +21,9 @@ function usage() {
   echo -e "(o) -k KEYID for the master key to be used"
   echo -e "(o) -n no alteration to CRYPTO_TEXT (pass through as is)"
   echo -e "(o) -p JSON_PATH is the path to the attribute within CRYPTO_FILE to be processed"
+  echo -e "(o) -q don't display result (quiet)"
   echo -e "(o) -t CRYPTO_TEXT is the plaintext or ciphertext to be processed"
-  echo -e "    -u update the attribute at JSON_PATH"
+  echo -e "    -u update the attribute at JSON_PATH (if provided), or replace CRYPTO_FILE with operation result"
   echo -e "    -v result is base64 decoded (visible)"
   echo -e "\nDEFAULTS:\n"
   echo -e "OPERATION = ${CRYPTO_OPERATION_DEFAULT}"
@@ -42,7 +43,7 @@ function usage() {
   echo -e "4. If a file at CRYPTO_FILE can't be located based on current directory, it will be"
   echo -e "   treated as a relative directory using the default filename"
   echo -e "5. Don't include \"alias/\" in any provided alias"
-  echo -e "6. If decrypting, the key is located as follows,"
+  echo -e "6. If encrypting, the key is located as follows,"
   echo -e "   - use KEYID if provided"
   echo -e "   - use ALIAS if provided"
   echo -e "   - if in segment directory, use segment keyid if available"
@@ -56,7 +57,7 @@ function usage() {
 }
 
 # Parse options
-while getopts ":a:bdef:hk:np:t:uv" opt; do
+while getopts ":a:bdef:hk:np:qt:uv" opt; do
     case $opt in
         a)
             ALIAS=$OPTARG
@@ -85,11 +86,14 @@ while getopts ":a:bdef:hk:np:t:uv" opt; do
         p)
             JSON_PATH=$OPTARG
             ;;
+        q)
+            CRYPTO_QUIET="true"
+            ;;
         t)
             CRYPTO_TEXT=$OPTARG
             ;;
         u)
-            JSON_UPDATE="true"
+            CRYPTO_UPDATE="true"
             ;;
         v)
             CRYPTO_VISIBLE="true"
@@ -124,16 +128,19 @@ fi
 if [[ "segment" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXsegmentXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILENAME_DEFAULT}")
+    if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILE}"); fi
 fi
 if [[ "product" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXproductXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
+    if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILE}"); fi
 fi
 if [[ "account" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
     FILES+=("${INFRASTRUCTURE_DIR}/${AID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
+    if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${AID}/credentials/${CRYPTO_FILENAME_DEFAULT}"); fi
 fi
-if [[ "root" =~ ${LOCATION} ]]; then
+if [[ ("root" =~ ${LOCATION}) || ("integrator" =~ ${LOCATION}) ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
 fi
 
@@ -159,10 +166,7 @@ if [[ (-n "${JSON_PATH}") ]]; then
         echo -e "\nNothing to encrypt"
         usage
     fi
-else
-    # Ensure no update attempted
-    JSON_UPDATE="false"
-    
+else    
     if [[ -z "${CRYPTO_TEXT}" ]]; then
         if [[ -z "${CRYPTO_FILE}" ]]; then
             echo -e "\nInsufficient arguments"
@@ -218,7 +222,8 @@ case ${CRYPTO_OPERATION} in
         ;;
     noop)
         # Don't touch CRYPTO_TEXT so either existing value will be displayed, or
-        # unchanged value will be saved. This is mainly for the account id at the moment.
+        # unchanged value will be saved.
+        RESULT=0
         ;;
 esac
 RESULT=$?
@@ -230,17 +235,24 @@ if [[ "${RESULT}" -eq 0 ]]; then
     fi
 
     # Update JSON if required
-    if [[ "${JSON_UPDATE}" == "true" ]]; then
-        cat "${TARGET_FILE}" | jq "${JSON_PATH}=\"${CRYPTO_TEXT}\"" > "temp_${CRYPTO_FILENAME_DEFAULT}"
-        RESULT=$?
-        if [[ "${RESULT}" -eq 0 ]]; then
-            mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+    if [[ "${CRYPTO_UPDATE}" == "true" ]]; then
+        if [[ -n "${JSON_PATH}" ]]; then
+            cat "${TARGET_FILE}" | jq --indent 4 "${JSON_PATH}=\"${CRYPTO_TEXT}\"" > "temp_${CRYPTO_FILENAME_DEFAULT}"
+            RESULT=$?
+            if [[ "${RESULT}" -eq 0 ]]; then
+                mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+            fi
+        else
+            echo "${CRYPTO_TEXT}" > "temp_${CRYPTO_FILENAME_DEFAULT}"
+            RESULT=$?
+            if [[ "${RESULT}" -eq 0 ]]; then
+                mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+            fi            
         fi
     fi
 fi
 
-if [[ "${RESULT}" -eq 0 ]]; then
+if [[ ("${RESULT}" -eq 0) && ( "${CRYPTO_QUIET}" != "true") ]]; then
     # Display result
     echo -n "${CRYPTO_TEXT}"
-
 fi
