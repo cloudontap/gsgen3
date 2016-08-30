@@ -8,7 +8,7 @@ BASE64_REGEX="^[A-Za-z0-9+/=\n]\+$"
 
 CREDENTIAL_TYPE_VALUES=("Login" "API")
 function usage() {
-  echo -e "\nManage a credential" 
+  echo -e "\nManage crypto for credential storage"
   echo -e "\nUsage: $(basename $0) -f CRYPTO_FILE -n CREDENTIAL_NAME -t CREDENTIAL_TYPE -i CREDENTIAL_ID -s CREDENTIAL_SECRET -e CREDENTIAL_EMAIL -v\n"
   echo -e "\nwhere\n"
   echo -e "(o) -e CREDENTIAL_EMAIL is the email associated with the credential (not encrypted)"

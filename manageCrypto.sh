@@ -158,7 +158,7 @@ if [[ (-n "${JSON_PATH}") ]]; then
         echo -e "\nCan't locate target file"
         usage
     fi
-    # Default cipherdata to that in the element    
+    # Default cipherdata to that in the element
     JSON_TEXT=$(cat "${TARGET_FILE}" | jq -r "${JSON_PATH} | select (.!=null)" )
     CRYPTO_TEXT="${CRYPTO_TEXT:-$JSON_TEXT}"
 
@@ -177,6 +177,9 @@ else
                 usage
             fi
         fi
+        # Default cipherdata to the file contents
+        FILE_TEXT=$(cat "${TARGET_FILE}" )
+        CRYPTO_TEXT="${CRYPTO_TEXT:-$FILE_TEXT}"
     fi
 fi
     
@@ -185,12 +188,8 @@ if [[ ("${CRYPTO_OPERATION}" == "encrypt") && (-z "${KEYID}") ]]; then
     usage
 fi
 
-if [[ -n "${CRYPTO_TEXT}" ]]; then
-    echo -n "${CRYPTO_TEXT}" > ./ciphertext.src
-else
-    cp ${TARGET_FILE} ./ciphertext.src
-fi
-
+# Prepare ciphertext for processing
+echo -n "${CRYPTO_TEXT}" > ./ciphertext.src
 
 # base64 decode if necessary
 if [[ -n "${CRYPTO_DECODE}" ]]; then
@@ -234,7 +233,7 @@ if [[ "${RESULT}" -eq 0 ]]; then
         CRYPTO_TEXT=$(echo -n "${CRYPTO_TEXT}" | dos2unix | base64 -d)
     fi
 
-    # Update JSON if required
+    # Update if required
     if [[ "${CRYPTO_UPDATE}" == "true" ]]; then
         if [[ -n "${JSON_PATH}" ]]; then
             cat "${TARGET_FILE}" | jq --indent 4 "${JSON_PATH}=\"${CRYPTO_TEXT}\"" > "temp_${CRYPTO_FILENAME_DEFAULT}"
