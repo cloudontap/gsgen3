@@ -113,7 +113,7 @@ if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.AWS.Region=\$AWS_
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.AWS.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.AWS.SES.Region=\$AWS_SES_REGION"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
-if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate=\$TID"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TID"; fi
 
 # Generate the tenant profile
 cat ${PROFILE} | jq --indent 4 \
