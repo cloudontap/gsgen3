@@ -13,7 +13,7 @@ function usage() {
   echo -e "(o) -k ACCESS_KEY specifies the API access key value"
   echo -e "(o) -p AWS_PASSWORD specifies the AWS account password"
   echo -e "(o) -s SECRET_KEY specifies the API secret key value"
-  echo -e "(m) -t TID is the organisation id"
+  echo -e "(m) -t TID is the tenant id"
   echo -e "(o) -u AWS_USERNAME specifies the AWS account username"
   echo -e "\nDEFAULTS:\n"
   echo -e "\nNOTES:\n"
@@ -70,7 +70,7 @@ CRYPTO_FILE_PATH="tenants/${TID}/${TAID}"
 OPTIONS="-v"
 if [[ -n "${AWS_USERNAME}" ]]; then OPTIONS="${OPTIONS} -i ${AWS_USERNAME}"; fi
 if [[ -n "${AWS_PASSWORD}" ]]; then OPTIONS="${OPTIONS} -s ${AWS_PASSWORD}"; fi
-${BIN_DIR}/manageCredential.sh -f "${CRYPTO_FILE_PATH}" -n "root+aws" -t "Login" ${OPTIONS}
+${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -n "root+aws" -t "Login" ${OPTIONS}
 RESULT=$?
 if [[ "${RESULT}" -ne 0 ]]; then exit; fi
 
@@ -78,5 +78,5 @@ if [[ "${RESULT}" -ne 0 ]]; then exit; fi
 OPTIONS="-v"
 if [[ -n "${ACCESS_KEY}" ]]; then OPTIONS="${OPTIONS} -i ${ACCESS_KEY}"; fi
 if [[ -n "${SECRET_KEY}" ]]; then OPTIONS="${OPTIONS} -s ${SECRET_KEY}"; fi
-${BIN_DIR}/manageCredential.sh -f "${CRYPTO_FILE_PATH}" -n "gosource-root" -t "API" ${OPTIONS}
+${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -n "gosource-root" -t "API" ${OPTIONS}
 RESULT=$?
