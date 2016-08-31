@@ -52,6 +52,7 @@ function usage() {
   echo -e "   - otherwise error"
   echo -e "7. The result is sent to stdout and is base64 encoded unless the"
   echo -e "   visibility flag is set"
+  echo -e "8. Decrypted files will have a \".decrypted\" extension added so they can be ignored by git"
   echo -e ""
   exit
 }
@@ -245,7 +246,11 @@ if [[ "${RESULT}" -eq 0 ]]; then
             echo "${CRYPTO_TEXT}" > "temp_${CRYPTO_FILENAME_DEFAULT}"
             RESULT=$?
             if [[ "${RESULT}" -eq 0 ]]; then
-                mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+                if [[ "${CRYPTO_OPERATION}" == "decrypt" ]]; then
+                    mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}.decrypted"
+                else
+                    mv "temp_${CRYPTO_FILENAME_DEFAULT}" "${TARGET_FILE}"
+                fi
             fi            
         fi
     fi
