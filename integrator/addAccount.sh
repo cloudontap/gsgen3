@@ -159,7 +159,7 @@ if [[ ${RESULT} -eq 0 ]]; then
     
     # Copy across the default credentials profile
     if [[ ! -f ${MASTER_ACCOUNT_DIR}/credentials.json ]]; then
-        cp ${BIN_DIR}/templates/credentials/rootCredentials.json ${MASTER_ACCOUNT_DIR}/credentials.json
+        echo "{}" > ${MASTER_ACCOUNT_DIR}/credentials.json
     fi
 fi
 
