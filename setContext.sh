@@ -3,6 +3,11 @@
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi                           
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# If the context has already been determined, there is nothing to do
+if [[ -n "${GSGEN_CONTEXT_DEFINED}" ]]; then exit; fi
+export GSGEN_CONTEXT_DEFINED="true"
+GSGEN_CONTEXT_DEFINED_LOCAL="true"
+
 export CURRENT_DIR="$(pwd)"
 
 # Generate the list of files constituting the blueprint
