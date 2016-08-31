@@ -8,7 +8,7 @@ function usage() {
     echo -e "\nUpdate SSL certificate details in AWS" 
     echo -e "\nUsage: $(basename $0) -i CERTIFICATE_ID -p CERTIFICATE_PUBLIC -v CERTIFICATE_PRIVATE -c CERTIFICATE_CHAIN -r REGION -q"
     echo -e "\nwhere\n"
-    echo -e "(m) -c CERTIFICATE_CHAIN is the path to the fiel containing intermediate certificates"
+    echo -e "(m) -c CERTIFICATE_CHAIN is the path to the file containing intermediate certificates"
     echo -e "    -h shows this text"
     echo -e "(m) -i CERTIFICATE_ID is the id of the certificate"
     echo -e "(m) -p CERTIFICATE_PUBLIC is the path to the public certificate file"
