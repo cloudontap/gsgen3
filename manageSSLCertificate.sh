@@ -12,7 +12,7 @@ function usage() {
     echo -e "    -h shows this text"
     echo -e "(m) -i CERTIFICATE_ID is the id of the certificate"
     echo -e "(m) -p CERTIFICATE_PUBLIC is the path to the public certificate file"
-    echo -e "(m) -q minimal output (quiet)"
+    echo -e "(o) -q minimal output (quiet)"
     echo -e "(m) -r REGION is the AWS region identifier for the region where the certificate should be updated"
     echo -e "(m) -v CERTIFICATE_PRIVATE is the path to the private certificate file"
     echo -e "\nNOTES:\n"
