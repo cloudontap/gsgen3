@@ -4,7 +4,7 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # If the context has already been determined, there is nothing to do
-if [[ -n "${GSGEN_CONTEXT_DEFINED}" ]]; then exit; fi
+if [[ -n "${GSGEN_CONTEXT_DEFINED}" ]]; then return 0; fi
 export GSGEN_CONTEXT_DEFINED="true"
 GSGEN_CONTEXT_DEFINED_LOCAL="true"
 
@@ -120,9 +120,8 @@ else
 fi
     
 # Extract and default key region settings from the composite solution
-export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.AWS.Region | select(.!=null)')}
-export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.AWS.Region | select(.!=null)')}
-export PRODUCT_REGION="${PRODUCT_REGION:-$ACCOUNT_REGION}"
+export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.Region | select(.!=null)')}
+export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Region | select(.!=null)')}
 export REGION="${REGION:-$PRODUCT_REGION}"
 
 if [[ -z "${REGION}" ]]; then
@@ -249,7 +248,9 @@ git status >/dev/null 2>&1
 if [[ $? -eq 0 ]]; then
     export WITHIN_GIT_REPO="true"
     export FILE_MV="git mv"
+    export FILE_RM="git rm"
 else
     export FILE_MV="mv"
+    export FILE_RM="rm"
 fi
 
