@@ -94,9 +94,9 @@ if [[ -f ${TENANT_DIR}/tenant.json ]]; then
         echo -e "\nTenant profile already exists. Maybe try using update option?"
         usage
     fi
-    PROFILE=${TENANT_DIR}/tenant.json
+    TENANT_PROFILE=${TENANT_DIR}/tenant.json
 else
-    PROFILE=${BIN_DIR}/templates/blueprint/tenant.json
+    TENANT_PROFILE=${BIN_DIR}/templates/blueprint/tenant.json
     DOMAIN=${DOMAIN:-${TID}.$(cat integrator.json | jq -r '.Integrator.Domain.Stem | select(.!=null)')}
     AWS_REGION=${AWS_REGION:-$(cat integrator.json | jq -r '.Integrator.Region | select(.!=null)')}
     AWS_SES_REGION=${AWS_SES_REGION:-$(cat integrator.json | jq -r '.Integrator.SES.Region | select(.!=null)')}
@@ -114,7 +114,7 @@ if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TID"; fi
 
 # Generate the tenant profile
-cat ${PROFILE} | jq --indent 4 \
+cat ${TENANT_PROFILE} | jq --indent 4 \
 --arg TID "${TID}" \
 --arg NAME "${NAME}" \
 --arg TITLE "${TITLE}" \

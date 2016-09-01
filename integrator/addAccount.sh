@@ -131,9 +131,9 @@ if [[ -f ${ACCOUNT_DIR}/account.json ]]; then
         echo -e "\nAccount profile already exists. Maybe try using update option?"
         usage
     fi
-    PROFILE=${ACCOUNT_DIR}/account.json
+    ACCOUNT_PROFILE=${ACCOUNT_DIR}/account.json
 else
-    PROFILE=${BIN_DIR}/templates/blueprint/account.json
+    ACCOUNT_PROFILE=${BIN_DIR}/templates/blueprint/account.json
 fi
 
 # Generate the filter
@@ -149,7 +149,7 @@ if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TAID"; fi
 
 # Generate the account profile
-cat ${PROFILE} | jq --indent 4 \
+cat ${ACCOUNT_PROFILE} | jq --indent 4 \
 --arg TAID "${TAID}" \
 --arg NAME "${NAME}" \
 --arg TITLE "${TITLE}" \
