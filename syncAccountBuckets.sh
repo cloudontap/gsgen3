@@ -66,7 +66,7 @@ pushd ${ACCOUNT_DIR}  > /dev/null 2>&1
 if [[ -z "${DOMAIN}" ]]; then DOMAIN=${AID}.gosource.com.au; fi
 
 # Confirm access to the code bucket
-aws ${PROFILE} --region ${REGION} s3 ls s3://code.${DOMAIN}/ > /dev/null 2>&1
+aws ${AWS_PROFILE} --region ${REGION} s3 ls s3://code.${DOMAIN}/ > /dev/null 2>&1
 RESULT=$?
 if [[ "$RESULT" -ne 0 ]]; then
       echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${AID}\" configuration bucket? If windows, is a profile matching the account been set up? Nothing to do."
@@ -74,10 +74,10 @@ if [[ "$RESULT" -ne 0 ]]; then
 fi
 
 cd ${INFRASTRUCTURE_DIR}/startup
-aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://code.${DOMAIN}/bootstrap/
+aws ${AWS_PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://code.${DOMAIN}/bootstrap/
 
 # Confirm access to the credentials bucket
-aws ${PROFILE} --region ${REGION} s3 ls s3://credentials.${DOMAIN}/ > /dev/null 2>&1
+aws ${AWS_PROFILE} --region ${REGION} s3 ls s3://credentials.${DOMAIN}/ > /dev/null 2>&1
 RESULT=$?
 if [[ "$RESULT" -ne 0 ]]; then
       echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${AID}\" configuration bucket? If windows, is a profile matching the account been set up? Nothing to do."
@@ -85,5 +85,5 @@ if [[ "$RESULT" -ne 0 ]]; then
 fi
 
 cd ${ACCOUNT_CREDENTIALS_DIR}/alm/docker
-aws ${PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} . s3://credentials.${DOMAIN}/${AID}/alm/docker/
+aws ${AWS_PROFILE} --region ${REGION} s3 sync ${DRYRUN} ${DELETE} . s3://credentials.${DOMAIN}/${AID}/alm/docker/
 RESULT=$?

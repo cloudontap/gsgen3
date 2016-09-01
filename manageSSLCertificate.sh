@@ -78,19 +78,19 @@ cp "${CERTIFICATE_PUBLIC}"  "${LOCAL_CERTIFICATE_PUBLIC}"
 cp "${CERTIFICATE_PRIVATE}" "${LOCAL_CERTIFICATE_PRIVATE}"
 cp "${CERTIFICATE_CHAIN}"   "${LOCAL_CERTIFICATE_CHAIN}"
 
-aws ${PROFILE} --region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-ssl > temp_ssl_check.out 2>&1
+aws ${AWS_PROFILE} --region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-ssl > temp_ssl_check.out 2>&1
 RESULT=$?
 if [[ "${QUIET}" != "true" ]]; then cat temp_ssl_check.out; fi
 if [[ "${RESULT}" -ne 0 ]]; then
     if [[ "${MINGW64}" == "true" ]]; then
-        MSYS_NO_PATHCONV=1 aws ${PROFILE} --region ${REGION} iam upload-server-certificate \
+        MSYS_NO_PATHCONV=1 aws ${AWS_PROFILE} --region ${REGION} iam upload-server-certificate \
                                           --server-certificate-name ${CERTIFICATE_ID}-ssl \
                                           --path "/ssl/${CERTIFICATE_ID}/" \
                                           --certificate-body file://${LOCAL_CERTIFICATE_PUBLIC} \
                                           --private-key file://${LOCAL_CERTIFICATE_PRIVATE} \
                                           --certificate-chain file://${LOCAL_CERTIFICATE_CHAIN}
     else
-        aws ${PROFILE} --region ${REGION} iam upload-server-certificate \
+        aws ${AWS_PROFILE} --region ${REGION} iam upload-server-certificate \
                                           --server-certificate-name ${CERTIFICATE_ID}-ssl \
                                           --path "/ssl/${CERTIFICATE_ID}/" \
                                           --certificate-body file://${LOCAL_CERTIFICATE_PUBLIC} \
@@ -101,19 +101,19 @@ if [[ "${RESULT}" -ne 0 ]]; then
     if [[ "${RESULT}" -ne 0 ]]; then exit; fi
 fi
 
-aws ${PROFILE} --region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-cloudfront > temp_cloudfront_check.out 2>&1
+aws ${AWS_PROFILE} --region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-cloudfront > temp_cloudfront_check.out 2>&1
 RESULT=$?
 if [[ "${QUIET}" != "true" ]]; then cat temp_cloudfront_check.out; fi
 if [[ "${RESULT}" -ne 0 ]]; then
     if [[ "${MINGW64}" == "true" ]]; then
-        MSYS_NO_PATHCONV=1  aws ${PROFILE} --region ${REGION} iam upload-server-certificate \
+        MSYS_NO_PATHCONV=1  aws ${AWS_PROFILE} --region ${REGION} iam upload-server-certificate \
                                            --server-certificate-name ${CERTIFICATE_ID}-cloudfront \
                                            --path "/cloudfront/${CERTIFICATE_ID}/" \
                                            --certificate-body file://${LOCAL_CERTIFICATE_PUBLIC} \
                                            --private-key file://${LOCAL_CERTIFICATE_PRIVATE} \
                                            --certificate-chain file://${LOCAL_CERTIFICATE_CHAIN}
     else
-        aws ${PROFILE} --region ${REGION} iam upload-server-certificate 
+        aws ${AWS_PROFILE} --region ${REGION} iam upload-server-certificate 
                                            --server-certificate-name ${CERTIFICATE_ID}-cloudfront \
                                            --path "/cloudfront/${CERTIFICATE_ID}/" \
                                            --certificate-body file://${LOCAL_CERTIFICATE_PUBLIC} \

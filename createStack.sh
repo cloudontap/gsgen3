@@ -83,13 +83,13 @@ fi
 if [[ "${CREATE}" == "true" ]]; then
     DOCREATE="true"
     if [[ "${CHECK}" == "false" ]]; then
-        aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
+        aws ${AWS_PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
         RESULT=$?
         if [ "$RESULT" -eq 0 ]; then DOCREATE="false"; fi
     fi
     if [[ "${DOCREATE}" == "true" ]]; then
         cat $TEMPLATE | jq -c '.' > stripped_${TEMPLATE}
-        aws ${PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://stripped_${TEMPLATE} --capabilities CAPABILITY_IAM
+        aws ${AWS_PROFILE} --region ${REGION} cloudformation create-stack --stack-name $STACKNAME --template-body file://stripped_${TEMPLATE} --capabilities CAPABILITY_IAM
         RESULT=$?
         if [ "$RESULT" -ne 0 ]; then exit; fi
     fi
@@ -98,7 +98,7 @@ fi
 RESULT=1
 if [[ "${WAIT}" == "true" ]]; then
   while true; do
-    aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK
+    aws ${AWS_PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK
     grep "StackStatus" $STACK > STATUS.txt
     cat STATUS.txt
     grep "CREATE_COMPLETE" STATUS.txt >/dev/null 2>&1

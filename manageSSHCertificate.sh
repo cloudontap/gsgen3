@@ -63,12 +63,12 @@ fi
 LOCAL_CERTIFICATE_PUBLIC="temp_$(basename ${CERTIFICATE_PUBLIC})"
 cp "${CERTIFICATE_PUBLIC}"  "${LOCAL_CERTIFICATE_PUBLIC}"
 
-aws ${PROFILE} --region ${REGION} ec2 describe-key-pairs --key-name ${CERTIFICATE_ID} > temp_ssh_check.out 2>&1
+aws ${AWS_PROFILE} --region ${REGION} ec2 describe-key-pairs --key-name ${CERTIFICATE_ID} > temp_ssh_check.out 2>&1
 RESULT=$?
 if [[ "${QUIET}" != "true" ]]; then cat temp_ssh_check.out; fi
 if [[ "${RESULT}" -ne 0 ]]; then
     CRT=$(cat "${LOCAL_CERTIFICATE_PUBLIC}" | dos2unix | awk 'BEGIN {RS="\n"} /^[^-]/ {printf $1}')
-    aws ${PROFILE} --region ${REGION} ec2 import-key-pair --key-name ${CERTIFICATE_ID} --public-key-material $CRT
+    aws ${AWS_PROFILE} --region ${REGION} ec2 import-key-pair --key-name ${CERTIFICATE_ID} --public-key-material $CRT
     RESULT=$?
 fi
 

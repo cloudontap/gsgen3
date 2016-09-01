@@ -83,13 +83,13 @@ if [[ "${CHECK}" = "true" && ! -f "$STACK" ]]; then
 fi
 
 if [[ "${DELETE}" = "true" ]]; then
-    aws ${PROFILE} --region ${REGION} cloudformation delete-stack --stack-name $STACKNAME 2>/dev/null
+    aws ${AWS_PROFILE} --region ${REGION} cloudformation delete-stack --stack-name $STACKNAME 2>/dev/null
 fi
 
 RESULT=1
 if [[ "${WAIT}" = "true" ]]; then
     while true; do
-        aws ${PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
+        aws ${AWS_PROFILE} --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
         if [ "$RESULT" -eq 255 ]; then
             # Assume stack doesn't exist
             RESULT=0

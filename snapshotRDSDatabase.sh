@@ -96,16 +96,16 @@ if [[ "${SUFFIX}" != "" ]]; then
 fi
 
 if [[ "${CREATE}" == "true" ]]; then
-    aws ${PROFILE} --region ${REGION} rds create-db-snapshot --db-snapshot-identifier ${DB_SNAPSHOT_IDENTIFIER} --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}
+    aws ${AWS_PROFILE} --region ${REGION} rds create-db-snapshot --db-snapshot-identifier ${DB_SNAPSHOT_IDENTIFIER} --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}
     RESULT=$?
     if [ "$RESULT" -ne 0 ]; then exit; fi
 fi
 
 if [[ ("${RETAIN}" != "") || ("${AGE}" != "") ]]; then
     if [[ "${RETAIN}" != "" ]]; then
-        LIST=$(aws ${PROFILE} --region ${REGION} rds describe-db-snapshots --snapshot-type manual | grep DBSnapshotIdentifier | grep ${DB_INSTANCE_IDENTIFIER} | cut -d'"' -f 4 | sort | head -n -${RETAIN})
+        LIST=$(aws ${AWS_PROFILE} --region ${REGION} rds describe-db-snapshots --snapshot-type manual | grep DBSnapshotIdentifier | grep ${DB_INSTANCE_IDENTIFIER} | cut -d'"' -f 4 | sort | head -n -${RETAIN})
     else
-        LIST=$(aws ${PROFILE} --region ${REGION} rds describe-db-snapshots --snapshot-type manual | grep DBSnapshotIdentifier | grep ${DB_INSTANCE_IDENTIFIER} | cut -d'"' -f 4 | sort)
+        LIST=$(aws ${AWS_PROFILE} --region ${REGION} rds describe-db-snapshots --snapshot-type manual | grep DBSnapshotIdentifier | grep ${DB_INSTANCE_IDENTIFIER} | cut -d'"' -f 4 | sort)
     fi
     if [[ "${AGE}" != "" ]]; then
         BASELIST=${LIST}
@@ -122,7 +122,7 @@ if [[ ("${RETAIN}" != "") || ("${AGE}" != "") ]]; then
     fi
     if [[ "${LIST}" != "" ]]; then
         for SNAPSHOT in $(echo $LIST); do
-            aws ${PROFILE} --region ${REGION} rds delete-db-snapshot --db-snapshot-identifier $SNAPSHOT
+            aws ${AWS_PROFILE} --region ${REGION} rds delete-db-snapshot --db-snapshot-identifier $SNAPSHOT
         done
     fi
 fi
@@ -130,7 +130,7 @@ fi
 RESULT=1
 if [[ "${WAIT}" == "true" ]]; then
     while true; do
-        aws ${PROFILE} --region ${REGION} rds describe-db-snapshots --db-snapshot-identifier ${DB_SNAPSHOT_IDENTIFIER} 2>/dev/null | grep "Status" > STATUS.txt
+        aws ${AWS_PROFILE} --region ${REGION} rds describe-db-snapshots --db-snapshot-identifier ${DB_SNAPSHOT_IDENTIFIER} 2>/dev/null | grep "Status" > STATUS.txt
         cat STATUS.txt
         grep "available" STATUS.txt >/dev/null 2>&1
         RESULT=$?

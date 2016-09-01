@@ -92,27 +92,27 @@ if [[ "${LOCATION}" != "segment" ]]; then
 fi
 
 # Find the cluster
-CLUSTER_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsX${TIER}X${COMPONENT}.*)\").arn")
+CLUSTER_ARN=$(aws ${AWS_PROFILE} --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsX${TIER}X${COMPONENT}.*)\").arn")
 if [[ -z "${CLUSTER_ARN}" ]]; then
     echo -e "\nUnable to locate ECS cluster"
     usage
 fi
 
 # Find the task definition
-TASK_DEFINITION_ARN=$(aws ${PROFILE} --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsTaskX${TIER}X${COMPONENT}X${TASK}.*)\").arn")
+TASK_DEFINITION_ARN=$(aws ${AWS_PROFILE} --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsTaskX${TIER}X${COMPONENT}X${TASK}.*)\").arn")
 if [[ -z "${TASK_DEFINITION_ARN}" ]]; then
     echo -e "\nUnable to locate task definition"
     usage
 fi
 
-aws ${PROFILE} --region ${REGION} ecs run-task --cluster "${CLUSTER_ARN}" --task-definition "${TASK_DEFINITION_ARN}" --count 1 --overrides "{\"containerOverrides\":[{\"name\":\"${TIER}-${COMPONENT}-${TASK}\",${ENV_STRUCTURE}}]}" > STATUS.txt
+aws ${AWS_PROFILE} --region ${REGION} ecs run-task --cluster "${CLUSTER_ARN}" --task-definition "${TASK_DEFINITION_ARN}" --count 1 --overrides "{\"containerOverrides\":[{\"name\":\"${TIER}-${COMPONENT}-${TASK}\",${ENV_STRUCTURE}}]}" > STATUS.txt
 RESULT=$?
 if [ "$RESULT" -ne 0 ]; then exit; fi
 cat STATUS.txt
 TASK_ARN=$(cat STATUS.txt | jq -r ".tasks[0].taskArn")
 
 while true; do
-    aws ${PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[] | select(.taskArn == \"${TASK_ARN}\") | {lastStatus: .lastStatus}" > STATUS.txt
+    aws ${AWS_PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[] | select(.taskArn == \"${TASK_ARN}\") | {lastStatus: .lastStatus}" > STATUS.txt
     cat STATUS.txt
     grep "STOPPED" STATUS.txt >/dev/null 2>&1
     RESULT=$?
@@ -124,7 +124,7 @@ while true; do
 done
 
 # Show the exit codes and return an error if they are not 0
-aws ${PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[].containers[] | {name: .name, exitCode: .exitCode}" > STATUS.txt
+aws ${AWS_PROFILE} --region ${REGION} ecs describe-tasks --cluster ${CLUSTER_ARN} --tasks ${TASK_ARN} 2>/dev/null | jq ".tasks[].containers[] | {name: .name, exitCode: .exitCode}" > STATUS.txt
 cat STATUS.txt
 RESULT=$(cat STATUS.txt | jq ".exitCode" | grep -m 1 -v "^0$" | tr -d '"')
 RESULT=${RESULT:-0}

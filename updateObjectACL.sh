@@ -66,14 +66,14 @@ fi
 . ${BIN_DIR}/setContext.sh
 
 # Get the list of ECS clusters  
-for KEY in $(aws ${PROFILE} --region ${REGION} s3 ls s3://${BUCKET}${PREFIX} --recursive  | tr -s " " | tr -d "\r" | cut -d " " -f4); do
+for KEY in $(aws ${AWS_PROFILE} --region ${REGION} s3 ls s3://${BUCKET}${PREFIX} --recursive  | tr -s " " | tr -d "\r" | cut -d " " -f4); do
     if [[ "${DISPLAY_ACLS}" == "true" ]]; then
         # Show current ACL
         echo "Key=${KEY}"
-        aws ${PROFILE} --region ${REGION} s3api get-object-acl --bucket "${BUCKET}" --key "${KEY}"
+        aws ${AWS_PROFILE} --region ${REGION} s3api get-object-acl --bucket "${BUCKET}" --key "${KEY}"
     else
         # Update the ACL
-        aws ${PROFILE} --region ${REGION} s3api put-object-acl --bucket "${BUCKET}" --key "${KEY}" --acl "${ACL}"
+        aws ${AWS_PROFILE} --region ${REGION} s3api put-object-acl --bucket "${BUCKET}" --key "${KEY}" --acl "${ACL}"
     fi
 done
 
