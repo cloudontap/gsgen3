@@ -2,7 +2,7 @@
 
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && cd .. && pwd )
-trap '${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
   echo -e "\nAdd a new tenant"
@@ -49,7 +49,7 @@ while getopts ":d:hl:n:o:r:s:t:u" opt; do
     r)
       AWS_REGION=$OPTARG
        ;;
-    r)
+    s)
       AWS_SES_REGION=$OPTARG
        ;;
     t)
@@ -69,8 +69,6 @@ while getopts ":d:hl:n:o:r:s:t:u" opt; do
    esac
 done
 
-UPDATE_TENANT="${UPDATE_TENANT:-false}"
-
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TID}") ]]; then
   echo -e "\nInsufficient arguments"
@@ -87,7 +85,7 @@ if [[ "${LOCATION}" != "integrator" ]]; then
 fi
 
 # Create the directory for the tenant
-TENANT_DIR="tenants/${TID}"
+TENANT_DIR="${ROOT_DIR}/tenants/${TID}"
 mkdir -p ${TENANT_DIR}
 
 # Check whether the tenant profile is already in place
@@ -100,8 +98,8 @@ if [[ -f ${TENANT_DIR}/tenant.json ]]; then
 else
     PROFILE=${BIN_DIR}/templates/blueprint/tenant.json
     DOMAIN=${DOMAIN:-${TID}.$(cat integrator.json | jq -r '.Integrator.Domain.Stem | select(.!=null)')}
-    AWS_REGION=${AWS_REGION:-$(cat integrator.json | jq -r '.Integrator.AWS.Region | select(.!=null)')}
-    AWS_SES_REGION=${AWS_SES_REGION:-$(cat integrator.json | jq -r '.Integrator.AWS.SES.Region | select(.!=null)')}
+    AWS_REGION=${AWS_REGION:-$(cat integrator.json | jq -r '.Integrator.Region | select(.!=null)')}
+    AWS_SES_REGION=${AWS_SES_REGION:-$(cat integrator.json | jq -r '.Integrator.SES.Region | select(.!=null)')}
 fi
 
 # Generate the filter
@@ -109,9 +107,9 @@ FILTER=". | .Tenant.Id=\$TID"
 if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Tenant.Name=\$NAME"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Tenant.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Tenant.Description=\$DESCRIPTION"; fi
-if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.AWS.Region=\$AWS_REGION"; fi
-if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.AWS.Region=\$AWS_REGION"; fi
-if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.AWS.SES.Region=\$AWS_SES_REGION"; fi
+if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.Region=\$AWS_REGION"; fi
+if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
+if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.SES.Region=\$AWS_SES_REGION"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TID"; fi
 
@@ -129,12 +127,14 @@ RESULT=$?
 
 if [[ ${RESULT} -eq 0 ]]; then
     mv ${TENANT_DIR}/temp_tenant.json ${TENANT_DIR}/tenant.json
+else
+    echo -e "\nError creating tenant profile" 
+    exit
+fi
 
-    # Provide an empty credentials profile for the tenant
-    if [[ ! -f ${TENANT_DIR}/credentials.json ]]; then
-        echo "{}" > ${TENANT_DIR}/credentials.json
-    fi
-
+# Provide an empty credentials profile for the tenant
+if [[ ! -f ${TENANT_DIR}/credentials.json ]]; then
+    echo "{}" > ${TENANT_DIR}/credentials.json
 fi
 
 
