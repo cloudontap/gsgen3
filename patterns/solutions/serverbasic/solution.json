@@ -1,19 +1,20 @@
 {
     "Solution" : {
-        "Title" : "Standalone ALM server hosted on a directly exposed single server",
-        "Id" : "alm",
-        "Name" : "alm",
+        "Id" : "serverbasic",
+        "Name" : "serverbasic",
+        "Title" : "Externally exposed server",
+        "Description" : "SSL/SSH Traffic permitted to a fixed IP address. Additional Storage provided",
         "Tiers": [
             {
                 "Id"  : "web",
                 "RouteTable" : "external",
                 "Components" : [
                     {
-                        "Title" : "ALM Server",
-                        "Id" : "alm",
-                        "Name" : "alm",
-                        "Slices" : ["alm"],
-                        "Role" : "ALM",
+                        "Title" : "WWW Server",
+                        "Id" : "www",
+                        "Name" : "www",
+                        "Slices" : ["www"],
+                        "Role" : "WWW",
                         "EC2" : {
                             "Ports" : [
                                 "https",
@@ -22,21 +23,22 @@
                             "LoadBalanced": false,
                             "FixedIP": true
                         }
-                    },
-                    {
-                        "Title" : "Binary images",
-                        "Id" : "binaries",
-                        "Name" : "binaries",
-                        "Slices" : ["alm-s3"],
-                        "S3" : {}
                     }
                 ]
             }
         ]
     },
     "Segment" : {
+        "SSHPerSegment" : true,
         "NAT" : {
             "Enabled" : false
+        }
+    },
+    "Processors" : {
+        "default" : {
+            "ECS" : {
+                "Processor" : "t2.small",
+            }
         }
     },
     "Storage" : {

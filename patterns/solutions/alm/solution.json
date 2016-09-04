@@ -1,8 +1,9 @@
 {
     "Solution" : {
-        "Title" : "Standalone ALM server hosted on a directly exposed single server",
         "Id" : "alm",
         "Name" : "alm",
+        "Title" : "Standalone ALM server hosted on a directly exposed single server",
+        "Description" : "Role permits additional configuration via Puppet. Binary S3 bucket for build images",
         "Tiers": [
             {
                 "Id"  : "web",
@@ -37,6 +38,13 @@
     "Segment" : {
         "NAT" : {
             "Enabled" : false
+        }
+    },
+    "Processors" : {
+        "default" : {
+            "ECS" : {
+                "Processor" : "t2.small",
+            }
         }
     },
     "Storage" : {

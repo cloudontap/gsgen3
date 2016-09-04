@@ -1,64 +1,86 @@
-[#ftl]
 {
     "Solution" : {
-        "Title" : "Docker based alpha stage product system",
-        "Id" : "alpha-docker",
-        "Name" : "alpha-docker",
+        "Id" : "webappbasic",
+        "Name" : "webappbasic",
+        "Title" : "Docker based web application",
         "Tiers" : [
             {
                 "Id" : "elb",
                 "Components" : [
                     {
-                        "Title" : "Website Load Balancer",
                         "Id" : "www",
                         "Name" : "www",
-                        "Slices" : ["website"],
+                        "Title" : "Load Balancer",
+                        "Slices" : ["www-elb"],
                         "ELB" : {
-                            "PortMappings" : ["https"]
+                            "PortMappings" : ["https"],
+                            "Logs" : true
                         }
                     }
                 ]
             },
             {
                 "Id" : "web",
-                "RouteTable" : "external",
                 "Components" : [
                     {
-                        "Title" : "Web Server",
                         "Id" : "www",
                         "Name" : "www",
-                        "Slices" : ["website"],
+                        "Title" : "Web App",
+                        "Slices" : ["www","www-spt","www-task"],
                         "Role" : "ECS",
                         "ECS" : {
-                            "Ports" : ["http", "ssh"]
+                            "Services" : [
+                                {
+                                    "Id" : "www",
+                                    "Slices" : ["www"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "www",
+                                            "Ports" : [{"Id": "http", "ELB" : "www"}],
+                                            "Cpu" : 1000,
+                                            "Memory" : 2048
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Id" : "spt",
+                                    "Slices" : ["www-spt"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "cleanup",
+                                            "Version" : "1.0",
+                                            "Cpu" : 24,
+                                            "Memory" : 64
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Tasks" : [
+                                {
+                                    "Id" : "wwwtask",
+                                    "Slices" : ["www-task"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "wwwtask",
+                                            "Cpu" : 1000,
+                                            "Memory" : 2048
+                                        }
+                                    ]
+                                }
+                            ]
                         }
                     }
                 ]
-            }
+            },
+			{
+				"Id" : "mgmt"
+			}
         ]
-    },
-    "Segment" : {
-        "SSHPerSegment" : true,
-        "NAT" : {
-            "Enabled" : false
-        }
     },
     "Processors" : {
         "default" : {
             "ECS" : {
-                "Processor" : "t2.small",
-            }
-        }
-    },
-    "Storage" : {
-        "default" : {
-            "ECS" : {
-                "Volumes" : [
-                    {
-                        "Device" : "/dev/sdp",
-                        "Size" : "20"
-                    }
-                ]
+                "Processor" : "t2.medium",
             }
         }
     }

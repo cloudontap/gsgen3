@@ -1,9 +1,9 @@
-[#ftl]
 {
     "Solution" : {
-        "Title" : "Basic network to enable launching of alpha stage product systems",
-        "Id" : "alpha",
-        "Name" : "alpha",
+        "Id" : "networkbasic",
+        "Name" : "networkbasic",
+        "Title" : "Basic externally exposed network",
+        "Description" : "Enables manual launching of other components",
         "Tiers" : [
             {
                 "Id" : "web",
