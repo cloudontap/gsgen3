@@ -24,13 +24,6 @@
                         }
                     },
                     {
-                        "Title" : "Docker images",
-                        "Id" : "docker",
-                        "Name" : "docker",
-                        "Slices" : ["alm-s3"],
-                        "S3" : {}
-                    },
-                    {
                         "Title" : "Binary images",
                         "Id" : "binaries",
                         "Name" : "binaries",
