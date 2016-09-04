@@ -1,8 +1,8 @@
 {
     "Solution" : {
         "Title" : "Standalone ALM server hosted on an directly exposed single server",
-        "Id" : "almext",
-        "Name" : "almexternal",
+        "Id" : "alm",
+        "Name" : "alm",
         "Tiers": [
             {
                 "Id"  : "web",
