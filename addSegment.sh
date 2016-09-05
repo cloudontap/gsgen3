@@ -5,78 +5,78 @@ BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-  echo -e "\nAdd a new segment"
-  echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -s SID -e EID -o DOMAIN -r AWS_REGION -u"
-  echo -e "\nwhere\n"
-  echo -e "(o) -d DESCRIPTION is the segment description"
-  echo -e "(o) -e EID is the ID of the environment of which this segment is part"
-  echo -e "    -h shows this text"
-  echo -e "(o) -l TITLE is the segment title"
-  echo -e "(m) -n NAME is the human readable form (one word, lowercase and no spaces) of the segment id"
-  echo -e "(o) -o DOMAIN is the default DNS domain to be used for the segment"
-  echo -e "(o) -r AWS_REGION is the default AWS region for the segment"
-  echo -e "(o) -s SID is the segment id"
-  echo -e "(o) -u if details should be updated"
-  echo -e "\nDEFAULTS:\n"
-  echo -e "EID=SID"
-  echo -e "TITLE,NAME and DESCRIPTION from environment master data for EID"
-  echo -e "\nNOTES:\n"
-  echo -e "1) Subdirectories are created in the config and infrastructure subtrees"
-  echo -e "2) The segment information is saved in the segment profile"
-  echo -e "3) To update the details, the update option must be explicitly set"
-  echo -e "4) The environment must exist in the masterData"
-  echo -e "5) EID or SID are required if creating a segment"
-  echo -e ""
-  exit
+    echo -e "\nAdd a new segment"
+    echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -s SID -e EID -o DOMAIN -r AWS_REGION -u"
+    echo -e "\nwhere\n"
+    echo -e "(o) -d DESCRIPTION is the segment description"
+    echo -e "(o) -e EID is the ID of the environment of which this segment is part"
+    echo -e "    -h shows this text"
+    echo -e "(o) -l TITLE is the segment title"
+    echo -e "(m) -n NAME is the human readable form (one word, lowercase and no spaces) of the segment id"
+    echo -e "(o) -o DOMAIN is the default DNS domain to be used for the segment"
+    echo -e "(o) -r AWS_REGION is the default AWS region for the segment"
+    echo -e "(o) -s SID is the segment id"
+    echo -e "(o) -u if details should be updated"
+    echo -e "\nDEFAULTS:\n"
+    echo -e "EID=SID"
+    echo -e "TITLE,NAME and DESCRIPTION from environment master data for EID"
+    echo -e "\nNOTES:\n"
+    echo -e "1. Subdirectories are created in the config and infrastructure subtrees"
+    echo -e "2. The segment information is saved in the segment profile"
+    echo -e "3. To update the details, the update option must be explicitly set"
+    echo -e "4. The environment must exist in the masterData"
+    echo -e "5. EID or SID are required if creating a segment"
+    echo -e ""
+    exit
 }
 
 # Parse options
 while getopts ":d:e:hl:n:o:r:s:u" opt; do
-  case $opt in
-    d)
-      DESCRIPTION=$OPTARG
-      ;;
-    e)
-      EID=$OPTARG
-      ;;
-    h)
-      usage
-      ;;
-    l)
-      TITLE=$OPTARG
-       ;;
-    n)
-      NAME=$OPTARG
-       ;;
-    o)
-      DOMAIN=$OPTARG
-       ;;
-    r)
-      AWS_REGION=$OPTARG
-       ;;
-    s)
-      SID=$OPTARG
-       ;;
-    u)
-      UPDATE_SEGMENT="true"
-       ;;
-    \?)
-      echo -e "\nInvalid option: -$OPTARG" 
-      usage
-      ;;
-    :)
-      echo -e "\nOption -$OPTARG requires an argument" 
-      usage
-      ;;
-   esac
+    case $opt in
+        d)
+            DESCRIPTION=$OPTARG
+            ;;
+        e)
+            EID=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        l)
+            TITLE=$OPTARG
+            ;;
+        n)
+            NAME=$OPTARG
+            ;;
+        o)
+            DOMAIN=$OPTARG
+            ;;
+        r)
+            AWS_REGION=$OPTARG
+            ;;
+        s)
+            SID=$OPTARG
+            ;;
+        u)
+            UPDATE_SEGMENT="true"
+            ;;
+        \?)
+            echo -e "\nInvalid option: -$OPTARG" 
+            usage
+            ;;
+        :)
+            echo -e "\nOption -$OPTARG requires an argument" 
+            usage
+            ;;
+    esac
 done
 
 EID=${EID:-$SID}
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${NAME}") ]]; then
-  echo -e "\nInsufficient arguments"
-  usage
+    echo -e "\nInsufficient arguments"
+    usage
 fi
 
 # Set up the context
@@ -95,15 +95,9 @@ SEGMENT_CREDENTIALS_DIR="${CREDENTIALS_DIR}/${NAME}"
 mkdir -p ${SEGMENT_SOLUTIONS_DIR}
 if [[ ! -d ${SEGMENT_DEPLOYMENTS_DIR} ]]; then
     mkdir -p ${SEGMENT_DEPLOYMENTS_DIR}
-    touch ${SEGMENT_DEPLOYMENTS_DIR}/.placeholder
+    echo "{}" > ${SEGMENT_DEPLOYMENTS_DIR}/config.json
 fi
 mkdir -p ${SEGMENT_CREDENTIALS_DIR}
-if [[ -e "${SOLUTIONS_DIR}/.placeholder" ]]; then
-    $FILE_RM "${SOLUTIONS_DIR}/.placeholder"
-fi
-if [[ -e "${DEPLOYMENTS_DIR}/.placeholder" ]]; then
-    $FILE_RM "${DEPLOYMENTS_DIR}/.placeholder"
-fi
 
 # Check whether the segment profile is already in place
 if [[ -f ${SEGMENT_SOLUTIONS_DIR}/segment.json ]]; then
@@ -135,7 +129,7 @@ if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGI
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$PID-\$NAME"; fi
 
-# Generate the product profile
+# Generate the segment profile
 cat ${SEGMENT_PROFILE} | jq --indent 4 \
 --arg PID "${PID}" \
 --arg SID "${SID}" \
@@ -153,6 +147,11 @@ if [[ ${RESULT} -eq 0 ]]; then
 else
     echo -e "\nError creating segment profile" 
     exit
+fi
+
+# Cleanup any placeholder
+if [[ -e "${SOLUTIONS_DIR}/.placeholder" ]]; then
+    ${FILE_RM} "${SOLUTIONS_DIR}/.placeholder"
 fi
 
 # Provide an empty credentials profile for the segment

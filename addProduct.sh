@@ -5,68 +5,68 @@ BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-  echo -e "\nAdd a new product"
-  echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -p PID -o DOMAIN -r AWS_REGION  -u"
-  echo -e "\nwhere\n"
-  echo -e "(o) -d DESCRIPTION is the product description"
-  echo -e "    -h shows this text"
-  echo -e "(o) -l TITLE is the product title"
-  echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the product id"
-  echo -e "(o) -o DOMAIN is the default DNS domain to be used for the product"
-  echo -e "(m) -p PID is the product id"
-  echo -e "(o) -r AWS_REGION is the default AWS region for the product"
-  echo -e "(o) -u if details should be updated"
-  echo -e "\nDEFAULTS:\n"
-  echo -e "\nNOTES:\n"
-  echo -e "1) Subdirectories are created in the config and infrastructure subtrees"
-  echo -e "2) The product information is saved in the product profile"
-  echo -e "3) To update the details, the update option must be explicitly set"
-  echo -e ""
-  exit
+    echo -e "\nAdd a new product"
+    echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -p PID -o DOMAIN -r AWS_REGION  -u"
+    echo -e "\nwhere\n"
+    echo -e "(o) -d DESCRIPTION is the product description"
+    echo -e "    -h shows this text"
+    echo -e "(o) -l TITLE is the product title"
+    echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the product id"
+    echo -e "(o) -o DOMAIN is the default DNS domain to be used for the product"
+    echo -e "(m) -p PID is the product id"
+    echo -e "(o) -r AWS_REGION is the default AWS region for the product"
+    echo -e "(o) -u if details should be updated"
+    echo -e "\nDEFAULTS:\n"
+    echo -e "\nNOTES:\n"
+    echo -e "1. Subdirectories are created in the config and infrastructure subtrees"
+    echo -e "2. The product information is saved in the product profile"
+    echo -e "3. To update the details, the update option must be explicitly set"
+    echo -e ""
+    exit
 }
 
 # Parse options
 while getopts ":d:hl:n:o:p:r:u" opt; do
-  case $opt in
-    d)
-      DESCRIPTION=$OPTARG
-      ;;
-    h)
-      usage
-      ;;
-    l)
-      TITLE=$OPTARG
-       ;;
-    n)
-      NAME=$OPTARG
-       ;;
-    o)
-      DOMAIN=$OPTARG
-       ;;
-    p)
-      PID=$OPTARG
-       ;;
-    r)
-      AWS_REGION=$OPTARG
-       ;;
-    u)
-      UPDATE_PRODUCT="true"
-       ;;
-    \?)
-      echo -e "\nInvalid option: -$OPTARG" 
-      usage
-      ;;
-    :)
-      echo -e "\nOption -$OPTARG requires an argument" 
-      usage
-      ;;
-   esac
+    case $opt in
+        d)
+            DESCRIPTION=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        l)
+            TITLE=$OPTARG
+            ;;
+        n)
+            NAME=$OPTARG
+            ;;
+        o)
+            DOMAIN=$OPTARG
+            ;;
+        p)
+            PID=$OPTARG
+            ;;
+        r)
+            AWS_REGION=$OPTARG
+            ;;
+        u)
+            UPDATE_PRODUCT="true"
+            ;;
+        \?)
+            echo -e "\nInvalid option: -$OPTARG" 
+            usage
+            ;;
+        :)
+            echo -e "\nOption -$OPTARG requires an argument" 
+            usage
+            ;;
+    esac
 done
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${PID}") ]]; then
-  echo -e "\nInsufficient arguments"
-  usage
+    echo -e "\nInsufficient arguments"
+    usage
 fi
 
 # Set up the context
@@ -90,7 +90,7 @@ if [[ ! -d ${SOLUTIONS_DIR} ]]; then
 fi
 if [[ ! -d ${DEPLOYMENTS_DIR} ]]; then
     mkdir -p ${DEPLOYMENTS_DIR}
-    touch ${DEPLOYMENTS_DIR}/.placeholder
+    echo "{}" > ${DEPLOYMENTS_DIR}/config.json
 fi
 mkdir -p ${CREDENTIALS_DIR}
 

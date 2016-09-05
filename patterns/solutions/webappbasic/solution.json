@@ -80,7 +80,7 @@
     "Processors" : {
         "default" : {
             "ECS" : {
-                "Processor" : "t2.medium",
+                "Processor" : "t2.medium"
             }
         }
     }

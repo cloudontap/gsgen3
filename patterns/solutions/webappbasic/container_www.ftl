@@ -1,4 +1,5 @@
 [#case "www"]
+[#case "wwwtask"]
     [#switch containerListMode]
         [#case "definition"]
             "Name" : "${tier.Name + "-" + component.Name + "-" + container.Id}",

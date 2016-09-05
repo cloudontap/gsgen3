@@ -43,7 +43,7 @@
     "Processors" : {
         "default" : {
             "ECS" : {
-                "Processor" : "t2.small",
+                "Processor" : "t2.small"
             }
         }
     },
