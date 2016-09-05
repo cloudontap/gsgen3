@@ -83,13 +83,13 @@ fi
 DB_INSTANCE_IDENTIFIER="${PID}-${SEGMENT}-${TIER}-${COMPONENT}"
 
 # Trigger the reboot
-aws ${AWS_PROFILE} --region ${REGION} rds reboot-db-instance --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}
+aws --region ${REGION} rds reboot-db-instance --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}
 RESULT=$?
 if [ "$RESULT" -ne 0 ]; then exit; fi
 
 if [[ "${WAIT}" == "true" ]]; then
     while true; do
-        aws ${AWS_PROFILE} --region ${REGION} rds describe-db-instances --db-instance-identifier ${DB_INSTANCE_IDENTIFIER} 2>/dev/null | grep "DBInstanceStatus" > STATUS.txt
+        aws --region ${REGION} rds describe-db-instances --db-instance-identifier ${DB_INSTANCE_IDENTIFIER} 2>/dev/null | grep "DBInstanceStatus" > STATUS.txt
         cat STATUS.txt
         grep "available" STATUS.txt >/dev/null 2>&1
         RESULT=$?

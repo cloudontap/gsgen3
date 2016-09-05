@@ -210,13 +210,13 @@ fi
 # Perform the operation
 case ${CRYPTO_OPERATION} in
     encrypt)
-        CRYPTO_TEXT=$(aws ${AWS_PROFILE} --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
+        CRYPTO_TEXT=$(aws --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
             --key-id "${KEYID}" --query CiphertextBlob \
             --plaintext "fileb://ciphertext.bin") 
         ;;
 
     decrypt)
-        CRYPTO_TEXT=$(aws ${AWS_PROFILE} --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
+        CRYPTO_TEXT=$(aws --region ${REGION} --output text kms ${CRYPTO_OPERATION} \
             --query Plaintext \
             --ciphertext-blob "fileb://ciphertext.bin")
         ;;

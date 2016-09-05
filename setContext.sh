@@ -234,7 +234,7 @@ export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!AID_AWS_SECRET_ACCESS_
     
 # Set the profile for IAM access if AWS credentials not in the environment
 if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${AID}") ]]; then
-    export AWS_PROFILE="--profile ${AID}"
+    export AWS_PROFILE="${AID}"
 fi
 
 # Handle some MINGW peculiarities
