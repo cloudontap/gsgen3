@@ -103,6 +103,7 @@ if [[ -f ${PRODUCT_DIR}/product.json ]]; then
     PRODUCT_PROFILE=${PRODUCT_DIR}/product.json
 else
     PRODUCT_PROFILE=${BIN_DIR}/templates/blueprint/product.json
+    if [[ -z "${NAME}" ]]; then NAME=${PID}; fi
 fi
 
 # Generate the filter
