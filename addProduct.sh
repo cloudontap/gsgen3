@@ -147,3 +147,22 @@ REGION=${REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Region | select(
 ${BIN_DIR}/manageSSHCertificate.sh -i ${PID} -p ${CREDENTIALS_DIR}/aws-ssh-crt.pem -r ${REGION}
 RESULT=$?
 
+# Ignore decrypted files
+if [[ ! -f ${INFRASTRUCTURE_DIR}/.gitignore ]]; then
+    cat > ${INFRASTRUCTURE_DIR}/.gitignore << EOF
+*.decrypted
+*.ppk
+EOF
+fi
+
+# Control line endings
+if [[ ! -f ${INFRASTRUCTURE_DIR}/.gitattributes ]]; then
+    cat > ${INFRASTRUCTURE_DIR}/.gitattributes << EOF
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# scripts and pem files should stay with LF
+*.sh text eol=lf
+*.pem text eol=lf
+EOF
+fi
