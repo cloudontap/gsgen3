@@ -229,12 +229,14 @@ else
 fi
 
 # Set AWS credentials if available (hook from Jenkins framework)
-export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${!AID_AWS_ACCESS_KEY_ID_VAR}}"
-export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!AID_AWS_SECRET_ACCESS_KEY_VAR}}"
+CHECK_AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${!AID_AWS_ACCESS_KEY_ID_VAR}}"
+if [[ -n "${CHECK_AWS_ACCESS_KEY_ID}" ]]; then export AWS_ACCESS_KEY_ID="${CHECK_AWS_ACCESS_KEY_ID}"; fi
+CHECK_AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${!AID_AWS_SECRET_ACCESS_KEY_VAR}}"
+if [[ -n "${CHECK_AWS_SECRET_ACCESS_KEY}" ]]; then export AWS_SECRET_ACCESS_KEY="${CHECK_AWS_SECRET_ACCESS_KEY}"; fi
     
 # Set the profile for IAM access if AWS credentials not in the environment
 if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${AID}") ]]; then
-    export AWS_PROFILE="${AID}"
+    export AWS_DEFAULT_PROFILE="${AID}"
 fi
 
 # Handle some MINGW peculiarities
