@@ -128,18 +128,18 @@ if [[ (-z "${KEYID}") && (-n "${ALIAS}") ]]; then
 fi
 if [[ "segment" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXsegmentXcmk") | .OutputValue | select (.!=null)')}
-    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILENAME_DEFAULT}")
     if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILE}"); fi
+    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${SEGMENT}/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ "product" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXproductXcmk") | .OutputValue | select (.!=null)')}
-    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
     if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILE}"); fi
+    FILES+=("${INFRASTRUCTURE_DIR}/${PID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ "account" =~ ${LOCATION} ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
-    FILES+=("${INFRASTRUCTURE_DIR}/${AID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
     if [[ -n "${CRYPTO_FILE}" ]]; then FILES+=("${INFRASTRUCTURE_DIR}/${AID}/credentials/${CRYPTO_FILENAME_DEFAULT}"); fi
+    FILES+=("${INFRASTRUCTURE_DIR}/${AID}/credentials/${CRYPTO_FILENAME_DEFAULT}")
 fi
 if [[ ("root" =~ ${LOCATION}) || ("integrator" =~ ${LOCATION}) ]]; then
     KEYID=${KEYID:-$(cat ${COMPOSITE_STACK_OUTPUTS} | jq -r '.[] | select(.OutputKey=="cmkXaccountXcmk") | .OutputValue | select (.!=null)')}
