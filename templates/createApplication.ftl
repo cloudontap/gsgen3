@@ -95,24 +95,24 @@
     {
         "Name" : "ENVIRONMENT",
         "Value" : "${environmentName}"
-    },
+    }
     [#if configurationReference??]
-        {
+        ,{
             "Name" : "CONFIGURATION_REFERENCE",
             "Value" : "${configurationReference}"
-        },
+        }
     [/#if]
     [#if buildCommit??]
-        {
+        ,{
             "Name" : "BUILD_REFERENCE",
             "Value" : "${buildCommit}"
-        },
+        }
     [/#if]
     [#if appReference?? && (appReference != "")]
-        {
+        ,{
             "Name" : "APP_REFERENCE",
             "Value" : "${appReference}"
-        },
+        }
     [/#if]
 [/#macro]
 
