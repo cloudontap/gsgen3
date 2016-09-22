@@ -60,10 +60,10 @@ if [[ -n ${SLICES} ]]; then
 fi
 
 # Find the solution name
-SOLUTION_NAME=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Solution.Name | select(.!=null)")
+SOLUTION_NAME=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Solution.Pattern | select(.!=null)")
 
 if [[ -z "${SOLUTION_NAME}" ]]; then
-    echo -e "\nNo solution configured yet. Maybe try adding the solution first?"
+    echo -e "\nNo solution pattern configured yet. Maybe try adding the solution first?"
     usage
 fi
 
