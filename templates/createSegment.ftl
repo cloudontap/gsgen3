@@ -108,8 +108,8 @@
 [#assign jumpServerPerAZ = jumpServer && segmentObject.NAT.MultiAZ]
 [#assign sshPerSegment = segmentObject.SSHPerSegment]
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
-[#assign logsBucket = "logs" + segmentDomainQualifier "." + segmentDomain]
-[#assign backupsBucket = "backups" + segmentDomainQualifier "." + segmentDomain]
+[#assign logsBucket = "logs" + segmentDomainQualifier + "." + segmentDomain]
+[#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
 
