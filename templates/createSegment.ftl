@@ -821,9 +821,6 @@
             "vpcXsegmentXvpc" : {
                 "Value" : { "Ref" : "vpc" }
             },
-            "vpcXsegmentXaz" : {
-                "Value" : "${azList}"
-            },
             "igwXsegmentXigw" : 
             {
                 "Value" : { "Ref" : "igw" }
