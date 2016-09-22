@@ -857,6 +857,18 @@
             "Port": 11211,
             "IPProtocol": "tcp"
         },
+        "meteor": {
+            "Port": 3000,
+            "Protocol": "HTTP",
+            "IPProtocol": "tcp",
+            "HealthCheck": {
+                "Path": "/",
+                "HealthyThreshold": "3",
+                "UnhealthyThreshold": "5",
+                "Interval": "30",
+                "Timeout": "5"
+            }
+        },
         "mongo": {
             "Port": 27017,
             "IPProtocol": "tcp"
@@ -979,6 +991,10 @@
         "kibana": {
             "Source": "https",
             "Destination": "kibana"
+        },
+        "meteor": {
+            "Source": "https",
+            "Destination": "meteor"
         },
         "node": {
             "Source": "https",
