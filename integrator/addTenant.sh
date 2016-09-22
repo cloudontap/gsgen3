@@ -12,7 +12,7 @@ function usage() {
   echo -e "    -h shows this text"
   echo -e "(o) -l TITLE is the tenant title"
   echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the tenant id"
-  echo -e "(o) -o DOMAIN is the default DNS domain to be used for tenant products"
+  echo -e "(o) -o DOMAIN is the default DNS domain to be used for tenant products and accounts"
   echo -e "(o) -r AWS_REGION is the default AWS region for the tenant"
   echo -e "(o) -s AWS_SES_REGION is the default AWS region for use of the SES service"
   echo -e "(m) -t TID is the tenant id"
@@ -110,7 +110,9 @@ if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Tenant.Description=\$DES
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.SES.Region=\$AWS_SES_REGION"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Account.Domain.Stem=\$DOMAIN"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Account.Domain.Certificate.Id=\$TID"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TID"; fi
 
 # Generate the tenant profile
