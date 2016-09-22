@@ -19,8 +19,8 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
+[#assign productRegionObject = regions[productRegion]]
 
 [#-- Key ids/names --]
 [#assign tenantId = tenantObject.Id]
@@ -28,19 +28,25 @@
 [#assign productId = productObject.Id]
 [#assign productName = productObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 
 [#-- Domains --]
-[#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
+[#assign productDomainStem = productObject.Domain.Stem]
 [#assign productDomainBehaviour = (productObject.Domain.ProductBehaviour)!""]
 [#switch productDomainBehaviour]
+    [#case "includeProduct"]
+        [#assign productDomain = productName + "." + productDomainStem]
+        [#assign productDomainQualifier = ""]
+        [#break]
     [#case "naked"]
         [#assign productDomain = productDomainStem]
+        [#assign productDomainQualifier = ""]
         [#break]
-    [#case "includeProductId"]
     [#default]
-        [#assign productDomain = productId + "." + productDomainStem]
+        [#assign productDomain = productDomainStem]
+        [#assign productDomainQualifier = "-" + productName]
+        [#break]
 [/#switch]
 
 [#-- Get stack output --]
@@ -116,9 +122,9 @@
                             "Type" : "AWS::S3::Bucket",
                             "Properties" : {
                                 [#if s3.Name??]
-                                    "BucketName" : "${s3.Name}.${productDomain}",
+                                    "BucketName" : "${s3.Name}${productDomainQualifier}.${productDomain}",
                                 [#else]
-                                    "BucketName" : "${component.Name}.${productDomain}",
+                                    "BucketName" : "${component.Name}${productDomainQualifier}.${productDomain}",
                                 [/#if]
                                 "Tags" : [ 
                                     { "Key" : "cot:product", "Value" : "${productId}" },
@@ -157,6 +163,9 @@
         [#if (regionId == productRegionId)]
             ,"domainXproductXdomain" : {
                 "Value" : "${productDomain}"
+            }
+            ,"domainXproductXqualifier" : {
+                "Value" : "${productDomainQualifier}"
             }
             [#if sharedComponentsPresent]
                 [#list sharedComponents as component] 

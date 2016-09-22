@@ -25,15 +25,21 @@
 [#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
-[#assign accountDomainStem = (accountObject.Domain.Stem)!"gosource.com.au"]
+[#assign accountDomainStem = accountObject.Domain.Stem]
 [#assign accountDomainBehaviour = (accountObject.Domain.AccountBehaviour)!""]
 [#switch accountDomainBehaviour]
+    [#case "includeAccount"]
+        [#assign accountDomain = accountName + "." + accountDomainStem]
+        [#assign accountDomainQualifier = ""]
+        [#break]
     [#case "naked"]
         [#assign accountDomain = accountDomainStem]
+        [#assign accountDomainQualifier = ""]
         [#break]
-    [#case "includeAccountId"]
-       [#default]
-       [#assign accountDomain = accountId + "." + accountDomainStem]
+    [#default]
+        [#assign accountDomain = accountDomainStem]
+        [#assign accountDomainQualifier = "-" + accountName]
+        [#break]
 [/#switch]
 
 {
@@ -45,7 +51,7 @@
             "s3X${bucket}" : {
                 "Type" : "AWS::S3::Bucket",
                 "Properties" : {
-                    "BucketName" : "${bucket}.${accountDomain}",
+                    "BucketName" : "${bucket}${accountDomainQualifier}.${accountDomain}",
                     "Tags" : [ 
                         { "Key" : "cot:product", "Value" : "${accountId}" },
                         { "Key" : "cot:category", "Value" : "${categoryId}" }
@@ -58,6 +64,9 @@
     "Outputs" : {
         "domainXaccountXdomain" : {
             "Value" : "${accountDomain}"
+        },
+        "domainXaccountXqualifier" : {
+            "Value" : "${accountDomainQualifier}"
         }
         [#list buckets as bucket]
             ,"s3XaccountX${bucket}" : {

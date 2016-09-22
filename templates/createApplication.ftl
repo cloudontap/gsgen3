@@ -27,8 +27,8 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
@@ -40,11 +40,15 @@
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
+
+[#-- Domains --]
+[#assign segmentDomain = getKey("domainXsegmentXdomain")]
+[#assign segmentDomainQualifier = getKey("domainXsegmentXqualifier")]
 
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
@@ -53,15 +57,7 @@
 [#assign backupsBucket = getKey("s3XsegmentXbackups")]
 
 [#-- AZ List --]
-[#if (segmentObject.AZList)??]
-    [#assign azList = segmentObject.AZList]
-[#else]
-    [#if regionObject.DefaultZones??]
-        [#assign azList = regionObject.DefaultZones]
-    [#else]
-        [#assign azList = ["a", "b"]]
-    [/#if]
-[/#if]
+[#assign azList = getKey("vpcXsegmentXaz")]
 
 [#-- Loop optimisation --]
 [#assign lastTier = solutionTiers?last]

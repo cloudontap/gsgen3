@@ -27,8 +27,8 @@
 
 [#-- Reference Objects --]
 [#assign regionObject = regions[region]]
-[#assign productRegionObject = regions[productRegion]]
 [#assign accountRegionObject = regions[accountRegion]]
+[#assign productRegionObject = regions[productRegion]]
 [#assign environmentObject = environments[segmentObject.Environment]]
 [#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
 
@@ -40,33 +40,34 @@
 [#assign segmentId = segmentObject.Id!environmentObject.Id]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
 [#assign regionId = regionObject.Id]
-[#assign productRegionId = productRegionObject.Id]
 [#assign accountRegionId = accountRegionObject.Id]
+[#assign productRegionId = productRegionObject.Id]
 [#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
 [#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
-[#assign productDomainStem = (productObject.Domain.Stem)!"gosource.com.au"]
+[#assign productDomainStem = productObject.Domain.Stem]
 [#assign segmentDomainBehaviour = (productObject.Domain.SegmentBehaviour)!""]
 [#switch segmentDomainBehaviour]
+    [#case "includeProduct"]
+        [#assign segmentDomain = segmentName + "." + productName + "." + productDomainStem]
+        [#assign segmentDomainQualifier = ""]
+        [#break]
+    [#case "includeSegment"]
+        [#assign segmentDomain = segmentName + "." + productDomainStem]
+        [#assign segmentDomainQualifier = ""]
+        [#break]
     [#case "naked"]
         [#assign segmentDomain = productDomainStem]
+        [#assign segmentDomainQualifier = ""]
         [#break]
-    [#case "includeSegmentName"]
-        [#assign segmentDomain = segmentName + "." + productDomainStem]
-        [#break]
-    [#case "includeProductId"]
     [#default]
-        [#assign segmentDomain = segmentName + "." + productId + "." + productDomainStem]
+        [#assign segmentDomain = productDomainStem]
+        [#assign segmentDomainQualifier = "-" + segmentName + "-" + productName]
+        [#break]
 [/#switch]
-[#if (productObject.Domain.CertificateId)??]
-    [#assign certificateId = segmentObject.Domain.CertificateId]
-[#elseif productDomainStem != "gosource.com.au"]
-    [#assign certificateId = productId]
-[#else]
-    [#assign certificateId = accountId]
-[/#if]
+[#assign segmentDomainCertificateId = productObject.Domain.CertificateId]
 
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
@@ -107,8 +108,8 @@
 [#assign jumpServerPerAZ = jumpServer && segmentObject.NAT.MultiAZ]
 [#assign sshPerSegment = segmentObject.SSHPerSegment]
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
-[#assign logsBucket = "logs." + segmentDomain]
-[#assign backupsBucket = "backups." + segmentDomain]
+[#assign logsBucket = "logs" + segmentDomainQualifier "." + segmentDomain]
+[#assign backupsBucket = "backups" + segmentDomainQualifier "." + segmentDomain]
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
 
@@ -808,8 +809,20 @@
         [/#if]
         [#if slice?contains("vpc")]
             [#if sliceCount > 0],[/#if]
+            "domainXsegmentXdomain" : {
+                "Value" : "${segmentDomain}"
+            },
+            "domainXsegmentXqualifier" : {
+                "Value" : "${segmentDomainQualifier}"
+            },
+            "domainXsegmentXcertificate" : {
+                "Value" : "${segmentDomainCertificateId}"
+            },
             "vpcXsegmentXvpc" : {
                 "Value" : { "Ref" : "vpc" }
+            },
+            "vpcXsegmentXaz" : {
+                "Value" : "${azList}"
             },
             "igwXsegmentXigw" : 
             {
