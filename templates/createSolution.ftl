@@ -49,7 +49,7 @@
 [#-- Domains --]
 [#assign segmentDomain = getKey("domainXsegmentXdomain")]
 [#assign segmentDomainQualifier = getKey("domainXsegmentXqualifier")]
-[#assign certificateId = getKey("domainXsegmentXvertificate")]
+[#assign certificateId = getKey("domainXsegmentXcertificate")]
 
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
