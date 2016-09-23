@@ -546,7 +546,7 @@
                                         "dirs": {
                                             "commands": {
                                                 "01Directories" : {
-                                                    "command" : "mkdir --parents --mode=0755 /etc/gosource && mkdir --parents --mode=0755 /opt/gosource/bootstrap && mkdir --parents --mode=0755 /var/log/gosource",
+                                                    "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /var/log/codeontap",
                                                     "ignoreErrors" : "false"
                                                 }
                                             }
@@ -558,7 +558,7 @@
                                                 }
                                             },  
                                             "files" : {
-                                                "/etc/gosource/facts.sh" : {
+                                                "/etc/codeontap/facts.sh" : {
                                                     "content" : { 
                                                         "Fn::Join" : [
                                                             "", 
@@ -583,16 +583,16 @@
                                                     },
                                                     "mode" : "000755"
                                                 },
-                                                "/opt/gosource/bootstrap/fetch.sh" : {
+                                                "/opt/codeontap/bootstrap/fetch.sh" : {
                                                     "content" : { 
                                                         "Fn::Join" : [
                                                             "", 
                                                             [
                                                                 "#!/bin/bash -ex\n",
-                                                                "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion | cut -d '=' -f 2)\n",
-                                                                "CODE=$(/etc/gosource/facts.sh | grep cot:code | cut -d '=' -f 2)\n",
-                                                                "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0500 /opt/gosource/bootstrap/*.sh\n"
+                                                                "exec > >(tee /var/log/codeontap/fetch.log|logger -t codeontap-fetch -s 2>/dev/console) 2>&1\n",
+                                                                "REGION=$(/etc/codeontap/facts.sh | grep cot:accountRegion | cut -d '=' -f 2)\n",
+                                                                "CODE=$(/etc/codeontap/facts.sh | grep cot:code | cut -d '=' -f 2)\n",
+                                                                "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/codeontap/bootstrap && chmod 0500 /opt/codeontap/bootstrap/*.sh\n"
                                                             ]
                                                         ]
                                                     },
@@ -601,11 +601,11 @@
                                             },
                                             "commands": {
                                                 "01Fetch" : {
-                                                    "command" : "/opt/gosource/bootstrap/fetch.sh",
+                                                    "command" : "/opt/codeontap/bootstrap/fetch.sh",
                                                     "ignoreErrors" : "false"
                                                 },
                                                 "02Initialise" : {
-                                                    "command" : "/opt/gosource/bootstrap/init.sh",
+                                                    "command" : "/opt/codeontap/bootstrap/init.sh",
                                                     "ignoreErrors" : "false"
                                                 }
                                             }
@@ -613,12 +613,12 @@
                                         "nat": {
                                             "commands": {
                                                 "01ExecuteRouteUpdateScript" : {
-                                                    "command" : "/opt/gosource/bootstrap/nat.sh",
+                                                    "command" : "/opt/codeontap/bootstrap/nat.sh",
                                                     "ignoreErrors" : "false"
                                                 }
                                                 [#if slice?contains("eip")]
                                                     ,"02ExecuteAllocateEIPScript" : {
-                                                        "command" : "/opt/gosource/bootstrap/eip.sh",
+                                                        "command" : "/opt/codeontap/bootstrap/eip.sh",
                                                         "env" : { 
                                                             [#-- Legacy code to support definition of eip and vpc in one template (slice = "eipvpc" or "eips3vpc" depending on how S3 to be defined)  --]
                                                             "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
@@ -628,7 +628,7 @@
                                                 [#else]
                                                     [#if getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")??]
                                                         ,"02ExecuteAllocateEIPScript" : {
-                                                            "command" : "/opt/gosource/bootstrap/eip.sh",
+                                                            "command" : "/opt/codeontap/bootstrap/eip.sh",
                                                             "env" : { 
                                                                 [#-- Normally assume eip defined in a separate template to the vpc --]
                                                                 "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"

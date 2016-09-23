@@ -458,7 +458,7 @@
                                                 "dirs": {
                                                     "commands": {
                                                         "01Directories" : {
-                                                            "command" : "mkdir --parents --mode=0755 /etc/gosource && mkdir --parents --mode=0755 /opt/gosource/bootstrap && mkdir --parents --mode=0755 /var/log/gosource",
+                                                            "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /var/log/codeontap",
                                                             "ignoreErrors" : "false"
                                                         }
                                                     }
@@ -470,7 +470,7 @@
                                                         }
                                                     },
                                                     "files" : {
-                                                        "/etc/gosource/facts.sh" : {
+                                                        "/etc/codeontap/facts.sh" : {
                                                             "content" : { 
                                                                 "Fn::Join" : [
                                                                     "", 
@@ -496,16 +496,16 @@
                                                             },
                                                             "mode" : "000755"
                                                         },
-                                                        "/opt/gosource/bootstrap/fetch.sh" : {
+                                                        "/opt/codeontap/bootstrap/fetch.sh" : {
                                                             "content" : { 
                                                                 "Fn::Join" : [
                                                                     "", 
                                                                     [
                                                                         "#!/bin/bash -ex\n",
-                                                                        "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                        "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
-                                                                        "CODE=$(/etc/gosource/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
-                                                                        "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0755 /opt/gosource/bootstrap/*.sh\n"
+                                                                        "exec > >(tee /var/log/codeontap/fetch.log|logger -t codeontap-fetch -s 2>/dev/console) 2>&1\n",
+                                                                        "REGION=$(/etc/codeontap/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
+                                                                        "CODE=$(/etc/codeontap/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
+                                                                        "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/codeontap/bootstrap && chmod 0755 /opt/codeontap/bootstrap/*.sh\n"
                                                                     ]
                                                                 ]
                                                             },
@@ -514,16 +514,16 @@
                                                     },
                                                     "commands": {
                                                         "01Fetch" : {
-                                                            "command" : "/opt/gosource/bootstrap/fetch.sh",
+                                                            "command" : "/opt/codeontap/bootstrap/fetch.sh",
                                                             "ignoreErrors" : "false"
                                                         },
                                                         "02Initialise" : {
-                                                            "command" : "/opt/gosource/bootstrap/init.sh",
+                                                            "command" : "/opt/codeontap/bootstrap/init.sh",
                                                             "ignoreErrors" : "false"
                                                         }
                                                         [#if ec2.LoadBalanced]
                                                             ,"03RegisterWithLB" : {
-                                                                "command" : "/opt/gosource/bootstrap/register.sh",
+                                                                "command" : "/opt/codeontap/bootstrap/register.sh",
                                                                 "env" : { 
                                                                     "LOAD_BALANCER" : { "Ref" : "elbXelbX${component.Id}" } 
                                                                 },
@@ -535,7 +535,7 @@
                                                 "puppet": {
                                                     "commands": {
                                                         "01SetupPuppet" : {
-                                                            "command" : "/opt/gosource/bootstrap/puppet.sh",
+                                                            "command" : "/opt/codeontap/bootstrap/puppet.sh",
                                                             "ignoreErrors" : "false"
                                                         }
                                                     }
@@ -825,7 +825,7 @@
                                         "dirs": {
                                             "commands": {
                                                 "01Directories" : {
-                                                    "command" : "mkdir --parents --mode=0755 /etc/gosource && mkdir --parents --mode=0755 /opt/gosource/bootstrap && mkdir --parents --mode=0755 /var/log/gosource",
+                                                    "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /var/log/codeontap",
                                                     "ignoreErrors" : "false"
                                                 }
                                             }
@@ -837,7 +837,7 @@
                                                 }
                                             },
                                             "files" : {
-                                                "/etc/gosource/facts.sh" : {
+                                                "/etc/codeontap/facts.sh" : {
                                                     "content" : { 
                                                         "Fn::Join" : [
                                                             "", 
@@ -861,16 +861,16 @@
                                                     },
                                                     "mode" : "000755"
                                                 },
-                                                "/opt/gosource/bootstrap/fetch.sh" : {
+                                                "/opt/codeontap/bootstrap/fetch.sh" : {
                                                     "content" : { 
                                                         "Fn::Join" : [
                                                             "", 
                                                             [
                                                                 "#!/bin/bash -ex\n",
-                                                                "exec > >(tee /var/log/gosource/fetch.log|logger -t gosource-fetch -s 2>/dev/console) 2>&1\n",
-                                                                "REGION=$(/etc/gosource/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
-                                                                "CODE=$(/etc/gosource/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
-                                                                "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/gosource/bootstrap && chmod 0755 /opt/gosource/bootstrap/*.sh\n"
+                                                                "exec > >(tee /var/log/codeontap/fetch.log|logger -t codeontap-fetch -s 2>/dev/console) 2>&1\n",
+                                                                "REGION=$(/etc/codeontap/facts.sh | grep cot:accountRegion= | cut -d '=' -f 2)\n",
+                                                                "CODE=$(/etc/codeontap/facts.sh | grep cot:code= | cut -d '=' -f 2)\n",
+                                                                "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/codeontap/bootstrap && chmod 0755 /opt/codeontap/bootstrap/*.sh\n"
                                                             ]
                                                         ]
                                                     },
@@ -879,16 +879,16 @@
                                             },
                                             "commands": {
                                                 "01Fetch" : {
-                                                    "command" : "/opt/gosource/bootstrap/fetch.sh",
+                                                    "command" : "/opt/codeontap/bootstrap/fetch.sh",
                                                     "ignoreErrors" : "false"
                                                 },
                                                 "02Initialise" : {
-                                                    "command" : "/opt/gosource/bootstrap/init.sh",
+                                                    "command" : "/opt/codeontap/bootstrap/init.sh",
                                                     "ignoreErrors" : "false"
                                                 }
                                                 [#if fixedIP]
                                                     ,"03AssignIP" : {
-                                                        "command" : "/opt/gosource/bootstrap/eip.sh",
+                                                        "command" : "/opt/codeontap/bootstrap/eip.sh",
                                                         "env" : { 
                                                             "EIP_ALLOCID" : { 
                                                                 "Fn::Join" : [
@@ -910,11 +910,11 @@
                                             "ecs": {
                                                 "commands": {
                                                     "01Fluentd" : {
-                                                        "command" : "/opt/gosource/bootstrap/fluentd.sh",
+                                                        "command" : "/opt/codeontap/bootstrap/fluentd.sh",
                                                         "ignoreErrors" : "false"
                                                     },
                                                     "02ConfigureCluster" : {
-                                                        "command" : "/opt/gosource/bootstrap/ecs.sh",
+                                                        "command" : "/opt/codeontap/bootstrap/ecs.sh",
                                                         "env" : { 
                                                         "ECS_CLUSTER" : { "Ref" : "ecsX${tier.Id}X${component.Id}" },
                                                         "ECS_LOG_DRIVER" : "fluentd"
