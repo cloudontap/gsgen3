@@ -10,7 +10,7 @@
                     "ReadOnly": false
                 }
             ],
-            "Essential" : false,
+            "Essential" : true,
             [#break]
 
         [#case "volumeCount"]
