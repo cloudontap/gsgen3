@@ -133,9 +133,9 @@
             },
             "AMIs": {
                 "Centos": {
-                    "NAT": "ami-e3217a80",
-                    "EC2": "ami-48d38c2b",
-                    "ECS": "ami-b8cbe8db"
+                    "NAT": "ami-53371f30",
+                    "EC2": "ami-dc361ebf",
+                    "ECS": "ami-22a49541"
                 }
             }
         },
@@ -348,9 +348,9 @@
             },
             "AMIs": {
                 "Centos": {
-                    "NAT": "ami-77a4b816",
-                    "EC2": "ami-f0091d91",
-                    "ECS": "ami-c7a451a7"
+                    "NAT": "ami-a275b1c2",
+                    "EC2": "ami-7172b611",
+                    "ECS": "ami-1ccd1f7c"
                 }
             }
         }
