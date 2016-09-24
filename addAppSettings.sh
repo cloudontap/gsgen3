@@ -5,15 +5,15 @@ BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-    echo -e "\nAdd the deployment configuration for a segment"
+    echo -e "\nAdd the application settings for a segment"
     echo -e "\nUsage: $(basename $0) -u"
     echo -e "\nwhere\n"
     echo -e "    -h shows this text"
     echo -e "(o) -u if details should be updated"
     echo -e "\nDEFAULTS:\n"
     echo -e "\nNOTES:\n"
-    echo -e "1. Any deployment configuration is located via the solution"
-    echo -e "   pattern matching the solution name"
+    echo -e "1. Any application settings are located via the solution"
+    echo -e "   pattern"
     echo -e "2. Nothing is done if no solution pattern can be found"
     echo -e "3. The script must be run in the segment directory"
     echo -e ""
@@ -27,7 +27,7 @@ while getopts ":hu" opt; do
             usage
             ;;
         u)
-            UPDATE_DEPLOYMENT="true"
+            UPDATE_APPSETTINGS="true"
             ;;
         \?)
             echo -e "\nInvalid option: -$OPTARG" 
@@ -49,12 +49,12 @@ if [[ ! ("segment" =~ "${LOCATION}") ]]; then
     usage
 fi
 
-# Check whether the deployment already exists
-SEGMENT_DEPLOYMENT_DIR="${DEPLOYMENTS_DIR}/${SEGMENT}"
-SLICES=$(find ${SEGMENT_DEPLOYMENT_DIR}/* -type d 2> /dev/null)
+# Check whether the application settings already exist
+SEGMENT_APPSETTINGS_DIR="${APPSETTINGS_DIR}/${SEGMENT}"
+SLICES=$(find ${SEGMENT_APPSETTINGS_DIR}/* -type d 2> /dev/null)
 if [[ -n ${SLICES} ]]; then
-    if [[ "${UPDATE_DEPLOYMENT}" != "true" ]]; then
-        echo -e "\nSegment deployment configuration already exists. Maybe try using update option?"
+    if [[ "${UPDATE_APPSETTINGS}" != "true" ]]; then
+        echo -e "\nSegment application settings already exist. Maybe try using update option?"
         usage
     fi
 fi
@@ -74,15 +74,15 @@ if [[ ! -d ${PATTERN_DIR} ]]; then
     RESULT=0
     exit
 fi
-if [[ ! -d ${PATTERN_DIR}/deployment ]]; then
-    echo -e "\nNo deployment configuration for the solution pattern. Nothing to do"
+if [[ ! -d ${PATTERN_DIR}/appsettings ]]; then
+    echo -e "\nNo application settings for the solution pattern. Nothing to do"
     RESULT=0
     exit
 fi
 
-# Copy across the deployment 
-mkdir -p ${SEGMENT_DEPLOYMENT_DIR}
-cp -rp ${PATTERN_DIR}/deployment/* ${SEGMENT_DEPLOYMENT_DIR}
+# Copy across the application settings 
+mkdir -p ${SEGMENT_APPSETTINGS_DIR}
+cp -rp ${PATTERN_DIR}/appsettings/* ${SEGMENT_APPSETTINGS_DIR}
 
 # All good
 RESULT=0

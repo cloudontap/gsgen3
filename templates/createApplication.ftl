@@ -2,7 +2,7 @@
 [#-- Standard inputs --]
 [#assign blueprintObject = blueprint?eval]
 [#assign credentialsObject = (credentials?eval).Credentials]
-[#assign configurationObject = configuration?eval]
+[#assign appSettingsObject = appsettings?eval]
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
@@ -83,7 +83,7 @@
 [/#function]
 
 [#-- Application --]
-[#assign docker = configurationObject.Docker]
+[#assign docker = appSettingsObject.Docker]
 [#assign solnMultiAZ = solutionObject.MultiAZ!environmentObject.MultiAZ!false]
 
 [#if buildReference??]

@@ -2,7 +2,7 @@
 [#-- Standard inputs --]
 [#assign blueprintObject = blueprint?eval]
 [#assign credentialsObject = credentials?eval]
-[#assign configurationObject = configuration?eval]
+[#assign appSettingsObject = appsettings?eval]
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
@@ -113,7 +113,7 @@
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
 
-[#-- Get processor configuration --]
+[#-- Get processor settings --]
 [#function getProcessor tier component type]
     [#assign tc = tier.Id + "-" + component.Id]
     [#assign defaultProfile = "default"]

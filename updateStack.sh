@@ -22,8 +22,7 @@ function usage() {
     echo -e "1. You must be in the correct directory corresponding to the requested stack type"
     echo -e "2. REGION is only relevant for the \"product\" type, where multiple product stacks are necessary"
     echo -e "   if the product uses resources in multiple regions"  
-    echo -e "3. \"segment\" is now used in preference to \"container\" to avoid confusion with docker, but"
-    echo -e "   \"container\" is still accepted to support legacy configurations"
+    echo -e "3. \"segment\" is now used in preference to \"container\" to avoid confusion with docker"
     echo -e ""
     exit
 }

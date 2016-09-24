@@ -163,7 +163,7 @@ ARGS+=("-v" "productRegion=${PRODUCT_REGION}")
 ARGS+=("-v" "accountRegion=${ACCOUNT_REGION}")
 ARGS+=("-v" "blueprint=${COMPOSITE_BLUEPRINT}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
-ARGS+=("-v" "configuration=${COMPOSITE_CONFIGURATION}")
+ARGS+=("-v" "appsettings=${COMPOSITE_APPSETTINGS}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
 
 ${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"

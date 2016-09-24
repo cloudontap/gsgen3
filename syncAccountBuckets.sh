@@ -73,7 +73,7 @@ if [[ "${CHECK}" == "true" ]]; then
     aws --region ${ACCOUNT_REGION} s3 ls s3://${CODE_BUCKET}/ >/dev/null 2>&1
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
-          echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${AID}\" configuration bucket? If windows, is a profile matching the account been set up? Nothing to do."
+          echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${AID}\" code bucket? If windows, is a profile matching the account been set up? Nothing to do."
           usage
     fi
 fi
@@ -85,7 +85,7 @@ if [[ "${CHECK}" == "true" ]]; then
     aws --region ${ACCOUNT_REGION} s3 ls s3://${CREDENTIALS_BUCKET}/ >/dev/null 2>&1
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
-          echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${AID}\" configuration bucket? If windows, is a profile matching the account been set up? Nothing to do."
+          echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${AID}\" credentials bucket? If windows, is a profile matching the account been set up? Nothing to do."
           usage
     fi
 fi

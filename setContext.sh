@@ -100,7 +100,7 @@ export INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure"
 export TENANT_DIR="${CONFIG_DIR}/${AID}"    
 export ACCOUNT_DIR="${CONFIG_DIR}/${AID}"    
 export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${AID}/credentials" 
-export ACCOUNT_DEPLOYMENTS_DIR="${ACCOUNT_DIR}/deployments" 
+export ACCOUNT_APPSETTINGS_DIR="${ACCOUNT_DIR}/appsettings" 
 export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"    
     
 if [[ -f "${ACCOUNT_DIR}/account.json" ]]; then
@@ -138,33 +138,33 @@ CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
 cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 
 # Product specific context if the product is known
-DEPLOYMENT_LIST=
+APPSETTINGS_LIST=
 CREDENTIALS_LIST=
 if [[ -n "${PID}" ]]; then
     export SOLUTIONS_DIR="${CONFIG_DIR}/${PID}/solutions"
-    export DEPLOYMENTS_DIR="${CONFIG_DIR}/${PID}/deployments"
+    export APPSETTINGS_DIR="${CONFIG_DIR}/${PID}/appsettings"
     export CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${PID}/credentials"
     
-    # slice level configuration
+    # slice level appsettings
     if [[ (-n "${SLICE}") ]]; then
     
-        if [[ -f "${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/slice.ref" ]]; then
-            SLICE=$(cat "${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref" ]]; then
+            SLICE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
         fi
         
-        if [[ -f "${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/config.json" ]]; then
-            DEPLOYMENT_LIST="${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/config.json ${DEPLOYMENT_LIST}"
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/appsettings.json" ]]; then
+            APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/appsettings.json ${APPSETTINGS_LIST}"
         fi
 
-        if [[ -f "${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/build.ref" ]]; then
-            export BUILD_REFERENCE=$(cat "${DEPLOYMENTS_DIR}/${SEGMENT}/${SLICE}/build.ref")
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/build.ref" ]]; then
+            export BUILD_REFERENCE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/build.ref")
         fi
     fi
     
-    # segment level configuration/credentials
+    # segment level appsettings/credentials
     if [[ (-n "${SEGMENT}") ]]; then
-        if [[ -f "${DEPLOYMENTS_DIR}/${SEGMENT}/config.json" ]]; then
-            DEPLOYMENT_LIST="${DEPLOYMENTS_DIR}/${SEGMENT}/config.json ${DEPLOYMENT_LIST}"
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/appsettings.json" ]]; then
+            APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/appsettings.json ${APPSETTINGS_LIST}"
         fi
 
         if [[ -f "${CREDENTIALS_DIR}/${SEGMENT}/credentials.json" ]]; then
@@ -172,9 +172,9 @@ if [[ -n "${PID}" ]]; then
         fi
     fi
     
-    # product level configuration
-    if [[ -f "${DEPLOYMENTS_DIR}/config.json" ]]; then
-        DEPLOYMENT_LIST="${DEPLOYMENTS_DIR}/config.json ${DEPLOYMENT_LIST}"
+    # product level appsettings
+    if [[ -f "${APPSETTINGS_DIR}/appsettings.json" ]]; then
+        APPSETTINGS_LIST="${APPSETTINGS_DIR}/appsettings.json ${APPSETTINGS_LIST}"
     fi
 
     # product level credentials
@@ -182,18 +182,18 @@ if [[ -n "${PID}" ]]; then
         CREDENTIALS_LIST="${CREDENTIALS_DIR}/credentials.json ${CREDENTIALS_LIST}"
     fi
 
-    # account level configuration
-    if [[ -f "${ACCOUNT_DEPLOYMENTS_DIR}/config.json" ]]; then
-        DEPLOYMENT_LIST="${ACCOUNT_DEPLOYMENTS_DIR}/config.json ${DEPLOYMENT_LIST}"
+    # account level appsettings
+    if [[ -f "${ACCOUNT_APPSETTINGS_DIR}/appsettings.json" ]]; then
+        APPSETTINGS_LIST="${ACCOUNT_APPSETTINGS_DIR}/appsettings.json ${APPSETTINGS_LIST}"
     fi
 fi
 
-# Build the composite configuration
-export COMPOSITE_CONFIGURATION="${CONFIG_DIR}/composite_configuration.json"
-if [[ -n "${DEPLOYMENT_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_CONFIGURATION} -c ${DEPLOYMENT_LIST}
+# Build the composite appsettings
+export COMPOSITE_APPSETTINGS="${CONFIG_DIR}/composite_appsettings.json"
+if [[ -n "${APPSETTINGS_LIST}" ]]; then
+    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_APPSETTINGS} -c ${APPSETTINGS_LIST}
 else
-    echo "{}" > ${COMPOSITE_CONFIGURATION}
+    echo "{}" > ${COMPOSITE_APPSETTINGS}
 fi    
 
 # Check for account level credentials

@@ -2,7 +2,7 @@
 [#-- Standard inputs --]
 [#assign blueprintObject = blueprint?eval]
 [#assign credentialsObject = credentials?eval]
-[#assign configurationObject = configuration?eval]
+[#assign appSettingsObject = appsettings?eval]
 [#assign stackOutputsObject = stackOutputs?eval]
 
 [#-- High level objects --]
@@ -89,7 +89,7 @@
 [#assign vpc = getKey("vpcXsegmentXvpc")]
 [#assign securityGroupNAT = getKey("securityGroupXmgmtXnat")!"none"]
 
-[#-- Get processor configuration --]
+[#-- Get processor settings --]
 [#function getProcessor tier component type]
     [#assign tc = tier.Id + "-" + component.Id]
     [#assign defaultProfile = "default"]
@@ -110,7 +110,7 @@
     [/#if]
 [/#function]
 
-[#-- Get storage configuration --]
+[#-- Get storage settings --]
 [#function getStorage tier component type]
     [#assign tc = tier.Id + "-" + component.Id]
     [#assign defaultProfile = "default"]

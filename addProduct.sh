@@ -81,16 +81,16 @@ fi
 # Create the directories for the product
 PRODUCT_DIR="${ROOT_DIR}/config/${PID}"
 SOLUTIONS_DIR="${PRODUCT_DIR}/solutions"
-DEPLOYMENTS_DIR="${PRODUCT_DIR}/deployments"
+APPSETTINGS_DIR="${PRODUCT_DIR}/appsettings"
 INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure/${PID}"
 CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/credentials"
 if [[ ! -d ${SOLUTIONS_DIR} ]]; then
     mkdir -p ${SOLUTIONS_DIR}
     touch ${SOLUTIONS_DIR}/.placeholder
 fi
-if [[ ! -d ${DEPLOYMENTS_DIR} ]]; then
-    mkdir -p ${DEPLOYMENTS_DIR}
-    echo "{}" > ${DEPLOYMENTS_DIR}/config.json
+if [[ ! -d ${APPSETTINGS_DIR} ]]; then
+    mkdir -p ${APPSETTINGS_DIR}
+    echo "{}" > ${APPSETTINGS_DIR}/appsettings.json
 fi
 mkdir -p ${CREDENTIALS_DIR}
 
