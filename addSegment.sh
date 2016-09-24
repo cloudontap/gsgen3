@@ -156,7 +156,7 @@ fi
 
 # Provide an empty credentials profile for the segment
 if [[ ! -f ${SEGMENT_CREDENTIALS_DIR}/credentials.json ]]; then
-    echo "{}" > ${SEGMENT_CREDENTIALS_DIR}/credentials.json
+    echo "{\"Credentials\" : {}}" > ${SEGMENT_CREDENTIALS_DIR}/credentials.json
 fi
 
 # Create an SSH certificate at the segment level

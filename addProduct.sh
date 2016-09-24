@@ -135,7 +135,7 @@ fi
 
 # Provide an empty credentials profile for the product
 if [[ ! -f ${CREDENTIALS_DIR}/credentials.json ]]; then
-    echo "{}" > ${CREDENTIALS_DIR}/credentials.json
+    echo "{\"Credentials\" : {}}" > ${CREDENTIALS_DIR}/credentials.json
 fi
 
 # Create an SSH certificate at the product level
