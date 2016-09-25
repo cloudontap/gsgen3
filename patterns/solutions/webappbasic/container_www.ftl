@@ -3,7 +3,7 @@
     [#switch containerListMode]
         [#case "definition"]
             "Name" : "${tier.Name + "-" + component.Name + "-" + container.Id}",
-            "Image" : "${docker.Registry}/${projectId}/${slice}-${buildCommit}${dockerTag}",
+            "Image" : "${docker.Registry}/${productId}/${slice}-${buildCommit}${dockerTag}",
             "Environment" : [
                 [@standardEnvironmentVariables /]
             ],
