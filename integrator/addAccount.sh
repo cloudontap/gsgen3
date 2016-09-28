@@ -169,5 +169,5 @@ fi
 
 # Copy across the default credentials profile
 if [[ ! -f ${ACCOUNT_DIR}/credentials.json ]]; then
-    echo "{}" > ${ACCOUNT_DIR}/credentials.json
+    echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${ACCOUNT_DIR}/credentials.json
 fi

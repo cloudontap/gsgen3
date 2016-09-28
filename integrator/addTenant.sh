@@ -136,7 +136,7 @@ fi
 
 # Provide an empty credentials profile for the tenant
 if [[ ! -f ${TENANT_DIR}/credentials.json ]]; then
-    echo "{}" > ${TENANT_DIR}/credentials.json
+    echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${TENANT_DIR}/credentials.json
 fi
 
 
