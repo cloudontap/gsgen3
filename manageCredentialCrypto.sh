@@ -120,18 +120,23 @@ echo -e "\n${PATH_BASE}"
 for ATTRIBUTE in ID SECRET EMAIL; do
     VAR_PATH="PATH_${ATTRIBUTE}"
     VAR_ATTRIBUTE="ATTRIBUTE_${ATTRIBUTE}"
-    VALUE=$(${BIN_DIR}/manageCrypto.sh -n -p "${!VAR_PATH}")
+    RAW_VALUE=$(${BIN_DIR}/manageCrypto.sh -n -p "${!VAR_PATH}")
     RESULT=$?
     if [[ "${RESULT}" -eq 0 ]]; then
-        ENCRYPTED=$(echo "${VALUE}" | grep -q "${BASE64_REGEX}")
+        ENCRYPTED=$(echo "${RAW_VALUE}" | grep -q "${BASE64_REGEX}")
         if [[ ($? -eq 0) && (-n "${CRYPTO_VISIBLE}" ) ]]; then
-            VALUE=$(${BIN_DIR}/manageCrypto.sh -d -b -v -p "${!VAR_PATH}")
+            VALUE=$(${BIN_DIR}/manageCrypto.sh -d -b -v -p "${!VAR_PATH}" 2> /dev/null)
             RESULT=$?
             if [[ "${RESULT}" -eq 0 ]]; then
                 echo -e "${!VAR_ATTRIBUTE}=${VALUE}"
+            else
+                if [[ "${!VAR_ATTRIBUTE}" == "AccessKey" ]]; then
+                    # AccessKey value matches base64 regex so show raw value
+                    echo -e "${!VAR_ATTRIBUTE}=${RAW_VALUE}"
+                fi
             fi
         else
-            echo -e "${!VAR_ATTRIBUTE}=${VALUE}"
+            echo -e "${!VAR_ATTRIBUTE}=${RAW_VALUE}"
         fi
     fi
 done
