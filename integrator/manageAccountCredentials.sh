@@ -64,7 +64,7 @@ if [[ (-z "${TID}") || (-z "${TAID}") ]]; then
     usage
 fi
 
-CRYPTO_FILE_PATH="tenants/${TID}/${TAID}"
+CRYPTO_FILE_PATH="tenants/${TID}/accounts/${TAID}"
 
 # Login credentials
 OPTIONS="-v"
