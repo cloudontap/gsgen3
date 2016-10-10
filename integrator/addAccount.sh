@@ -167,7 +167,17 @@ else
     exit
 fi
 
-# Copy across the default credentials profile
+# Provide an empty credentials profile for the account
 if [[ ! -f ${ACCOUNT_DIR}/credentials.json ]]; then
     echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${ACCOUNT_DIR}/credentials.json
 fi
+
+# Ignore account tree used to initialise account rep
+if [[ ! -f ${ACCOUNT_DIR}/.gitignore ]]; then
+    cat > ${ACCOUNT_DIR}/.gitignore << EOF
+${TAID}
+EOF
+fi
+
+# All good
+RESULT=0
