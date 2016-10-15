@@ -84,10 +84,7 @@ SOLUTIONS_DIR="${PRODUCT_DIR}/solutions"
 APPSETTINGS_DIR="${PRODUCT_DIR}/appsettings"
 INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure/${PID}"
 CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/credentials"
-if [[ ! -d ${SOLUTIONS_DIR} ]]; then
-    mkdir -p ${SOLUTIONS_DIR}
-    touch ${SOLUTIONS_DIR}/.placeholder
-fi
+
 if [[ ! -d ${APPSETTINGS_DIR} ]]; then
     mkdir -p ${APPSETTINGS_DIR}
     echo "{}" > ${APPSETTINGS_DIR}/appsettings.json

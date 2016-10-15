@@ -60,6 +60,7 @@ fi
 # Ensure we are in the product or segment directory
 if [[ ("product" =~ "${LOCATION}") ]]; then
     TARGET_DIR="./solutions"
+    mkdir -p ${TARGET_DIR}
 else
     if [[ ("segment" =~ "${LOCATION}") ]]; then
         TARGET_DIR="."
@@ -89,11 +90,6 @@ if [[ -f "${SOLUTION_FILE}" ]]; then
     if [[ "${RESULT}" -eq 0 ]]; then
         mv "${SOLUTION_TEMP_FILE}" "${SOLUTION_FILE}"
     fi
-fi
-
-# Cleanup any placeholder
-if [[ -e ${TARGET_DIR}/.placeholder ]] ; then
-    ${FILE_RM} ${TARGET_DIR}/.placeholder
 fi
 
 # All good

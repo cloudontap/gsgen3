@@ -19,7 +19,7 @@ function usage() {
     echo -e "(o) -u if details should be updated"
     echo -e "\nDEFAULTS:\n"
     echo -e "EID=SID"
-    echo -e "TITLE,NAME and DESCRIPTION from environment master data for EID"
+    echo -e "TITLE, NAME and DESCRIPTION from environment master data for EID"
     echo -e "\nNOTES:\n"
     echo -e "1. Subdirectories are created in the config and infrastructure subtrees"
     echo -e "2. The segment information is saved in the segment profile"
@@ -82,8 +82,8 @@ fi
 # Set up the context
 . ${BIN_DIR}/setContext.sh
 
-# Ensure we are in the root of the account tree
-if [[ ! ("product" =~ "${LOCATION}") ]]; then
+# Ensure we are in the root of the product tree
+if [[ ! ("product" =~ ${LOCATION}) ]]; then
     echo -e "\nWe don't appear to be in the product directory. Are we in the right place?"
     usage
 fi
@@ -115,7 +115,7 @@ else
     fi
     TITLE=${TITLE:-$ENVIRONMENT_TITLE}
     NAME=${NAME:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Name | select(.!=null)")}
-    DESCRIPTION=${DESCRIPTION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Description | select(.!=null)")}
+#    DESCRIPTION=${DESCRIPTION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Description | select(.!=null)")}
 fi
 
 # Generate the filter
@@ -149,14 +149,9 @@ else
     exit
 fi
 
-# Cleanup any placeholder
-if [[ -e "${SOLUTIONS_DIR}/.placeholder" ]]; then
-    ${FILE_RM} "${SOLUTIONS_DIR}/.placeholder"
-fi
-
 # Provide an empty credentials profile for the segment
 if [[ ! -f ${SEGMENT_CREDENTIALS_DIR}/credentials.json ]]; then
-    echo "{\"Credentials\" : {}}" > ${SEGMENT_CREDENTIALS_DIR}/credentials.json
+    echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${SEGMENT_CREDENTIALS_DIR}/credentials.json
 fi
 
 # Create an SSH certificate at the segment level
