@@ -57,15 +57,7 @@
 [#assign backupsBucket = getKey("s3XsegmentXbackups")]
 
 [#-- AZ List --]
-[#if (segmentObject.AZList)??]
-    [#assign azList = segmentObject.AZList]
-[#else]
-    [#if regionObject.DefaultZones??]
-        [#assign azList = regionObject.DefaultZones]
-    [#else]
-        [#assign azList = ["a", "b"]]
-    [/#if]
-[/#if]
+[#assign azList = segmentObject.AZList]
 
 [#-- Loop optimisation --]
 [#assign lastTier = solutionTiers?last]

@@ -1022,6 +1022,7 @@
         "InternetAccess" : true,
         "DNSSupport" : true,
         "DNSHostnames" : true,
+        "AZList" : ["a", "b"],
         "NAT" : {
             "Enabled" : true,
             "MultiAZ" : false

@@ -58,15 +58,7 @@
 [#assign backupsBucket = getKey("s3XsegmentXbackups")]
 
 [#-- AZ List --]
-[#if (segmentObject.AZList)??]
-    [#assign azList = segmentObject.AZList]
-[#else]
-    [#if regionObject.DefaultZones??]
-        [#assign azList = regionObject.DefaultZones]
-    [#else]
-        [#assign azList = ["a", "b"]]
-    [/#if]
-[/#if]
+[#assign azList = segmentObject.AZList]
 
 [#-- Loop optimisation --]
 [#assign lastTier = solutionTiers?last]
@@ -262,9 +254,9 @@
                                     "Type" : "AWS::EC2::SecurityGroupIngress",
                                     "Properties" : {
                                         "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                        "IpProtocol": "${ports[portMappings[mapping].Source].IPProtocol}", 
-                                        "FromPort": "${ports[portMappings[mapping].Source].Port?c}", 
-                                        "ToPort": "${ports[portMappings[mapping].Source].Port?c}", 
+                                        "IpProtocol": "${ports[portMappings[mapping].Source].IPProtocol}",
+                                        "FromPort": "${ports[portMappings[mapping].Source].Port?c}",
+                                        "ToPort": "${ports[portMappings[mapping].Source].Port?c}",
                                         "CidrIp": "0.0.0.0/0"
                                     }
                                 },
@@ -284,7 +276,7 @@
                                             "${getKey("subnetX"+tier.Id+"X"+firstZone)}"
                                         ],
                                     [/#if]
-                                    "Listeners" : [ 
+                                    "Listeners" : [
                                         [#list elb.PortMappings as mapping]
                                             {
                                                 [#assign source = ports[portMappings[mapping].Source]]
@@ -294,12 +286,12 @@
                                                 "InstancePort" : "${destination.Port?c}",
                                                 "InstanceProtocol" : "${destination.Protocol}"
                                                 [#if (source.Certificate)?? && source.Certificate]
-                                                    ,"SSLCertificateId" : { 
+                                                    ,"SSLCertificateId" : {
                                                         "Fn::Join" : [
-                                                            "", 
+                                                            "",
                                                             [
-                                                                "arn:aws:iam::", 
-                                                                {"Ref" : "AWS::AccountId"}, 
+                                                                "arn:aws:iam::",
+                                                                {"Ref" : "AWS::AccountId"},
                                                                 ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
                                                             ]
                                                         ]
@@ -335,13 +327,92 @@
                                         { "Key" : "cot:category", "Value" : "${categoryId}" },
                                         { "Key" : "cot:tier", "Value" : "${tier.Id}" },
                                         { "Key" : "cot:component", "Value" : "${component.Id}" },
-                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" } 
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" }
                                     ]
                                 }
                             }
                             [#assign count = count + 1]
                         [/#if]
         
+                        [#-- ALB --]
+                        [#if component.ALB??]
+                            [#assign alb = component.ALB]
+                            [#list alb.PortMappings as mapping]
+                                [#assign source = ports[portMappings[mapping].Source]]
+                                "securityGroupIngressX${tier.Id}X${component.Id}X${source.Port?c}" : {
+                                    "Type" : "AWS::EC2::SecurityGroupIngress",
+                                    "Properties" : {
+                                        "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
+                                        "IpProtocol": "${source.IPProtocol}",
+                                        "FromPort": "${source.Port?c}",
+                                        "ToPort": "${source.Port?c}",
+                                        "CidrIp": "0.0.0.0/0"
+                                    }
+                                },
+                                "listenerX${tier.Id}X${component.Id}X${source.Port?c}" : {
+                                    "Type" : "AWS::EC2::SecurityGroupIngress",
+                                    "Properties" : {
+                                        "Certificates" : [ 
+                                            {
+                                                "CertificateArn" : {
+                                                    "Fn::Join" : [
+                                                        "",
+                                                        [
+                                                            "arn:aws:iam::",
+                                                            {"Ref" : "AWS::AccountId"},
+                                                            ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
+                                                        ]
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "DefaultActions" : [ 
+                                            {
+                                              "TargetGroupArn" : { "Ref" : "tgX${tier.Id}X${component.Id}X${source.Port?c}Xdefault" },
+                                              "Type" : "forward"
+                                            }
+                                        ],
+                                        "LoadBalancerArn" : { "Ref" : "albX${tier.Id}X${component.Id}" },
+                                        "Port" : ${source.Port?c},
+                                        "Protocol" : "${source.Protocol}"
+                                    }   
+                                },
+                            [/#list]
+                                    ],
+                                    "HealthCheck" : {
+                                        [#assign port = ports[portMappings[alb.PortMappings[0]].Destination]]
+                                        "Target" : "${(port.HealthCheck.Protocol)!port.Protocol}:${port.Port?c}${(alb.HealthCheck.Path)!port.HealthCheck.Path}",
+                                        "HealthyThreshold" : "${(alb.HealthCheck.HealthyThreshold)!port.HealthCheck.HealthyThreshold}",
+                                        "UnhealthyThreshold" : "${(alb.HealthCheck.UnhealthyThreshold)!port.HealthCheck.UnhealthyThreshold}",
+                                        "Interval" : "${(alb.HealthCheck.Interval)!port.HealthCheck.Interval}",
+                                        "Timeout" : "${(alb.HealthCheck.Timeout)!port.HealthCheck.Timeout}"
+                                    },
+                            "albX${tier.Id}X${component.Id}" : {
+                                "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+                                "Properties" : {
+                                    "Subnets" : [
+                                        [#list azList as zone]
+                                            "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
+                                        [/#list]
+                                    ],
+                                    "Scheme" : "${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("internet-facing","internal")}",
+                                    "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
+                                    "Name" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
+                                    "Tags" : [
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                        { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                        { "Key" : "cot:component", "Value" : "${component.Id}" },
+                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}" }
+                                    ]
+                                }
+                            }
+                            [#assign count = count + 1]
+                        [/#if]
+
                         [#-- EC2 --]
                         [#if component.EC2??]
                             [#assign ec2 = component.EC2]
@@ -1406,6 +1477,18 @@
                             },
                             "elbX${tier.Id}X${component.Id}Xdns" : {
                                 "Value" : { "Fn::GetAtt" : ["elbX${tier.Id}X${component.Id}", "DNSName"] }
+                            }
+                            [#assign count = count + 1]
+                        [/#if]
+
+                        [#-- ALB --]
+                        [#if component.ALB??]
+                            [#if count > 0],[/#if]
+                            "albX${tier.Id}X${component.Id}" : {
+                                "Value" : { "Ref" : "albX${tier.Id}X${component.Id}" }
+                            },
+                            "albX${tier.Id}X${component.Id}Xdns" : {
+                                "Value" : { "Fn::GetAtt" : ["albX${tier.Id}X${component.Id}", "DNSName"] }
                             }
                             [#assign count = count + 1]
                         [/#if]
