@@ -1,0 +1,115 @@
+{
+    "Solution" : {
+        "Title" : "Dashboard",
+        "Id" : "dashboard",
+        "Name" : "dashboard",
+        "Tiers" : [
+            {
+                "Id" : "elb",
+                "Components" : [
+                    {
+                        "Title" : "ES Load Balancer",
+                        "Id" : "es",
+                        "Name" : "es",
+                        "Slices" : ["es-elb"],
+                        "ELB" : {
+                            "PortMappings" : ["https", "http"],
+                            "HealthCheck" : {
+                                "Path" : "/healthcheck/",
+                                "Interval" : "30",
+                                "Timeout" : "29",
+                                "HealthyThreshold" : "2",
+                                "UnhealthyThreshold" : "10"
+                            },
+                            "Logs" : true
+                        }
+                    }
+                ]
+            },
+            {
+                "Id" : "web",
+                "Components" : [
+                    {
+                        "Title" : "ES/Kibana Filters plus data sources",
+                        "Id" : "es",
+                        "Name" : "es",
+                        "Slices" : ["es-filter", "dp-provider"],
+                        "Role" : "ECS",
+                        "ECS" : {
+                            "Processor" : {
+                                "Processor" : "t2.medium",
+                                "MinPerZone" : 1,
+                                "MaxPerZone" : 1,
+                                "DesiredPerZone" : 1
+                            },
+                            "Services" : [
+                                {
+                                    "Id" : "filter",
+                                    "Slices" : ["es-filter"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "filter",
+                                            "Version" : "1.1",
+                                            "Ports" : [{"Id": "http", "ELB" : "es"}],
+                                            "Cpu" : 1000,
+                                            "Memory" : 1536
+                                        },
+                                        {
+                                            "Id" : "cleanup",
+                                            "Version" : "1.0",
+                                            "Cpu" : 24,
+                                            "Memory" : 64
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Tasks" : [
+                                {
+                                    "Id" : "provider",
+                                    "Slices" : ["dp-provider"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "provider",
+                                            "Cpu" : 256,
+                                            "Memory" : 2048
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "Id" : "ana",
+                "Components" : [
+                    {
+                        "Title" : "ES Cluster",
+                        "Id" : "es",
+                        "Name" : "es",
+                        "Slices" : ["es"],
+                        "ElasticSearch" : {
+                            "Processor" : {
+                                "Processor" : "t2.medium.elasticsearch",
+                                "CountPerZone" : 1
+                            },
+                            "Storage" : {
+                                "Volumes" : [
+                                    {
+                                    "Size" : 35
+                                    }
+                                ]
+                            },
+                            "Snapshot" : {
+                                "Hour" : 15
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "Id" : "mgmt"
+            }
+        ]
+    }
+}
