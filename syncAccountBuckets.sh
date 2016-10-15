@@ -9,7 +9,7 @@ function usage() {
     echo -e "\nUsage: $(basename $0) -q -x -y"
     echo -e "\nwhere\n"
     echo -e "    -h shows this text"
-    echo -e "(o) -q for no check (quick) - don't check bucket access before attmepting to synchronise"
+    echo -e "(o) -q for no check (quick) - don't check bucket access before attempting to synchronise"
     echo -e "(o) -x for no delete - by default files in the buckets that are absent locally are deleted"
     echo -e "(o) -y for a dryrun - show what will happen without actually transferring any files"
     echo -e "\nDEFAULTS:\n"
@@ -73,22 +73,44 @@ if [[ "${CHECK}" == "true" ]]; then
     aws --region ${ACCOUNT_REGION} s3 ls s3://${CODE_BUCKET}/ >/dev/null 2>&1
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
-          echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${AID}\" code bucket? If windows, is a profile matching the account been set up? Nothing to do."
-          usage
+        echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${AID}\" code bucket? If windows, is a profile matching the account been set up? Nothing to do."
+        usage
     fi
 fi
-cd ${INFRASTRUCTURE_DIR}/startup
-aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://${CODE_BUCKET}/bootstrap/
+
+if [[ -d ${INFRASTRUCTURE_DIR}/startup ]]; then
+    cd ${INFRASTRUCTURE_DIR}/startup
+    aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://${CODE_BUCKET}/bootstrap/
+    RESULT=$?
+    if [[ "$RESULT" -ne 0 ]]; then
+        echo -e "\nCan't update the code bucket"
+        usage
+    fi
+else
+    echo -e "\nStartup directory not found"
+    usage    
+fi
 
 # Confirm access to the credentials bucket
 if [[ "${CHECK}" == "true" ]]; then
     aws --region ${ACCOUNT_REGION} s3 ls s3://${CREDENTIALS_BUCKET}/ >/dev/null 2>&1
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
-          echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${AID}\" credentials bucket? If windows, is a profile matching the account been set up? Nothing to do."
-          usage
+        echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${AID}\" credentials bucket? If windows, is a profile matching the account been set up? Nothing to do."
+        usage
     fi
 fi
-cd ${ACCOUNT_CREDENTIALS_DIR}/alm/docker
-aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} . s3://${CREDENTIALS_BUCKET}/${AID}/alm/docker/
-RESULT=$?
+
+if [[-d ${ACCOUNT_CREDENTIALS_DIR}/alm/docker ]]; then
+    cd ${ACCOUNT_CREDENTIALS_DIR}/alm/docker
+    aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} . s3://${CREDENTIALS_BUCKET}/${AID}/alm/docker/
+    RESULT=$?
+    if [[ "$RESULT" -ne 0 ]]; then
+        echo -e "\nCan't update the code bucket"
+        usage
+    fi
+else
+    echo -e "\nDocker directory not found"
+    usage    
+fi
+
