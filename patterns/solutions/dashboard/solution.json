@@ -77,6 +77,22 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "Title" : "Provider raw bucket",
+                        "Id" : "raw-provider",
+                        "Name" : "raw-provider",
+                        "Slices" : ["raw-provider"],
+                        "S3" : {
+                        }
+                    },
+                    {
+                        "Title" : "Provider normalised bucket",
+                        "Id" : "norm-provider",
+                        "Name" : "norm-provider",
+                        "Slices" : ["norm-provider"],
+                        "S3" : {
+                        }
                     }
                 ]
             },
