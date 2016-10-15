@@ -40,13 +40,6 @@
             "Enabled" : false
         }
     },
-    "Processors" : {
-        "default" : {
-            "ECS" : {
-                "Processor" : "t2.small"
-            }
-        }
-    },
     "Storage" : {
         "default" : {
             "EC2" : {
