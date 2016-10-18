@@ -220,8 +220,68 @@
                                             ]
                                         }
                                     [/#if]
+                                    [#if s3.Notifications??]
+                                        ,"NotificationConfiguration" : {
+                                        [#if s3.Notifications.SQS??]
+                                            "QueueConfigurations" : [
+                                                [#list s3.Notifications.SQS as queue]
+                                                    {
+                                                        "Event" : "s3:ObjectCreated:*",
+                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                    },
+                                                    {
+                                                        "Event" : "s3:ObjectRemoved:*",
+                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                    },
+                                                    {
+                                                        "Event" : "s3:ReducedRedundancyLostObject",
+                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                    }
+                                                    [#if !(queue.Id == (s3.Notifications.SQS?last).Id)],[/#if]
+                                                [/#list]
+                                            ]
+                                        [/#if]
+                                        }
+                                    [/#if]
                                 }
+                                [#if s3.Notifications??]
+                                    ,"DependsOn" : [
+                                        [#if (s3.Notifications.SQS)??]
+                                            [#list s3.Notifications.SQS as queue]
+                                                "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy"
+                                                [#if !(queue.Id == (s3.Notifications.SQS?last).Id)],[/#if]
+                                            [/#list]
+                                        [/#if]
+                                    ]
+                                [/#if]
                             }
+                            [#if (s3.Notifications.SQS)??]
+                                [#list s3.Notifications.SQS as queue]
+                                    ,"s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy" : {
+                                        "Type" : "AWS::SQS::QueuePolicy",
+                                        "Properties" : {
+                                            "PolicyDocument" : {
+                                                "Version" : "2012-10-17",
+                                                "Id" : "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy",
+                                                "Statement" : [
+                                                    {
+                                                        "Effect" : "Allow",
+                                                        "Principal" : "*",
+                                                        "Action" : "sqs:SendMessage",
+                                                        "Resource" : "*",
+                                                        "Condition" : {
+                                                            "ArnLike" : {
+                                                                "aws:sourceArn" : "arn:aws:s3:::*"
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            "Queues" : [ "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xurl")}" ]
+                                        }
+                                    }
+                                [/#list]
+                            [/#if]
                             [#assign count = count + 1]
                         [/#if]
 
@@ -1468,6 +1528,7 @@
                             "sqsX${tier.Id}X${component.Id}Xarn" : {
                                 "Value" : { "Fn::GetAtt" : ["sqsX${tier.Id}X${component.Id}", "Arn"] }
                             }
+                            [#assign count = count + 1]
                         [/#if]
                         
                         [#-- ELB --]
