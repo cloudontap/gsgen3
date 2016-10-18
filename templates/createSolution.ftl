@@ -1365,6 +1365,7 @@
                                         },
                                     [/#if]
                                     "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}",
+                                    "ElasticsearchVersion" : "2.3",
                                     [#if (storageProfile.Volumes)?? && (storageProfile.Volumes?size > 0)]
                                         [#assign volume = storageProfile.Volumes[0]]
                                         "EBSOptions" : {
