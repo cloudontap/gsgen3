@@ -101,7 +101,7 @@ if [[ "${CHECK}" == "true" ]]; then
     fi
 fi
 
-if [[-d ${ACCOUNT_CREDENTIALS_DIR}/alm/docker ]]; then
+if [[ -d ${ACCOUNT_CREDENTIALS_DIR}/alm/docker ]]; then
     cd ${ACCOUNT_CREDENTIALS_DIR}/alm/docker
     aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} . s3://${CREDENTIALS_BUCKET}/${AID}/alm/docker/
     RESULT=$?
