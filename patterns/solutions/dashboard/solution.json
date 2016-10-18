@@ -8,10 +8,10 @@
                 "Id" : "elb",
                 "Components" : [
                     {
-                        "Title" : "ES Load Balancer",
-                        "Id" : "es",
-                        "Name" : "es",
-                        "Slices" : ["es-elb"],
+                        "Title" : "UI Load Balancer",
+                        "Id" : "ui",
+                        "Name" : "ui",
+                        "Slices" : ["ui-elb"],
                         "ELB" : {
                             "PortMappings" : ["https", "http"],
                             "HealthCheck" : {
@@ -30,30 +30,135 @@
                 "Id" : "web",
                 "Components" : [
                     {
-                        "Title" : "ES/Kibana Filters plus data sources",
-                        "Id" : "es",
-                        "Name" : "es",
-                        "Slices" : ["es-filter", "dp-provider"],
+                        "Title" : "UI and ES/Kibana Filters",
+                        "Id" : "ui",
+                        "Name" : "ui",
+                        "Slices" : ["ui", "dp-ui","es-filter"],
                         "Role" : "ECS",
                         "ECS" : {
-                            "Processor" : {
-                                "Processor" : "t2.medium",
-                                "MinPerZone" : 1,
-                                "MaxPerZone" : 1,
-                                "DesiredPerZone" : 1
-                            },
                             "Services" : [
                                 {
+                                    "Id" : "dp",
+                                    "Slices" : ["ui-dp"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "ui",
+                                            "Ports" : [{"Id": "http", "ELB" : "ui"}],
+                                            "Cpu" : 1000,
+                                            "Memory" : 1536
+                                        }
+                                    ]
+                                },
+                                {
                                     "Id" : "filter",
-                                    "Slices" : ["es-filter"],
+                                    "Slices" : ["ui-filter"],
                                     "Containers" : [
                                         {
                                             "Id" : "filter",
                                             "Version" : "1.1",
-                                            "Ports" : [{"Id": "http", "ELB" : "es"}],
+                                            "Ports" : [{"Id": "http", "ELB" : "ui"}],
                                             "Cpu" : 1000,
                                             "Memory" : 1536
-                                        },
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Id" : "support",
+                                    "Slices" : ["ui-spt"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "cleanup",
+                                            "Version" : "1.0",
+                                            "Cpu" : 24,
+                                            "Memory" : 64
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "Id" : "app",
+                "Components" : [
+                    {
+                        "Title" : "Provider normalised bucket notifications",
+                        "Id" : "providernorm",
+                        "Name" : "provider-norm",
+                        "Slices" : ["dp-sqs"],
+                        "SQS" : {
+                        }
+                    },
+                    {
+                        "Title" : "Provider etl bucket notifications",
+                        "Id" : "provideretl",
+                        "Name" : "provider-etl",
+                        "Slices" : ["dp-sqs"],
+                        "SQS" : {
+                        }
+                    },
+                    {
+                        "Title" : "Provider raw bucket",
+                        "Id" : "providerraw",
+                        "Name" : "raw-provider",
+                        "Slices" : ["dp-s3"],
+                        "S3" : {
+                        }
+                    },
+                    {
+                        "Title" : "Provider normalised bucket",
+                        "Id" : "providernorm",
+                        "Name" : "norm-provider",
+                        "Slices" : ["dp-s3"],
+                        "S3" : {
+                            "Notifications" : {
+                                "SQS" : [
+                                    {
+                                        "Id" : "providernorm"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "Title" : "Provider etl bucket",
+                        "Id" : "provideretl",
+                        "Name" : "etl-provider",
+                        "Slices" : ["dp-s3"],
+                        "S3" : {
+                            "Notifications" : {
+                                "SQS" : [
+                                    {
+                                        "Id" : "provideretl"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "Title" : "Providers",
+                        "Id" : "dp",
+                        "Name" : "dp",
+                        "Slices" : ["dp", "dp-provider", "dp-provider-task"],
+                        "Role" : "ECS",
+                        "ECS" : {
+                           "Services" : [
+                                {
+                                    "Id" : "provider",
+                                    "Slices" : ["dp-provider"],
+                                    "Containers" : [
+                                        {
+                                            "Id" : "provider",
+                                            "Cpu" : 256,
+                                            "Memory" : 1536
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Id" : "support",
+                                    "Slices" : ["dp-spt"],
+                                    "Containers" : [
                                         {
                                             "Id" : "cleanup",
                                             "Version" : "1.0",
@@ -65,8 +170,8 @@
                             ],
                             "Tasks" : [
                                 {
-                                    "Id" : "provider",
-                                    "Slices" : ["dp-provider"],
+                                    "Id" : "providertask",
+                                    "Slices" : ["dp-provider-task"],
                                     "Containers" : [
                                         {
                                             "Id" : "provider",
@@ -76,22 +181,6 @@
                                     ]
                                 }
                             ]
-                        }
-                    },
-                    {
-                        "Title" : "Provider raw bucket",
-                        "Id" : "raw-provider",
-                        "Name" : "raw-provider",
-                        "Slices" : ["raw-provider"],
-                        "S3" : {
-                        }
-                    },
-                    {
-                        "Title" : "Provider normalised bucket",
-                        "Id" : "norm-provider",
-                        "Name" : "norm-provider",
-                        "Slices" : ["norm-provider"],
-                        "S3" : {
                         }
                     }
                 ]
@@ -105,17 +194,6 @@
                         "Name" : "es",
                         "Slices" : ["es"],
                         "ElasticSearch" : {
-                            "Processor" : {
-                                "Processor" : "t2.medium.elasticsearch",
-                                "CountPerZone" : 1
-                            },
-                            "Storage" : {
-                                "Volumes" : [
-                                    {
-                                    "Size" : 35
-                                    }
-                                ]
-                            },
                             "Snapshot" : {
                                 "Hour" : 15
                             }
@@ -127,5 +205,26 @@
                 "Id" : "mgmt"
             }
         ]
+    },
+    "Processors" : {
+        "default" : {
+            "ECS" : {
+                "Processor" : "t2.medium"
+            },
+            "ElasticSearch" : {
+                "Processor" : "t2.medium.elasticsearch"
+            }
+        }
+    },
+    "Storage" : {
+        "default" : {
+            "ElasticSearch" : {
+                "Volumes" : [
+                    {
+                    "Size" : 35
+                    }
+                ]
+            }
+        }
     }
 }
