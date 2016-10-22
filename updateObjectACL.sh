@@ -6,6 +6,7 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
 
 ACL_DEFAULT="private"
 PREFIX_DEFAULT="/"
+DISPLAY_ACLS_DEFAULT="false"
 function usage() {
     echo -e "\nUpdate the ACL associated with all objects in a bucket" 
     echo -e "\nUsage: $(basename $0) -b BUCKET -p PREFIX -a ACL -d\n"
@@ -18,15 +19,13 @@ function usage() {
     echo -e "\nDEFAULTS:\n"
     echo -e "ACL    = \"${ACL_DEFAULT}\""
     echo -e "PREFIX = \"${PREFIX_DEFAULT}\""
+    echo -e "DISPLAY_ACLS = \"${DISPLAY_ACLS_DEFAULT}\""
     echo -e "\nNOTES:\n"
     echo -e "1. PREFIX must start and end with a /"
     echo -e ""
     exit
 }
 
-ACL="${ACL_DEFAULT}"
-PREFIX="${PREFIX_DEFAULT}"
-DISPLAY_ACLS="false"
 # Parse options
 while getopts ":a:b:dhp:" opt; do
     case $opt in
@@ -55,6 +54,11 @@ while getopts ":a:b:dhp:" opt; do
             ;;
     esac
 done
+
+# Defaults
+ACL="${ACL:-${ACL_DEFAULT}}"
+PREFIX="${PREFIX:-${PREFIX_DEFAULT}}"
+DISPLAY_ACLS="${DISPLAY_ACLS:-${DISPLAY_ACLS_DEFAULT}}"
 
 # Ensure mandatory arguments have been provided
 if [[ "${BUCKET}"  == "" ]]; then
