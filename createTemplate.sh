@@ -109,8 +109,19 @@ TEMPLATE="create${TYPE^}.ftl"
 case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        OUTPUT="${CF_DIR}/acc-${SLICE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_acc-${SLICE}-${REGION}-template.json"
+        TYPE_PREFIX="acc-"
+        SLICE_PREFIX="${SLICE}-"
+        REGION_PREFIX="${REGION}-"
+
+        # LEGACY: Support stacks created before slices added to account
+        if [[ "${SLICE}" =~ s3 ) ]]; then
+            if [[ -f "${CF_DIR}/account-${REGION}-template.json" ]]; then
+                TYPE_PREFIX="account-"
+                SLICE_PREFIX=""
+            fi
+
+        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
         ;;
     product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
