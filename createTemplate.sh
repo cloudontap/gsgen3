@@ -16,11 +16,13 @@ function usage() {
     echo -e "\nNOTES:\n"
     echo -e "1. You must be in the directory specific to the type"
     echo -e "2. REGION is only relevant for the \"product\" type"
-    echo -e "3. SLICE is mandatory for the \"segment\", \"solution\" or \"application\" type"
-    echo -e "4. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for \"segment\" type "
-    echo -e "5. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
-    echo -e "6. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
-    echo -e "7. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
+    echo -e "3. SLICE is mandatory for the \"account\", \"segment\", \"solution\" or \"application\" type"
+    echo -e "4. SLICE may be one of \"s3\" or \"cert\" for \"account\" type "
+    echo -e "5. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for \"segment\" type"
+    echo -e "6. Stack for SLICE of \"eip\" or \"s3\" must be created before stack for \"vpc\" for \"segment\" type"
+    echo -e "7. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
+    echo -e "8. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
+    echo -e "9. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
     echo -e "   \"eips3vpc\" are also supported but for new products, individual "
     echo -e "   templates for each slice should be created"
     echo -e ""
@@ -62,8 +64,13 @@ if [[ (-z "${TYPE}") ]]; then
     usage
 fi
 if [[ (-z "${SLICE}") && 
-      (!("${TYPE}" =~ account|product)) ]]; then
+      (!("${TYPE}" =~ product)) ]]; then
     echo -e "\nInsufficient arguments"
+    usage
+fi
+if [[ ("${TYPE}" == "account") && 
+      (!("${SLICE}" =~ s3|cert)) ]]; then
+    echo -e "\nUnknown slice ${SLICE} for the account type"
     usage
 fi
 if [[ ("${TYPE}" == "segment") && 
@@ -102,8 +109,8 @@ TEMPLATE="create${TYPE^}.ftl"
 case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
+        OUTPUT="${CF_DIR}/acc-${SLICE}-${REGION}-template.json"
+        TEMP_OUTPUT="${CF_DIR}/temp_acc-${SLICE}-${REGION}-template.json"
         ;;
     product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"

@@ -212,7 +212,7 @@ fi
 # Create the composite stack outputs
 STACK_LIST=()
 if [[ (-n "${AID}") && (-d "${INFRASTRUCTURE_DIR}/${AID}/aws/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${AID}/aws/cf" -name account-*-stack.json))
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${AID}/aws/cf" -name acc*-stack.json))
 fi
 if [[ (-n "${PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
     STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name product-${REGION}-stack.json))
