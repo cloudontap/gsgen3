@@ -97,7 +97,8 @@ if [[ -f ${TENANT_DIR}/tenant.json ]]; then
     TENANT_PROFILE=${TENANT_DIR}/tenant.json
 else
     TENANT_PROFILE=${BIN_DIR}/templates/blueprint/tenant.json
-    DOMAIN=${DOMAIN:-${TID}.$(cat integrator.json | jq -r '.Integrator.Domain.Stem | select(.!=null)')}
+    INTEGRATOR_DOMAIN=$(cat integrator.json | jq -r '.Integrator.Domain.Stem | select(.!=null)')
+    DOMAIN=${DOMAIN:-${TID}.${INTEGRATOR_DOMAIN}}
     AWS_REGION=${AWS_REGION:-$(cat integrator.json | jq -r '.Integrator.Region | select(.!=null)')}
     AWS_SES_REGION=${AWS_SES_REGION:-$(cat integrator.json | jq -r '.Integrator.SES.Region | select(.!=null)')}
 fi
@@ -107,6 +108,7 @@ FILTER=". | .Tenant.Id=\$TID"
 if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Tenant.Name=\$NAME"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Tenant.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Tenant.Description=\$DESCRIPTION"; fi
+if [[ -n "${INTEGRATOR_DOMAIN}" ]]; then FILTER="${FILTER} | .Tenant.Domain.Validation=\$INTEGRATOR_DOMAIN"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.SES.Region=\$AWS_SES_REGION"; fi
@@ -124,6 +126,7 @@ cat ${TENANT_PROFILE} | jq --indent 4 \
 --arg AWS_REGION "${AWS_REGION}" \
 --arg AWS_SES_REGION "${AWS_SES_REGION}" \
 --arg DOMAIN "${DOMAIN}" \
+--arg INTEGRATOR_DOMAIN "${INTEGRATOR_DOMAIN}" \
 "${FILTER}" > ${TENANT_DIR}/temp_tenant.json
 RESULT=$?
 
