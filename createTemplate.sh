@@ -17,7 +17,7 @@ function usage() {
     echo -e "1. You must be in the directory specific to the type"
     echo -e "2. REGION is only relevant for the \"product\" type"
     echo -e "3. SLICE is mandatory for the \"segment\", \"solution\" or \"application\" type"
-    echo -e "4. SLICE may be one of \"eip\", \"s3\", \"key\", \"vpc\" or \"dns\" for \"segment\" type "
+    echo -e "4. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for \"segment\" type "
     echo -e "5. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
     echo -e "6. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
     echo -e "7. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
@@ -67,7 +67,7 @@ if [[ (-z "${SLICE}") &&
     usage
 fi
 if [[ ("${TYPE}" == "segment") && 
-      (!("${SLICE}" =~ eip|s3|key|vpc|dns|eipvpc|eips3vpc)) ]]; then
+      (!("${SLICE}" =~ eip|s3|cmk|cert|vpc|dns|eipvpc|eips3vpc)) ]]; then
     echo -e "\nUnknown slice ${SLICE} for the segment type"
     usage
 fi
@@ -121,7 +121,7 @@ case $TYPE in
         SLICE_PREFIX="${SLICE}-"
         REGION_PREFIX="${REGION}-"
         # LEGACY: Support old formats for existing stacks so they can be updated 
-        if [[ !("${SLICE}" =~ key|dns ) ]]; then
+        if [[ !("${SLICE}" =~ cmk|cert|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
                 TYPE_PREFIX="cont-"
             fi
