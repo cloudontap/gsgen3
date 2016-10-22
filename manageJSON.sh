@@ -89,5 +89,5 @@ fi
 jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" > ${JSON_OUTPUT} 
 RESULT=$?
 if [[ "${RESULT}" -eq 0 ]]; then dos2unix "${JSON_OUTPUT}" 2> /dev/null; fi
-rm -f "${JSON_ARRAY_SHORT[@]}"
+if [[ ! -n "${GSGEN_DEBUG}" ]]; then rm -f "${JSON_ARRAY_SHORT[@]}"; fi
 #
