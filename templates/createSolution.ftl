@@ -145,7 +145,7 @@
                 "DeviceName" : "/dev/sdt",
                 "VirtualName" : "ephemeral1"
             }
-        ]
+        ],
     [/#if]
 [/#macro]
 
@@ -719,7 +719,7 @@
                                         [#assign processorProfile = getProcessor(tier, component, "EC2")]
                                         [#assign storageProfile = getStorage(tier, component, "EC2")]
                                         "Properties": {
-                                            [@createBlockDevices storageProfile=storageProfile /],
+                                            [@createBlockDevices storageProfile=storageProfile /]
                                             "DisableApiTermination" : false,
                                             "EbsOptimized" : false,
                                             "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}X${component.Id}" },
@@ -809,7 +809,8 @@
                                             [#list container.Ports as port]
                                                 [#if port?is_hash]
                                                     [#assign portId = port.Id]
-                                                    [#assign fromSG = port.ELB?? && (port.fromSG || fixedIP)]
+                                                    [#assign fromSG = port.ELB?? && 
+                                                        ((port.sgAccessOnly?? && port.limitAccessToSG) || fixedIP)]
                                                     [#if fromSG]
                                                         [#assign sg = getKey("securityGroupXelbX"+port.ELB)]
                                                     [/#if]
@@ -825,7 +826,7 @@
                                                         "FromPort": "${ports[portId].Port?c}", 
                                                         "ToPort": "${ports[portId].Port?c}", 
                                                         [#if fromSG]
-                                                            "SourceSecurityGroupId": "${sg)}"
+                                                            "SourceSecurityGroupId": "${sg}"
                                                         [#else]
                                                             "CidrIp": "0.0.0.0/0"
                                                         [/#if]
@@ -835,15 +836,15 @@
                                         [/#if]
                                         [#if container.PortMappings??]
                                             [#list container.PortMappings as mapping]
-                                                [#assign port = ports[portMappings[mapping.Id].Destination]]
-                                                [#assign portId = port.Id]
+                                                [#assign destination = ports[portMappings[mapping.Id].Destination]]
                                                 [#assign useDynamicHostPort = mapping.DynamicHostPort?? && mapping.DynamicHostPort]
                                                 [#if useDynamicHostPort]
                                                     [#assign ruleName = "ecsXdynamic"]
                                                 [#else]
-                                                    [#assign ruleName = ports[portId].Port?c]
+                                                    [#assign ruleName = destination.Port?c]
                                                 [/#if]
-                                                [#assign fromSG = (mapping.ELB?? || mapping.ILB) && (mapping.fromSG || fixedIP)]
+                                                [#assign fromSG = (mapping.ELB?? || mapping.ILB??) && 
+                                                    ((mapping.limitAccessToSG?? && mapping.limitAccessToSG) || fixedIP)]
                                                 [#if fromSG]
                                                     [#if mapping.ELB??]
                                                         [#assign sg = getKey("securityGroupXelbX"+mapping.ELB)]
@@ -855,16 +856,16 @@
                                                     "Type" : "AWS::EC2::SecurityGroupIngress",
                                                     "Properties" : {
                                                         "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                                        "IpProtocol": "${ports[portId].IPProtocol}",
+                                                        "IpProtocol": "${destination.IPProtocol}",
                                                         [#if useDynamicHostPort]
                                                             "FromPort": "49153",
                                                             "ToPort": "65535",
                                                         [#else]
-                                                            "FromPort": "${ports[portId].Port?c}", 
-                                                            "ToPort": "${ports[portId].Port?c}", 
+                                                            "FromPort": "${destination.Port?c}", 
+                                                            "ToPort": "${destination.Port?c}", 
                                                         [/#if]
                                                         [#if fromSG]
-                                                            "SourceSecurityGroupId": "${sg)}"
+                                                            "SourceSecurityGroupId": "${sg}"
                                                         [#else]
                                                             "CidrIp": "0.0.0.0/0"
                                                         [/#if]
@@ -1183,7 +1184,7 @@
                                     "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
                                     "ImageId": "${regionObject.AMIs.Centos.ECS}",
                                     "InstanceType": "${processorProfile.Processor}",
-                                    [@createBlockDevices storageProfile=storageProfile /],
+                                    [@createBlockDevices storageProfile=storageProfile /]
                                     "SecurityGroups" : [ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} [#if securityGroupNAT != "none"], "${securityGroupNAT}"[/#if] ], 
                                     "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}X${component.Id}" },
                                     "AssociatePublicIpAddress" : ${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("true","false")},
