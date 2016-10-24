@@ -5,7 +5,7 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TYPE}") || \
-        ((-z "${SLICE}") && (! ("${TYPE}" =~ account|product ))) ]]; then
+        ((-z "${SLICE}") && (! ("${TYPE}" =~ product ))) ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -30,33 +30,42 @@ esac
 
 
 # Determine the details of the template to be created
+PRODUCT_PREFIX="${PID}"
+TYPE_PREFIX="${TYPE}-"
+SLICE_PREFIX="${SLICE}-"
+REGION_PREFIX="${REGION}-"
+SEGMENT_SUFFIX="-${SEGMENT}"
+TYPE_SUFFIX="-${TYPE}"
+SLICE_SUFFIX="-${SLICE}"
 case $TYPE in
     account)
-        REGION="${ACCOUNT_REGION}"
         CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        STACKNAME="${AID}-${TYPE}"
-        TEMPLATE="${TYPE}-${REGION}-template.json"
-        STACK="${TYPE}-${REGION}-stack.json"
+        PRODUCT_PREFIX="${AID}"
+        REGION_PREFIX="${ACCOUNT_REGION}-"
+        SEGMENT_SUFFIX=""
+
+        # LEGACY: Support stacks created before slices added to account
+        if [[ "${SLICE}" =~ s3 ]]; then
+            if [[ -f "${CF_DIR}/${TYPE_PREFIX}${REGION_PREFIX}template.json" ]]; then
+                SLICE_PREFIX=""
+                SLICE_SUFFIX=""
+            fi
+        fi
         ;;
+
     product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
-        STACKNAME="${PID}-${TYPE}"
-        TEMPLATE="${TYPE}-${REGION}-template.json"
-        STACK="${TYPE}-${REGION}-stack.json"
+        SEGMENT_SUFFIX=""
         ;;
     solution)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        STACKNAME="${PID}-${SEGMENT}-soln-${SLICE}"
-        TEMPLATE="soln-${SLICE}-${REGION}-template.json"
-        STACK="soln-${SLICE}-${REGION}-stack.json"
+        TYPE_PREFIX="soln-"
+        TYPE_SUFFIX="-soln"
         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
         TYPE_SUFFIX="seg"
-        SLICE_PREFIX="${SLICE}-"
-        SLICE_SUFFIX="-${SLICE}"
-        REGION_PREFIX="${REGION}-"
         # LEGACY: Support old formats for existing stacks so they can be updated 
         if [[ !("${SLICE}" =~ key|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
@@ -77,19 +86,19 @@ case $TYPE in
                 REGION_PREFIX=""
             fi
         fi
-        STACKNAME="${PID}-${SEGMENT}-${TYPE_SUFFIX}${SLICE_SUFFIX}"
-        TEMPLATE="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
-        STACK="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}stack.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        STACKNAME="${PID}-${SEGMENT}-app-${SLICE}"
-        TEMPLATE="app-${SLICE}-${REGION}-template.json"
-        STACK="app-${SLICE}-${REGION}-stack.json"
+        TYPE_PREFIX="app-"
+        TYPE_SUFFIX="-app"
         ;;
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, product, segment, solution, application). Nothing to do."
         usage
         ;;
 esac
+
+STACKNAME="${PRODUCT_PREFIX}${SEGMENT_SUFFIX}${TYPE_SUFFIX}${SLICE_SUFFIX}"
+TEMPLATE="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+STACK="${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}stack.json"
 

@@ -4,23 +4,27 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
+REQUEST_DEFAULT="unassigned"
 function usage() {
     echo -e "\nCreate a CloudFormation (CF) template" 
-    echo -e "\nUsage: $(basename $0) -t TYPE -r REGION -s SLICE"
+    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -q REQUEST -r REGION"
     echo -e "\nwhere\n"
     echo -e "(o) -c CONFIGURATION_REFERENCE is the id of the configuration (commit id, branch id, tag)"
     echo -e "    -h shows this text"
+    echo -e "(o) -q REQUEST is an opaque value to link this template to a triggering request management system"
     echo -e "(o) -r REGION is the AWS region identifier"
-    echo -e "(o) -s SLICE is the slice of the solution to be included in the template"
+    echo -e "(m) -s SLICE is the slice to be included in the template"
     echo -e "(m) -t TYPE is the template type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
+    echo -e "\nDEFAULTS:\n"
+    echo -e "REQUEST = \"${REQUEST_DEFAULT}\""
     echo -e "\nNOTES:\n"
     echo -e "1. You must be in the directory specific to the type"
     echo -e "2. REGION is only relevant for the \"product\" type"
-    echo -e "3. SLICE is mandatory for the \"account\", \"segment\", \"solution\" or \"application\" type"
-    echo -e "4. SLICE may be one of \"s3\" or \"cert\" for \"account\" type "
-    echo -e "5. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for \"segment\" type"
-    echo -e "6. Stack for SLICE of \"eip\" or \"s3\" must be created before stack for \"vpc\" for \"segment\" type"
-    echo -e "7. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for \"segment\" type "
+    echo -e "3. SLICE may be one of \"s3\" or \"cert\" for the \"account\" type"
+    echo -e "4. SLICE may be one of \"cmk\", \"cert\", \"sns\" or \"shared\" for the \"product\" type"
+    echo -e "5. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for the \"segment\" type"
+    echo -e "6. Stack for SLICE of \"eip\" or \"s3\" must be created before stack for \"vpc\" for the \"segment\" type"
+    echo -e "7. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for the \"segment\" type "
     echo -e "8. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
     echo -e "9. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
     echo -e "   \"eips3vpc\" are also supported but for new products, individual "
@@ -30,13 +34,16 @@ function usage() {
 }
 
 # Parse options
-while getopts ":c:hr:s:t:" opt; do
+while getopts ":c:hq:r:s:t:" opt; do
     case $opt in
         c)
             CONFIGURATION_REFERENCE=$OPTARG
             ;;
         h)
             usage
+            ;;
+        q)
+            REQUEST=$OPTARG
             ;;
         r)
             REGION=$OPTARG
@@ -58,19 +65,22 @@ while getopts ":c:hr:s:t:" opt; do
     esac
 done
 
+# Defaults
+REQUEST="${REQUEST:-${REQUEST_DEFAULT}}"
+
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TYPE}") ]]; then 
-    echo -e "\nInsufficient arguments"
-    usage
-fi
-if [[ (-z "${SLICE}") && 
-      (!("${TYPE}" =~ product)) ]]; then
+if [[ (-z "${TYPE}") || (-z "${SLICE}") ]]; then 
     echo -e "\nInsufficient arguments"
     usage
 fi
 if [[ ("${TYPE}" == "account") && 
       (!("${SLICE}" =~ s3|cert)) ]]; then
     echo -e "\nUnknown slice ${SLICE} for the account type"
+    usage
+fi
+if [[ ("${TYPE}" == "product") && 
+      (!("${SLICE}" =~ s3|sns|cmk|cert)) ]]; then
+    echo -e "\nUnknown slice ${SLICE} for the product type"
     usage
 fi
 if [[ ("${TYPE}" == "segment") && 
@@ -106,38 +116,34 @@ esac
 # Set up the type specific template information
 TEMPLATE_DIR="${BIN_DIR}/templates"
 TEMPLATE="create${TYPE^}.ftl"
+
+# Determine the template name
+SLICE_PREFIX="${SLICE}-"
+REGION_PREFIX="${REGION}-"
 case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        TYPE_PREFIX="acc-"
-        SLICE_PREFIX="${SLICE}-"
-        REGION_PREFIX="${REGION}-"
+        TYPE_PREFIX="account-"
+        REGION_PREFIX="${ACCOUNT_REGION}-"
 
         # LEGACY: Support stacks created before slices added to account
-        if [[ "${SLICE}" =~ s3 ) ]]; then
-            if [[ -f "${CF_DIR}/account-${REGION}-template.json" ]]; then
-                TYPE_PREFIX="account-"
+        if [[ "${SLICE}" =~ s3 ]]; then
+            if [[ -f "${CF_DIR}/${TYPE_PREFIX}${REGION_PREFIX}template.json" ]]; then
                 SLICE_PREFIX=""
             fi
-
-        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+        fi
         ;;
     product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
-        OUTPUT="${CF_DIR}/${TYPE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE}-${REGION}-template.json"
+        TYPE_PREFIX="product-"
         ;;
     solution)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        OUTPUT="${CF_DIR}/soln-${SLICE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_soln-${SLICE}-${REGION}-template.json"
-        ;;
+        TYPE_PREFIX="soln-"
+         ;;
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
-        SLICE_PREFIX="${SLICE}-"
-        REGION_PREFIX="${REGION}-"
         # LEGACY: Support old formats for existing stacks so they can be updated 
         if [[ !("${SLICE}" =~ cmk|cert|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
@@ -153,19 +159,20 @@ case $TYPE in
                 REGION_PREFIX=""
             fi
         fi
-        OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
         ;;
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
-        OUTPUT="${CF_DIR}/app-${SLICE}-${REGION}-template.json"
-        TEMP_OUTPUT="${CF_DIR}/temp_app-${SLICE}-${REGION}-template.json"
+        TYPE_PREFIX="app-"
         ;;
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, product, segment, solution, application). Nothing to do."
         usage
         ;;
 esac
+
+# Generate the template filename
+OUTPUT="${CF_DIR}/${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
+TEMP_OUTPUT="${CF_DIR}/temp_${TYPE_PREFIX}${SLICE_PREFIX}${REGION_PREFIX}template.json"
 
 # Ensure the aws tree for the templates exists
 if [[ ! -d ${CF_DIR} ]]; then mkdir -p ${CF_DIR}; fi
@@ -183,6 +190,7 @@ ARGS+=("-v" "blueprint=${COMPOSITE_BLUEPRINT}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
 ARGS+=("-v" "appsettings=${COMPOSITE_APPSETTINGS}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
+ARGS+=("-v" "request=${REQUEST}")
 
 ${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
 RESULT=$?
