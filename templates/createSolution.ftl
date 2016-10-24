@@ -145,8 +145,40 @@
                 "DeviceName" : "/dev/sdt",
                 "VirtualName" : "ephemeral1"
             }
-        ],
+        ]
     [/#if]
+[/#macro]
+
+[#macro createTargetGroup tier component source destination name]
+    "tgX${tier.Id}X${component.Id}X${source.Port?c}X${name}" : {
+        "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+        "Properties" : {
+            "HealthCheckPort" : "${(destination.HealthCheck.Port)!destination.Port?c}",
+            "HealthCheckProtocol" : "${(destination.HealthCheck.Protocol)!destination.Protocol}",
+            "HealthCheckPath" : "${destination.HealthCheck.Path}",
+            "HealthCheckIntervalSeconds" : ${destination.HealthCheck.Interval},
+            "HealthCheckTimeoutSeconds" : ${destination.HealthCheck.Timeout},
+            "HealthyThresholdCount" : ${destination.HealthCheck.HealthyThreshold},
+            "UnhealthyThresholdCount" : ${destination.HealthCheck.UnhealthyThreshold},
+            [#if (destination.HealthCheck.SuccessCodes)?? ]
+                "Matcher" : { "HttpCode" : "${destination.HealthCheck.SuccessCodes}" },
+            [/#if]
+            "Port" : ${destination.Port?c},
+            "Protocol" : "${destination.Protocol}",
+            "Tags" : [
+                { "Key" : "cot:request", "Value" : "${request}" },
+                { "Key" : "cot:account", "Value" : "${accountId}" },
+                { "Key" : "cot:product", "Value" : "${productId}" },
+                { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                { "Key" : "cot:category", "Value" : "${categoryId}" },
+                { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                { "Key" : "cot:component", "Value" : "${component.Id}" },
+                { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${component.Name}-${source.Port?c}-${name}" }
+            ],
+            "VpcId": "${vpc}"
+        }
+    }
 [/#macro]
 
 {
@@ -174,6 +206,7 @@
                                     "GroupDescription": "Security Group for ${tier.Name}-${component.Name}",
                                     "VpcId": "${vpc}",
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -199,6 +232,7 @@
                                         "BucketName" : "${component.Name}${segmentDomainQualifier}.${segmentDomain}",
                                     [/#if]
                                     "Tags" : [ 
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -310,13 +344,14 @@
                         [#if component.ELB??]
                             [#assign elb = component.ELB]
                             [#list elb.PortMappings as mapping]
-                                "securityGroupIngressX${tier.Id}X${component.Id}X${ports[portMappings[mapping].Source].Port?c}" : {
+                                [#assign source = ports[portMappings[mapping].Source]]
+                                "securityGroupIngressX${tier.Id}X${component.Id}X${source.Port?c}" : {
                                     "Type" : "AWS::EC2::SecurityGroupIngress",
                                     "Properties" : {
                                         "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                        "IpProtocol": "${ports[portMappings[mapping].Source].IPProtocol}",
-                                        "FromPort": "${ports[portMappings[mapping].Source].Port?c}",
-                                        "ToPort": "${ports[portMappings[mapping].Source].Port?c}",
+                                        "IpProtocol": "${source.IPProtocol}",
+                                        "FromPort": "${source.Port?c}",
+                                        "ToPort": "${source.Port?c}",
                                         "CidrIp": "0.0.0.0/0"
                                     }
                                 },
@@ -338,36 +373,41 @@
                                     [/#if]
                                     "Listeners" : [
                                         [#list elb.PortMappings as mapping]
+                                            [#assign source = ports[portMappings[mapping].Source]]
+                                            [#assign destination = ports[portMappings[mapping].Destination]]
                                             {
-                                                [#assign source = ports[portMappings[mapping].Source]]
-                                                [#assign destination = ports[portMappings[mapping].Destination]]
                                                 "LoadBalancerPort" : "${source.Port?c}",
                                                 "Protocol" : "${source.Protocol}",
                                                 "InstancePort" : "${destination.Port?c}",
                                                 "InstanceProtocol" : "${destination.Protocol}"
                                                 [#if (source.Certificate)?? && source.Certificate]
-                                                    ,"SSLCertificateId" : {
-                                                        "Fn::Join" : [
-                                                            "",
-                                                            [
-                                                                "arn:aws:iam::",
-                                                                {"Ref" : "AWS::AccountId"},
-                                                                ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
-                                                            ]
-                                                        ]
-                                                    }
+                                                    ,"SSLCertificateId" :
+                                                        [#if getKey("certificateX" + certificateId)??]
+                                                            "${getKey("certificateX" + certificateId)}"
+                                                        [#else]
+                                                            {
+                                                                "Fn::Join" : [
+                                                                    "",
+                                                                    [
+                                                                        "arn:aws:iam::",
+                                                                        {"Ref" : "AWS::AccountId"},
+                                                                        ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
+                                                                    ]
+                                                                ]
+                                                            }
+                                                        [/#if]
                                                 [/#if]
                                             }
                                             [#if !(mapping == elb.PortMappings?last)],[/#if]
                                         [/#list]
                                     ],
                                     "HealthCheck" : {
-                                        [#assign port = ports[portMappings[elb.PortMappings[0]].Destination]]
-                                        "Target" : "${(port.HealthCheck.Protocol)!port.Protocol}:${port.Port?c}${(elb.HealthCheck.Path)!port.HealthCheck.Path}",
-                                        "HealthyThreshold" : "${(elb.HealthCheck.HealthyThreshold)!port.HealthCheck.HealthyThreshold}",
-                                        "UnhealthyThreshold" : "${(elb.HealthCheck.UnhealthyThreshold)!port.HealthCheck.UnhealthyThreshold}",
-                                        "Interval" : "${(elb.HealthCheck.Interval)!port.HealthCheck.Interval}",
-                                        "Timeout" : "${(elb.HealthCheck.Timeout)!port.HealthCheck.Timeout}"
+                                        [#assign destination = ports[portMappings[elb.PortMappings[0]].Destination]]
+                                        "Target" : "${(destination.HealthCheck.Protocol)!destination.Protocol}:${destination.Port?c}${(elb.HealthCheck.Path)!destination.HealthCheck.Path}",
+                                        "HealthyThreshold" : "${(elb.HealthCheck.HealthyThreshold)!destination.HealthCheck.HealthyThreshold}",
+                                        "UnhealthyThreshold" : "${(elb.HealthCheck.UnhealthyThreshold)!destination.HealthCheck.UnhealthyThreshold}",
+                                        "Interval" : "${(elb.HealthCheck.Interval)!destination.HealthCheck.Interval}",
+                                        "Timeout" : "${(elb.HealthCheck.Timeout)!destination.HealthCheck.Timeout}"
                                     },
                                     [#if (elb.Logs)?? && (elb.Logs == true)]
                                         "AccessLoggingPolicy" : {
@@ -380,6 +420,7 @@
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -399,6 +440,7 @@
                             [#assign alb = component.ALB]
                             [#list alb.PortMappings as mapping]
                                 [#assign source = ports[portMappings[mapping].Source]]
+                                [#assign destination = ports[portMappings[mapping].Destination]]
                                 "securityGroupIngressX${tier.Id}X${component.Id}X${source.Port?c}" : {
                                     "Type" : "AWS::EC2::SecurityGroupIngress",
                                     "Properties" : {
@@ -410,22 +452,29 @@
                                     }
                                 },
                                 "listenerX${tier.Id}X${component.Id}X${source.Port?c}" : {
-                                    "Type" : "AWS::EC2::SecurityGroupIngress",
+                                    "Type" : "AWS::ElasticLoadBalancingV2::Listener",
                                     "Properties" : {
-                                        "Certificates" : [ 
-                                            {
-                                                "CertificateArn" : {
-                                                    "Fn::Join" : [
-                                                        "",
-                                                        [
-                                                            "arn:aws:iam::",
-                                                            {"Ref" : "AWS::AccountId"},
-                                                            ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
-                                                        ]
-                                                    ]
+                                        [#if (source.Certificate)?? && source.Certificate]
+                                            "Certificates" : [ 
+                                                {
+                                                    "CertificateArn" :
+                                                        [#if getKey("certificateX" + certificateId)??]
+                                                            "${getKey("certificateX" + certificateId)}"
+                                                        [#else]
+                                                            {
+                                                                "Fn::Join" : [
+                                                                    "",
+                                                                    [
+                                                                        "arn:aws:iam::",
+                                                                        {"Ref" : "AWS::AccountId"},
+                                                                        ":server-certificate/ssl/${certificateId}/${certificateId}-ssl"
+                                                                    ]
+                                                                ]
+                                                            }
+                                                        [/#if]
                                                 }
-                                            }
-                                        ],
+                                            ],
+                                        [/#if]
                                         "DefaultActions" : [ 
                                             {
                                               "TargetGroupArn" : { "Ref" : "tgX${tier.Id}X${component.Id}X${source.Port?c}Xdefault" },
@@ -437,16 +486,8 @@
                                         "Protocol" : "${source.Protocol}"
                                     }   
                                 },
+                                [@createTargetGroup tier=tier component=component source=source destination=destination name="default" /],
                             [/#list]
-                                    ],
-                                    "HealthCheck" : {
-                                        [#assign port = ports[portMappings[alb.PortMappings[0]].Destination]]
-                                        "Target" : "${(port.HealthCheck.Protocol)!port.Protocol}:${port.Port?c}${(alb.HealthCheck.Path)!port.HealthCheck.Path}",
-                                        "HealthyThreshold" : "${(alb.HealthCheck.HealthyThreshold)!port.HealthCheck.HealthyThreshold}",
-                                        "UnhealthyThreshold" : "${(alb.HealthCheck.UnhealthyThreshold)!port.HealthCheck.UnhealthyThreshold}",
-                                        "Interval" : "${(alb.HealthCheck.Interval)!port.HealthCheck.Interval}",
-                                        "Timeout" : "${(alb.HealthCheck.Timeout)!port.HealthCheck.Timeout}"
-                                    },
                             "albX${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
                                 "Properties" : {
@@ -459,6 +500,7 @@
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "Name" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -607,6 +649,7 @@
                                                                     "", 
                                                                     [
                                                                         "#!/bin/bash\n",
+                                                                        "echo \"cot:request=${request}\"\n",
                                                                         "echo \"cot:accountRegion=${accountRegionId}\"\n",
                                                                         "echo \"cot:account=${accountId}\"\n",
                                                                         "echo \"cot:product=${productId}\"\n",
@@ -676,7 +719,7 @@
                                         [#assign processorProfile = getProcessor(tier, component, "EC2")]
                                         [#assign storageProfile = getStorage(tier, component, "EC2")]
                                         "Properties": {
-                                            [@createBlockDevices storageProfile=storageProfile /]
+                                            [@createBlockDevices storageProfile=storageProfile /],
                                             "DisableApiTermination" : false,
                                             "EbsOptimized" : false,
                                             "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}X${component.Id}" },
@@ -701,6 +744,7 @@
                                             ],
                                             "SourceDestCheck" : true,
                                             "Tags" : [
+                                                { "Key" : "cot:request", "Value" : "${request}" },
                                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                                 { "Key" : "cot:product", "Value" : "${productId}" },
                                                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -765,8 +809,13 @@
                                             [#list container.Ports as port]
                                                 [#if port?is_hash]
                                                     [#assign portId = port.Id]
+                                                    [#assign fromSG = port.ELB?? && (port.fromSG || fixedIP)]
+                                                    [#if fromSG]
+                                                        [#assign sg = getKey("securityGroupXelbX"+port.ELB)]
+                                                    [/#if]
                                                 [#else]
                                                     [#assign portId = port]
+                                                    [#assign fromSG = false]
                                                 [/#if]
                                                 "securityGroupIngressX${tier.Id}X${component.Id}X${ports[portId].Port?c}" : {
                                                     "Type" : "AWS::EC2::SecurityGroupIngress",
@@ -775,8 +824,47 @@
                                                         "IpProtocol": "${ports[portId].IPProtocol}", 
                                                         "FromPort": "${ports[portId].Port?c}", 
                                                         "ToPort": "${ports[portId].Port?c}", 
-                                                        [#if fixedIP && port?is_hash && port.ELB??]
-                                                            "SourceSecurityGroupId": "${getKey("securityGroupXelbX"+port.ELB)}"
+                                                        [#if fromSG]
+                                                            "SourceSecurityGroupId": "${sg)}"
+                                                        [#else]
+                                                            "CidrIp": "0.0.0.0/0"
+                                                        [/#if]
+                                                    }
+                                                },
+                                            [/#list]
+                                        [/#if]
+                                        [#if container.PortMappings??]
+                                            [#list container.PortMappings as mapping]
+                                                [#assign port = ports[portMappings[mapping.Id].Destination]]
+                                                [#assign portId = port.Id]
+                                                [#assign useDynamicHostPort = mapping.DynamicHostPort?? && mapping.DynamicHostPort]
+                                                [#if useDynamicHostPort]
+                                                    [#assign ruleName = "ecsXdynamic"]
+                                                [#else]
+                                                    [#assign ruleName = ports[portId].Port?c]
+                                                [/#if]
+                                                [#assign fromSG = (mapping.ELB?? || mapping.ILB) && (mapping.fromSG || fixedIP)]
+                                                [#if fromSG]
+                                                    [#if mapping.ELB??]
+                                                        [#assign sg = getKey("securityGroupXelbX"+mapping.ELB)]
+                                                    [#else]
+                                                        [#assign sg = getKey("securityGroupXilbX"+mapping.ILB)]
+                                                    [/#if]
+                                                [/#if]
+                                                "securityGroupIngressX${tier.Id}X${component.Id}X${ruleName}" : {
+                                                    "Type" : "AWS::EC2::SecurityGroupIngress",
+                                                    "Properties" : {
+                                                        "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
+                                                        "IpProtocol": "${ports[portId].IPProtocol}",
+                                                        [#if useDynamicHostPort]
+                                                            "FromPort": "49153",
+                                                            "ToPort": "65535",
+                                                        [#else]
+                                                            "FromPort": "${ports[portId].Port?c}", 
+                                                            "ToPort": "${ports[portId].Port?c}", 
+                                                        [/#if]
+                                                        [#if fromSG]
+                                                            "SourceSecurityGroupId": "${sg)}"
                                                         [#else]
                                                             "CidrIp": "0.0.0.0/0"
                                                         [/#if]
@@ -974,6 +1062,7 @@
                                                             "", 
                                                             [
                                                                 "#!/bin/bash\n",
+                                                                "echo \"cot:request=${request}\"\n",
                                                                 "echo \"cot:accountRegion=${accountRegionId}\"\n",
                                                                 "echo \"cot:account=${accountId}\"\n",
                                                                 "echo \"cot:product=${productId}\"\n",
@@ -1075,6 +1164,7 @@
                                         "VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+firstZone)}"],
                                     [/#if]
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
@@ -1093,7 +1183,7 @@
                                     "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
                                     "ImageId": "${regionObject.AMIs.Centos.ECS}",
                                     "InstanceType": "${processorProfile.Processor}",
-                                    [@createBlockDevices storageProfile=storageProfile /]
+                                    [@createBlockDevices storageProfile=storageProfile /],
                                     "SecurityGroups" : [ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} [#if securityGroupNAT != "none"], "${securityGroupNAT}"[/#if] ], 
                                     "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}X${component.Id}" },
                                     "AssociatePublicIpAddress" : ${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("true","false")},
@@ -1221,6 +1311,7 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1279,6 +1370,7 @@
                                         [/#list]
                                     ],
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1298,6 +1390,7 @@
                                     "Parameters" : {
                                     },
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1318,6 +1411,7 @@
                                     "OptionConfigurations" : [
                                     ],
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1360,6 +1454,7 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1462,6 +1557,7 @@
                                         },
                                     [/#if]
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1546,6 +1642,16 @@
                         [#-- ALB --]
                         [#if component.ALB??]
                             [#if count > 0],[/#if]
+                            [#assign alb = component.ALB]
+                            [#list alb.PortMappings as mapping]
+                                [#assign source = ports[portMappings[mapping].Source]]
+                                "listenerX${tier.Id}X${component.Id}X${source.Port?c}" : {
+                                    "Value" : { "Ref" : "listenerX${tier.Id}X${component.Id}X${source.Port?c}" }
+                                },
+                                "tgX${tier.Id}X${component.Id}X${source.Port?c}Xdefault" : {
+                                    "Value" : { "Ref" : "tgX${tier.Id}X${component.Id}X${source.Port?c}Xdefault" }
+                                },
+                            [/#list]
                             "albX${tier.Id}X${component.Id}" : {
                                 "Value" : { "Ref" : "albX${tier.Id}X${component.Id}" }
                             },
