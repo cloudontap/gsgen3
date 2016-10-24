@@ -6,7 +6,7 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
 
 DELAY_DEFAULT=30
 function usage() {
-    echo -e "Update an existing CloudFormation stack" 
+    echo -e "\nUpdate an existing CloudFormation stack" 
     echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -u -m -d DELAY -r REGION\n"
     echo -e "\nwhere\n"
     echo -e "(o) -d DELAY is the interval between checking the progress of stack update"

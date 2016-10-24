@@ -86,7 +86,7 @@ if [[ (-d config) && (-d infrastructure) ]]; then
 fi
 
 if [[ -z "${ROOT_DIR}" ]]; then
-    echo "\nCan't locate the root of the directory tree. Are we in the right place?"
+    echo -e "\nCan't locate the root of the directory tree. Are we in the right place?"
     usage
 fi
 
