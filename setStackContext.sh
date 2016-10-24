@@ -65,7 +65,7 @@ case $TYPE in
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
-        TYPE_SUFFIX="seg"
+        TYPE_SUFFIX="-seg"
         # LEGACY: Support old formats for existing stacks so they can be updated 
         if [[ !("${SLICE}" =~ key|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
