@@ -29,7 +29,7 @@
 [#assign accountDomainBehaviour = (accountObject.Domain.AccountBehaviour)!""]
 [#assign accountDomainCertificateId = accountObject.Domain.Certificate.Id]
 [#switch accountDomainBehaviour]
-    [#case "AccountInDomain"]
+    [#case "accountInDomain"]
         [#assign accountDomain = accountName + "." + accountDomainStem]
         [#assign accountDomainQualifier = ""]
         [#assign accountDomainCertificateId = accountDomainCertificateId + "-" + accountId]
@@ -38,7 +38,7 @@
         [#assign accountDomain = accountDomainStem]
         [#assign accountDomainQualifier = ""]
         [#break]
-    [#case "AccountInHost"]
+    [#case "accountInHost"]
     [#default]
         [#assign accountDomain = accountDomainStem]
         [#assign accountDomainQualifier = "-" + accountName]
@@ -61,6 +61,7 @@
                     "Properties" : {
                         "BucketName" : "${bucket}${accountDomainQualifier}.${accountDomain}",
                         "Tags" : [ 
+                            { "Key" : "cot:request", "Value" : "${request}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:category", "Value" : "${categoryId}" }
                         ]
@@ -84,21 +85,21 @@
                             "ValidationDomain" : "${tenantObject.Domain.Validation}"
                         }
                     ]
+                }
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]        
     },
     "Outputs" : {
         [#assign sliceCount = 0]
-        "domainXaccountXdomain" : {
-            "Value" : "${accountDomain}"
-        },
-        "domainXaccountXqualifier" : {
-            "Value" : "${accountDomainQualifier}"
-        },
-
         [#if slice?contains("s3")]
             [#if sliceCount > 0],[/#if]
+            "domainXaccountXdomain" : {
+                "Value" : "${accountDomain}"
+            },
+            "domainXaccountXqualifier" : {
+                "Value" : "${accountDomainQualifier}"
+            },
             [#list buckets as bucket]
                 "s3XaccountX${bucket}" : {
                     "Value" : { "Ref" : "s3X${bucket}" }

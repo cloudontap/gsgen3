@@ -49,25 +49,32 @@
 [#-- Domains --]
 [#assign productDomainStem = productObject.Domain.Stem]
 [#assign segmentDomainBehaviour = (productObject.Domain.SegmentBehaviour)!""]
+[#assign segmentDomainCertificateId = productObject.Domain.Certificate.Id]
 [#switch segmentDomainBehaviour]
-    [#case "includeProduct"]
+    [#case "segmentProductInDomain"]
         [#assign segmentDomain = segmentName + "." + productName + "." + productDomainStem]
         [#assign segmentDomainQualifier = ""]
+        [#assign segmentDomainCertificateId = segmentDomainCertificateId + "-" + productId + "-" + segmentId]
         [#break]
-    [#case "includeSegment"]
+    [#case "segmentInDomain"]
         [#assign segmentDomain = segmentName + "." + productDomainStem]
         [#assign segmentDomainQualifier = ""]
+        [#assign segmentDomainCertificateId = segmentDomainCertificateId + "-" + segmentId]
         [#break]
     [#case "naked"]
         [#assign segmentDomain = productDomainStem]
         [#assign segmentDomainQualifier = ""]
         [#break]
+    [#case "segmentInHost"]
+        [#assign segmentDomain = productDomainStem]
+        [#assign segmentDomainQualifier = "-" + segmentName]
+        [#break]
+    [#case "segmentProductInHost"]
     [#default]
         [#assign segmentDomain = productDomainStem]
         [#assign segmentDomainQualifier = "-" + segmentName + "-" + productName]
         [#break]
 [/#switch]
-[#assign segmentDomainCertificateId = productObject.Domain.Certificate.Id]
 
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
@@ -132,6 +139,7 @@
         [#assign sliceCount = 0]
         [#if slice?contains("eip")]
             [#-- Define EIPs --]
+            [#if sliceCount > 0],[/#if]
             [#assign eipCount = 0]
             [#if jumpServer]
                 [#assign tier = tiers["mgmt"]]
@@ -152,8 +160,8 @@
                 [#assign sliceCount = sliceCount + 1]
             [/#if]
         [/#if]
-        
-        [#if slice?contains("key")]
+                
+        [#if slice?contains("cmk")]
             [#-- Define KMS CMK --]
             [#if sliceCount > 0],[/#if]
             "cmk" : {
@@ -188,6 +196,24 @@
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]
+
+        [#if slice?contains("cert")]
+            [#-- Generate certificate --]
+            [#if sliceCount > 0],[/#if]
+            "certificate" : {
+                "Type" : "AWS::CertificateManager::Certificate",
+                "Properties" : {
+                    "DomainName" : "*.${segmentDomain}",
+                    "DomainValidationOptions" : [
+                        {
+                            "DomainName" : "*.${segmentDomain}",
+                            "ValidationDomain" : "${tenantObject.Domain.Validation}"
+                        }
+                    ]
+                }
+            }
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
         
         [#if slice?contains("dns")]
             [#-- Define private DNS zone --]
@@ -199,6 +225,7 @@
                         "Comment" : "${productName}-${segmentName}" 
                     },
                     "HostedZoneTags" : [ 
+                        { "Key" : "cot:request", "Value" : "${request}" },
                         { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -224,6 +251,7 @@
                     "EnableDnsSupport" : ${(dnsSupport)?string("true","false")},
                     "EnableDnsHostnames" : ${(dnsHostnames)?string("true","false")},
                     "Tags" : [ 
+                        { "Key" : "cot:request", "Value" : "${request}" },
                         { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -240,6 +268,7 @@
                     "Type" : "AWS::EC2::InternetGateway",
                     "Properties" : {
                         "Tags" : [ 
+                            { "Key" : "cot:request", "Value" : "${request}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -274,6 +303,7 @@
                                 "Properties" : {
                                     "VpcId" : { "Ref" : "vpc" },
                                     "Tags" : [ 
+                                        { "Key" : "cot:request", "Value" : "${request}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -317,6 +347,7 @@
                         "Properties" : {
                             "VpcId" : { "Ref" : "vpc" },
                             "Tags" : [ 
+                                { "Key" : "cot:request", "Value" : "${request}" },
                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                 { "Key" : "cot:product", "Value" : "${productId}" },
                                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -377,6 +408,7 @@
                                 "AvailabilityZone" : "${zone.AWSZone}",
                                 "CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
                                 "Tags" : [
+                                    { "Key" : "cot:request", "Value" : "${request}" },
                                     { "Key" : "cot:account", "Value" : "${accountId}" },
                                     { "Key" : "cot:product", "Value" : "${productId}" },
                                     { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -487,6 +519,7 @@
                         "GroupDescription": "Security Group for HA NAT instances",
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
+                            { "Key" : "cot:request", "Value" : "${request}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -508,6 +541,7 @@
                         "GroupDescription": "Security Group for access from NAT",
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
+                            { "Key" : "cot:request", "Value" : "${request}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -556,6 +590,7 @@
                                                             "", 
                                                             [
                                                                 "#!/bin/bash\n",
+                                                                "echo \"cot:request=${request}\"\n",
                                                                 "echo \"cot:accountRegion=${accountRegionId}\"\n",
                                                                 "echo \"cot:account=${accountId}\"\n",
                                                                 "echo \"cot:product=${productId}\"\n",
@@ -642,6 +677,7 @@
                                         { "Ref" : "subnetX${tier.Id}X${zone.Id}"} 
                                     ],
                                     "Tags" : [
+                                        { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
@@ -700,6 +736,7 @@
                 "Properties" : {
                     "BucketName" : "${logsBucket}",
                     "Tags" : [ 
+                        { "Key" : "cot:request", "Value" : "${request}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
                         { "Key" : "cot:environment", "Value" : "${environmentId}" },
@@ -741,6 +778,7 @@
                 "Properties" : {
                     "BucketName" : "${backupsBucket}",
                     "Tags" : [ 
+                        { "Key" : "cot:request", "Value" : "${request}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
                         { "Key" : "cot:environment", "Value" : "${environmentId}" },
@@ -764,7 +802,7 @@
     {
         [#assign sliceCount = 0]
         [#if slice?contains("eip")]
-            [#-- Define EIPs --]
+            [#if sliceCount > 0],[/#if]
             [#assign eipCount = 0]
             [#if jumpServer]
                 [#assign tier = tiers["mgmt"]]
@@ -785,13 +823,23 @@
                 [#assign sliceCount = sliceCount + 1]
             [/#if]
         [/#if]
-        [#if slice?contains("key")]
+        
+        [#if slice?contains("cmk")]
             [#if sliceCount > 0],[/#if]
             "cmkXsegmentXcmk" : {
                 "Value" : { "Ref" : "cmk" }
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]
+        
+        [#if slice?contains("cert")]
+            [#if sliceCount > 0],[/#if]
+            "certificateX${segmentDomainCertificateId}" : {
+                "Value" : { "Ref" : "certificate" }
+            }
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+        
         [#if slice?contains("dns")]
             [#if sliceCount > 0],[/#if]
             "dnsXsegmentXdns" : {
@@ -799,6 +847,7 @@
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]
+        
         [#if slice?contains("vpc")]
             [#if sliceCount > 0],[/#if]
             "domainXsegmentXdomain" : {
@@ -835,6 +884,7 @@
             [/#list]
             [#assign sliceCount = sliceCount + 1]
         [/#if]
+        
         [#if slice?contains("s3")]
             [#if sliceCount > 0],[/#if]
             "s3XsegmentXlogs" : {

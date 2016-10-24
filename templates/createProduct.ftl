@@ -34,15 +34,18 @@
 [#-- Domains --]
 [#assign productDomainStem = productObject.Domain.Stem]
 [#assign productDomainBehaviour = (productObject.Domain.ProductBehaviour)!""]
+[#assign productDomainCertificateId = productObject.Domain.Certificate.Id]
 [#switch productDomainBehaviour]
-    [#case "includeProduct"]
+    [#case "productInDomain"]
         [#assign productDomain = productName + "." + productDomainStem]
         [#assign productDomainQualifier = ""]
+        [#assign productDomainCertificateId = productDomainCertificateId + "-" + productId]
         [#break]
     [#case "naked"]
         [#assign productDomain = productDomainStem]
         [#assign productDomainQualifier = ""]
         [#break]
+    [#case productInHost]    
     [#default]
         [#assign productDomain = productDomainStem]
         [#assign productDomainQualifier = "-" + productName]
@@ -59,46 +62,70 @@
 [/#function]
 
 [#-- Product --]
-[#assign snsEnabled = false]
 [#assign rotateKeys = (productObject.RotateKeys)!true]
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Resources" : { 
-        [#-- Key for product --]
-        "cmk" : {
-            "Type" : "AWS::KMS::Key",
-            "Properties" : {
-                "Description" : "${productName}",
-                "Enabled" : true,
-                "EnableKeyRotation" : ${(rotateKeys)?string("true","false")},
-                "KeyPolicy" : {
-                    "Version": "2012-10-17",
-                    "Statement": [ 
-                        {
-                            "Effect": "Allow",
-                            "Principal": { 
-                                "AWS": { 
-                                    "Fn::Join": [
-                                        "", 
-                                        [
-                                            "arn:aws:iam::",
-                                            { "Ref" : "AWS::AccountId" },
-                                            ":root"
+        [#assign sliceCount = 0]
+        [#if slice?contains("cmk")]
+            [#-- Key for product --]
+            [#if sliceCount > 0],[/#if]
+            "cmk" : {
+                "Type" : "AWS::KMS::Key",
+                "Properties" : {
+                    "Description" : "${productName}",
+                    "Enabled" : true,
+                    "EnableKeyRotation" : ${(rotateKeys)?string("true","false")},
+                    "KeyPolicy" : {
+                        "Version": "2012-10-17",
+                        "Statement": [ 
+                            {
+                                "Effect": "Allow",
+                                "Principal": { 
+                                    "AWS": { 
+                                        "Fn::Join": [
+                                            "", 
+                                            [
+                                                "arn:aws:iam::",
+                                                { "Ref" : "AWS::AccountId" },
+                                                ":root"
+                                            ]
                                         ]
-                                    ]
-                                }
-                            },
-                            "Action": [ "kms:*" ],
-                            "Resource": "*"
+                                    }
+                                },
+                                "Action": [ "kms:*" ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }
+                }
+            }
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+        
+        [#if slice?contains("cert")]
+            [#-- Generate certificate --]
+            [#if sliceCount > 0],[/#if]
+            "certificate" : {
+                "Type" : "AWS::CertificateManager::Certificate",
+                "Properties" : {
+                    "DomainName" : "*.${productDomain}",
+                    "DomainValidationOptions" : [
+                        {
+                            "DomainName" : "*.${productDomain}",
+                            "ValidationDomain" : "${tenantObject.Domain.Validation}"
                         }
                     ]
                 }
             }
-        }
-        [#-- SNS for product --]
-        [#if snsEnabled]
-            ,"snsXalerts" : {
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+
+        [#if slice?contains("sns")]
+            [#-- SNS for product --]
+            [#if sliceCount > 0],[/#if]
+            "snsXalerts" : {
                 "Type": "AWS::SNS::Topic",
                 "Properties" : {
                     "DisplayName" : "${(productName + "-alerts")[0..9]}",
@@ -111,70 +138,103 @@
                     ]
                 }
             } 
-       [/#if]
-       [#-- Shared product level resources if we are in the product region --]
-        [#if (regionId == productRegionId)]
-            [#if sharedComponentsPresent]
-                [#list sharedComponents as component] 
-                    [#if component.S3??]
-                        [#assign s3 = component.S3]
-                        ,"s3X${component.Id}" : {
-                            "Type" : "AWS::S3::Bucket",
-                            "Properties" : {
-                                [#if s3.Name??]
-                                    "BucketName" : "${s3.Name}${productDomainQualifier}.${productDomain}",
-                                [#else]
-                                    "BucketName" : "${component.Name}${productDomainQualifier}.${productDomain}",
-                                [/#if]
-                                "Tags" : [ 
-                                    { "Key" : "cot:product", "Value" : "${productId}" },
-                                    { "Key" : "cot:category", "Value" : "${categoryId}" }
-                                ]
-                                [#if s3.Lifecycle??]
-                                    ,"LifecycleConfiguration" : {
-                                        "Rules" : [
-                                            {
-                                                "Id" : "default",
-                                                [#if s3.Lifecycle.Expiration??]
-                                                    "ExpirationInDays" : ${s3.Lifecycle.Expiration},
-                                                [/#if]
-                                                "Status" : "Enabled"
-                                            }
-                                        ]
-                                    }
-                                [/#if]
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+       
+        [#if slice?contains("shared")]
+            [#if (regionId == productRegionId)]
+                [#if sharedComponentsPresent]
+                    [#if sliceCount > 0],[/#if]
+                    [#assign sharedCount = 0]
+                    [#list sharedComponents as component] 
+                        [#if component.S3??]
+                            [#assign s3 = component.S3]
+                            [#if sharedCount > 0],[/#if]
+                            "s3X${component.Id}" : {
+                                "Type" : "AWS::S3::Bucket",
+                                "Properties" : {
+                                    [#if s3.Name??]
+                                        "BucketName" : "${s3.Name}${productDomainQualifier}.${productDomain}",
+                                    [#else]
+                                        "BucketName" : "${component.Name}${productDomainQualifier}.${productDomain}",
+                                    [/#if]
+                                    "Tags" : [ 
+                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:product", "Value" : "${productId}" },
+                                        { "Key" : "cot:category", "Value" : "${categoryId}" }
+                                    ]
+                                    [#if s3.Lifecycle??]
+                                        ,"LifecycleConfiguration" : {
+                                            "Rules" : [
+                                                {
+                                                    "Id" : "default",
+                                                    [#if s3.Lifecycle.Expiration??]
+                                                        "ExpirationInDays" : ${s3.Lifecycle.Expiration},
+                                                    [/#if]
+                                                    "Status" : "Enabled"
+                                                }
+                                            ]
+                                        }
+                                    [/#if]
+                                }
                             }
-                        }
-                    [/#if]
-                [/#list]
+                            [#assign sharedCount = sharedCount + 1]
+                        [/#if]
+                    [/#list]
+                    [#assign sliceCount = sliceCount + 1]
+                [/#if]
             [/#if]
         [/#if]
     },
     
     "Outputs" : {
-        "cmkXproductXcmk" : {
-            "Value" : { "Ref" : "cmk" }
-        }
-        [#if snsEnabled]
-            ,"snsXproductXalertsX${regionId?replace("-","")}" : {
+        [#assign sliceCount = 0]
+        [#if slice?contains("cmk")]
+            [#if sliceCount > 0],[/#if]
+            "cmkXproductXcmk" : {
+                "Value" : { "Ref" : "cmk" }
+            }
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+
+        [#if slice?contains("cert")]
+            [#if sliceCount > 0],[/#if]
+            "certificateX${productDomainCertificateId}" : {
+                "Value" : { "Ref" : "certificate" }
+            }
+            [#assign sliceCount = sliceCount + 1]
+        [/#if]
+
+        [#if slice?contains("sns")]
+            [#if sliceCount > 0],[/#if]
+            "snsXproductXalertsX${regionId?replace("-","")}" : {
                 "Value" : { "Ref" : "snsXalerts" }
             }
         [/#if]
-        [#if (regionId == productRegionId)]
-            ,"domainXproductXdomain" : {
-                "Value" : "${productDomain}"
-            }
-            ,"domainXproductXqualifier" : {
-                "Value" : "${productDomainQualifier}"
-            }
-            [#if sharedComponentsPresent]
-                [#list sharedComponents as component] 
-                    [#if component.S3??]
-                        ,"s3XproductX${component.Id}" : {
-                            "Value" : { "Ref" : "s3X${component.Id}" }
-                        }
+        
+        [#if slice?contains("shared")]
+            [#if (regionId == productRegionId)]
+                [#if sliceCount > 0],[/#if]
+                "domainXproductXdomain" : {
+                    "Value" : "${productDomain}"
+                }
+                ,"domainXproductXqualifier" : {
+                    "Value" : "${productDomainQualifier}"
+                }
+                [#if sharedComponentsPresent]
+                    [#assign sharedCount = 0]
+                    [#list sharedComponents as component] 
+                        [#if component.S3??]
+                            [#assign s3 = component.S3]
+                            [#if sharedCount > 0],[/#if]        
+                            "s3XproductX${component.Id}" : {
+                                "Value" : { "Ref" : "s3X${component.Id}" }
+                            }
+                            [#assign sharedCount = sharedCount + 1]
                     [/#if]
-                [/#list]
+                    [/#list]
+                    [#assign sliceCount = sliceCount + 1]
+                [/#if]
             [/#if]
         [/#if]
     }
