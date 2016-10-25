@@ -802,107 +802,28 @@
                             [/#if]
                             [#assign storageProfile = getStorage(tier, component, "ECS")]
                             [#assign fixedIP = ecs.FixedIP?? && ecs.FixedIP]
-                            [#if ecs.Services??]
-                                [#list ecs.Services as service]
-                                    [#list service.Containers as container]
-                                        [#if container.Ports??]
-                                            [#list container.Ports as port]
-                                                [#if port?is_hash]
-                                                    [#assign portId = port.Id]
-                                                    [#assign fromSG = port.ELB?? && 
-                                                        ((port.limitAccessToSG?? && port.limitAccessToSG) || fixedIP)]
-                                                    [#if fromSG]
-                                                        [#assign sg = getKey("securityGroupXelbX"+port.ELB)]
-                                                    [/#if]
-                                                [#else]
-                                                    [#assign portId = port]
-                                                    [#assign fromSG = false]
-                                                [/#if]
-                                                "securityGroupIngressX${tier.Id}X${component.Id}X${ports[portId].Port?c}" : {
-                                                    "Type" : "AWS::EC2::SecurityGroupIngress",
-                                                    "Properties" : {
-                                                        "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                                        "IpProtocol": "${ports[portId].IPProtocol}", 
-                                                        "FromPort": "${ports[portId].Port?c}", 
-                                                        "ToPort": "${ports[portId].Port?c}", 
-                                                        [#if fromSG]
-                                                            "SourceSecurityGroupId": "${sg}"
-                                                        [#else]
-                                                            "CidrIp": "0.0.0.0/0"
-                                                        [/#if]
-                                                    }
-                                                },
-                                            [/#list]
-                                        [/#if]
-                                        [#if container.PortMappings??]
-                                            [#list container.PortMappings as mapping]
-                                                [#assign destination = ports[portMappings[mapping.Id].Destination]]
-                                                [#assign useDynamicHostPort = mapping.DynamicHostPort?? && mapping.DynamicHostPort]
-                                                [#if useDynamicHostPort]
-                                                    [#assign groupName = service.Id]
-                                                    [#if mapping.Group??]
-                                                        [#assign groupName = mapping.Group]
-                                                    [/#if]
-                                                    [#assign ruleName = groupName + "Xdynamic"]
-                                                [#else]
-                                                    [#assign ruleName = groupName + "X" + destination.Port?c]
-                                                [/#if]
-                                                [#assign fromSG = (mapping.ELB?? || mapping.ILB??) && 
-                                                    ((mapping.limitAccessToSG?? && mapping.limitAccessToSG) || fixedIP)]
-                                                [#if fromSG]
-                                                    [#if mapping.ELB??]
-                                                        [#assign sg = getKey("securityGroupXelbX"+mapping.ELB)]
-                                                    [#else]
-                                                        [#assign sg = getKey("securityGroupXilbX"+mapping.ILB)]
-                                                    [/#if]
-                                                [/#if]
-                                                "securityGroupIngressX${tier.Id}X${component.Id}X${ruleName}" : {
-                                                    "Type" : "AWS::EC2::SecurityGroupIngress",
-                                                    "Properties" : {
-                                                        "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                                        "IpProtocol": "${destination.IPProtocol}",
-                                                        [#if useDynamicHostPort]
-                                                            "FromPort": "49153",
-                                                            "ToPort": "65535",
-                                                        [#else]
-                                                            "FromPort": "${destination.Port?c}", 
-                                                            "ToPort": "${destination.Port?c}", 
-                                                        [/#if]
-                                                        [#if fromSG]
-                                                            "SourceSecurityGroupId": "${sg}"
-                                                        [#else]
-                                                            "CidrIp": "0.0.0.0/0"
-                                                        [/#if]
-                                                    }
-                                                },
-                                            [/#list]
-                                        [/#if]
-                                    [/#list]
+                            [#if ecs.Ports??]
+                                [#list ecs.Ports as port]
+                                    [#if port?is_hash]
+                                        [#assign portId = port.Id]
+                                    [#else]
+                                        [#assign portId = port]
+                                    [/#if]
+                                    "securityGroupIngressX${tier.Id}X${component.Id}X${ports[portId].Port?c}" : {
+                                        "Type" : "AWS::EC2::SecurityGroupIngress",
+                                        "Properties" : {
+                                            "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
+                                            "IpProtocol": "${ports[portId].IPProtocol}", 
+                                            "FromPort": "${ports[portId].Port?c}", 
+                                            "ToPort": "${ports[portId].Port?c}", 
+                                            [#if fixedIP && port?is_hash && port.ELB??]
+                                                "SourceSecurityGroupId": "${getKey("securityGroupXelbX"+port.ELB)}"
+                                            [#else]
+                                                "CidrIp": "0.0.0.0/0"
+                                            [/#if]
+                                        }
+                                    },
                                 [/#list]
-                            [#else]
-                                [#if ecs.Ports??]
-                                    [#list ecs.Ports as port]
-                                        [#if port?is_hash]
-                                            [#assign portId = port.Id]
-                                        [#else]
-                                            [#assign portId = port]
-                                        [/#if]
-                                        "securityGroupIngressX${tier.Id}X${component.Id}X${ports[portId].Port?c}" : {
-                                            "Type" : "AWS::EC2::SecurityGroupIngress",
-                                            "Properties" : {
-                                                "GroupId": {"Ref" : "securityGroupX${tier.Id}X${component.Id}"},
-                                                "IpProtocol": "${ports[portId].IPProtocol}", 
-                                                "FromPort": "${ports[portId].Port?c}", 
-                                                "ToPort": "${ports[portId].Port?c}", 
-                                                [#if fixedIP && port?is_hash && port.ELB??]
-                                                    "SourceSecurityGroupId": "${getKey("securityGroupXelbX"+port.ELB)}"
-                                                [#else]
-                                                    "CidrIp": "0.0.0.0/0"
-                                                [/#if]
-                                            }
-                                        },
-                                    [/#list]
-                                [/#if]
                             [/#if]
                 
                             "ecsX${tier.Id}X${component.Id}" : {
