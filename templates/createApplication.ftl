@@ -74,9 +74,28 @@
     [/#list]
 [/#function]
 
+[#-- Locate the object for a tier --]
+[#function getTier tier]
+    [#return tiers[tier]]
+[/#function]
+
+[#-- Locate the object for a component within tier --]
+[#function getComponent tier component]
+    [#list solutionTiers as t]
+        [#if t.Id == tier]
+            [#list t.Components as c]
+                [#if c.Id == component]
+                    [#return c]
+                [/#if]
+            [/#list]
+        [/#if]
+    [/#list]
+[/#function]
+
 [#-- Application --]
 [#assign docker = appSettingsObject.Docker]
 [#assign solnMultiAZ = solutionObject.MultiAZ!environmentObject.MultiAZ!false]
+[#assign vpc = getKey("vpcXsegmentXvpc")]
 
 [#if buildReference??]
     [#assign buildCommit = buildReference]
@@ -145,7 +164,6 @@
                                         [#else]
                                             "HostPort" : ${ports[port.Id].Port?c}
                                         [/#if]
-                                        "HostPort" : ${ports[port.Id].Port?c}
                                     }[#if !(port.Id == (container.Ports?last).Id)],[/#if]
                                 [/#list]
                             ],
@@ -278,8 +296,13 @@
                                                                         {
                                                                             [#if port.LB??]
                                                                                 [#assign lb = port.LB]
+                                                                                 [#if lb.Port??]
+                                                                                    [#assign lbPort = lb.Port]
+                                                                                [#else] 
+                                                                                    [#assign lbPort = port.Id]
+                                                                                [/#if]
                                                                                 [#if lb.TargetGroup??]
-                                                                                    [#assign targetGroupKey = "tgX" + lb.Tier + "X" + lb.Component + "X" + ports[lb.Port].Port?c + "X" + lb.TargetGroup]
+                                                                                    [#assign targetGroupKey = "tgX" + lb.Tier + "X" + lb.Component + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
                                                                                     [#if getKey(targetGroupKey)??]
                                                                                         "TargetGroupArn" : "${getKey(targetGroupKey)}",
                                                                                     [#else]
@@ -337,7 +360,7 @@
                                                     ,"securityGroupIngressX${tier.Id}X${component.Id}X${service.Id}X${container.Id}X${portRange}" : {
                                                         "Type" : "AWS::EC2::SecurityGroupIngress",
                                                         "Properties" : {
-                                                            "GroupId": ${ecsSG},
+                                                            "GroupId": "${ecsSG}",
                                                             "IpProtocol": "${ports[port.Id].IPProtocol}", 
                                                             [#if useDynamicHostPort]
                                                                 "FromPort": "49153",
@@ -355,11 +378,18 @@
                                                     }
                                                     [#if port.LB??]
                                                         [#assign lb = port.LB]
+                                                        [#assign lbTier = getTier(lb.Tier)]
+                                                        [#assign lbComponent = getComponent(lb.Tier, lb.Component)]
+                                                        [#if lb.Port??]
+                                                            [#assign lbPort = lb.Port]
+                                                        [#else]
+                                                            [#assign lbPort = port.Id]
+                                                        [/#if]
                                                         [#if lb.TargetGroup??]
-                                                            [#assign targetGroupKey = "tgX" + lb.Tier + "X" + lb.Component + "X" + ports[lb.Port].Port?c + "X" + lb.TargetGroup]
+                                                            [#assign targetGroupKey = "tgX" + lbTier.Id + "X" + lbComponent.Id + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
                                                             [#if ! getKey(targetGroupKey)??]
-                                                                [@createTargetGroup tier=tier component=component source=ports[lb.Port] destination=ports[lb.Id] name=lb.TargetGroup /],
-                                                                ,"" : {
+                                                                ,[@createTargetGroup tier=lbTier component=lbComponent source=ports[lbPort] destination=ports[port.Id] name=lb.TargetGroup /]
+                                                                ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup})" : {
                                                                     "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
                                                                     "Properties" : {
                                                                         [#if lb.Priority??]
@@ -371,18 +401,17 @@
                                                                                 "TargetGroupArn": { "Ref": "${targetGroupKey}" }
                                                                             }
                                                                         ],
-                                                                        "Conditions" : "Conditions": [
+                                                                        "Conditions": [
                                                                             {
                                                                                 "Field": "path-pattern",
                                                                                 "Values": [ "${lb.Path}" ]
                                                                             }
                                                                         ],
-                                                                        "ListenerArn" : "${getKey("listenerX" + tier.Id + "X" + component.Id + "X" + ports[lb.Port].Port?c)}"
+                                                                        "ListenerArn" : "${getKey("listenerX" + lbTier.Id + "X" +  lbComponent.Id + "X" + ports[lbPort].Port?c)}"
                                                                     }
                                                                 }
                                                             [/#if]
                                                         [/#if]
-
                                                     [/#if]
                                                 [/#list]
                                             [/#if]
@@ -434,6 +463,28 @@
                                             "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" : {
                                                 "Value" : { "Ref" : "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" }
                                             }
+                                            [#list service.Containers as container]
+                                                [#if container.Ports??]
+                                                    [#list container.Ports as port]
+                                                        [#if port.LB??]
+                                                            [#assign lb = port.LB]
+                                                            [#if lb.Port??]
+                                                                [#assign lbPort = lb.Port]
+                                                            [#else] 
+                                                                [#assign lbPort = port.Id]
+                                                            [/#if]
+                                                            [#if lb.TargetGroup??]
+                                                                [#assign targetGroupKey = "tgX" + lb.Tier + "X" + lb.Component + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
+                                                                [#if ! getKey(targetGroupKey)??]
+                                                                    ,"${targetGroupKey}" : {
+                                                                        "Value" : { "Ref" : "targetGroupKey" }
+                                                                    }
+                                                                [/#if]
+                                                            [/#if]
+                                                        [/#if]
+                                                    [/#list]
+                                                [/#if]
+                                            [/#list]
                                             [#assign count = count + 1]
                                     [/#if]
                                 [/#list]
