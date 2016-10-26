@@ -155,7 +155,7 @@
                         }
                     ]
                 },
-                "Path": "/",
+                "Path": "/"
             }
         },
         [#list task.Containers as container]
