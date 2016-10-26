@@ -49,9 +49,6 @@
             [#assign volumeCount = volumeCount + 2]
             [#break]
 
-        [#case "supplemental"]
-            [#break]
-
     [/#switch]
     [#break]
 

@@ -136,6 +136,33 @@
 [/#macro]
 
 [#macro createTask tier component task]
+    [#assign policyCount = 0]
+    [#list task.Containers as container]
+        [#assign containerListMode = "policyCount"]
+        [#include containerList]
+    [/#list]
+    [#if policyCount > 0]
+        "roleX${tier.Id}X${component.Id}X${task.Id}" : {
+            "Type" : "AWS::IAM::Role",
+            "Properties" : {
+                "AssumeRolePolicyDocument" : {
+                    "Version": "2012-10-17",
+                    "Statement": [ 
+                        {
+                            "Effect": "Allow",
+                            "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ] },
+                            "Action": [ "sts:AssumeRole" ]
+                        }
+                    ]
+                },
+                "Path": "/",
+            }
+        },
+        [#list task.Containers as container]
+            [#assign containerListMode = "policy"]
+            [#include containerList]
+        [/#list]
+    [/#if]
     "ecsTaskX${tier.Id}X${component.Id}X${task.Id}" : {
         "Type" : "AWS::ECS::TaskDefinition",
         "Properties" : {
@@ -192,6 +219,9 @@
                         [#include containerList]
                     [/#list]
                 ]
+            [/#if]
+            [#if policyCount > 0]
+                ,"TaskRoleArn" : { "Fn::GetAtt" : ["roleX${tier.Id}X${component.Id}X${task.Id}","Arn"]}
             [/#if]
         }
     }

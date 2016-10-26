@@ -35,15 +35,6 @@
             "Essential" : true,
             [#break]
 
-        [#case "volumeCount"]
-            [#break]
-
-        [#case "volumes"]
-            [#break]
-
-        [#case "supplemental"]
-            [#break]
-
     [/#switch]
     [#break]
 
