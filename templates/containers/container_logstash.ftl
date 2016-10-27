@@ -44,7 +44,7 @@
             [#break]
 
         [#case "volumeCount"]
-            [#assign volumeCount = volumeCount + 1]
+            [#assign volumeCount += 1]
             [#break]
 
         [#case "volumes"]
@@ -55,7 +55,7 @@
                 },
                 "Name": "logstash"
             }
-            [#assign volumeCount = volumeCount + 1]
+            [#assign volumeCount += 1]
             [#break]
 
         [#case "supplemental"]

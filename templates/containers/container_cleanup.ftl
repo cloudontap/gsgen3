@@ -29,7 +29,7 @@
             [#break]
 
         [#case "volumeCount"]
-            [#assign volumeCount = volumeCount + 2]
+            [#assign volumeCount += 2]
             [#break]
 
         [#case "volumes"]
@@ -46,7 +46,7 @@
                 },
                 "Name": "dockerFiles"
             }
-            [#assign volumeCount = volumeCount + 2]
+            [#assign volumeCount += 2]
             [#break]
 
     [/#switch]

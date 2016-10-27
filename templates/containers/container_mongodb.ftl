@@ -14,7 +14,7 @@
             [#break]
 
         [#case "volumeCount"]
-            [#assign volumeCount = volumeCount + 1]
+            [#assign volumeCount += 1]
             [#break]
 
         [#case "volumes"]
@@ -25,7 +25,7 @@
                 },
                 "Name": "mongodb"
             }
-            [#assign volumeCount = volumeCount + 1]
+            [#assign volumeCount += 1]
             [#break]
 
     [/#switch]
