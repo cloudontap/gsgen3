@@ -2,132 +2,104 @@
     "Regions": {
         "ap-northeast-1": {
             "Id": "ap-northeast-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-northeast-1a",
                     "Locality": "Tokyo"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 4,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-northeast-1b",
                     "Locality": "Tokyo"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-northeast-1c",
                     "Locality": "Tokyo"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "582318560864"
             }
         },
         "ap-northeast-2": {
             "Id": "ap-northeast-2",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 21,
                     "AWSZone": "ap-northeast-2a",
                     "Locality": "Seoul"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 21,
                     "AWSZone": "ap-northeast-2c",
                     "Locality": "Seoul"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "600734575887"
             }
         },
         "ap-southeast-1": {
             "Id": "ap-southeast-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 21,
+                    "Index": 0,
                     "AWSZone": "ap-southeast-1a",
                     "Locality": "Singapore"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Singapore Zone B",
-                    "CClassOffset": 8,
-                    "CIDRMask": 21,
+                    "Index": 1,
                     "AWSZone": "ap-southeast-1b",
                     "Locality": "Singapore"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "114774131450"
             }
         },
         "ap-southeast-2": {
             "Id": "ap-southeast-2",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-southeast-2a",
                     "Locality": "Sydney"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 4,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-southeast-2b",
                     "Locality": "Sydney"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 22,
                     "AWSZone": "ap-southeast-2c",
                     "Locality": "Sydney"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "783225319266"
             },
@@ -141,208 +113,160 @@
         },
         "eu-central-1": {
             "Id": "eu-central-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 21,
                     "AWSZone": "eu-central-1a",
                     "Locality": "Frankfurt"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 8,
-                    "CIDRMask": 21,
                     "AWSZone": "eu-central-1b",
                     "Locality": "Frankfurt"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "054676820928"
             }
         },
         "eu-west-1": {
             "Id": "eu-west-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 22,
                     "AWSZone": "eu-west-1a",
                     "Locality": "Ireland"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 4,
-                    "CIDRMask": 22,
                     "AWSZone": "eu-west-1b",
                     "Locality": "Ireland"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 22,
                     "AWSZone": "eu-west-1c",
                     "Locality": "Ireland"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "156460612806"
             }
         },
         "sa-east-1": {
             "Id": "sa-east-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 21,
                     "AWSZone": "sa-east-1a",
                     "Locality": "Sao Paulo"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 8,
-                    "CIDRMask": 21,
                     "AWSZone": "sa-east-1b",
                     "Locality": "Sao Paulo"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "507241528517"
             }
         },
         "us-east-1": {
             "Id": "us-east-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 22,
                     "AWSZone": "us-east-1a",
                     "Locality": "North Virginia"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 4,
-                    "CIDRMask": 22,
                     "AWSZone": "us-east-1b",
                     "Locality": "North Virginia"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 22,
                     "AWSZone": "us-east-1c",
                     "Locality": "North Virginia"
                 },
-                {
+                "d" : {
                     "Title": "Zone D",
-                    "Id": "d",
                     "Name": "d",
                     "Description": "Zone D",
-                    "CClassOffset": 12,
-                    "CIDRMask": 22,
                     "AWSZone": "us-east-1e",
                     "Locality": "North Virginia"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "127311923021"
             }
         },
         "us-west-1": {
             "Id": "us-west-1",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 21,
                     "AWSZone": "us-west-1b",
                     "Locality": "North California"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 8,
-                    "CIDRMask": 21,
                     "AWSZone": "us-west-1c",
                     "Locality": "North California"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "027434742980"
             }
         },
         "us-west-2": {
             "Id": "us-west-2",
-            "Zones": [
-                {
+            "Zones": {
+                "a" : {
                     "Title": "Zone A",
-                    "Id": "a",
                     "Name": "a",
                     "Description": "Zone A",
-                    "CClassOffset": 0,
-                    "CIDRMask": 22,
                     "AWSZone": "us-west-2a",
                     "Locality": "Oregon"
                 },
-                {
+                "b" : {
                     "Title": "Zone B",
-                    "Id": "b",
                     "Name": "b",
                     "Description": "Zone B",
-                    "CClassOffset": 4,
-                    "CIDRMask": 22,
                     "AWSZone": "us-west-2b",
                     "Locality": "Oregon"
                 },
-                {
+                "c" : {
                     "Title": "Zone C",
-                    "Id": "c",
                     "Name": "c",
                     "Description": "Zone C",
-                    "CClassOffset": 8,
-                    "CIDRMask": 22,
                     "AWSZone": "us-west-2c",
                     "Locality": "Oregon"
                 }
-            ],
+            },
             "Accounts": {
                 "ELB": "797873946194"
             },
@@ -501,192 +425,72 @@
             "Id": "web",
             "Name": "web",
             "Description": "Supports HMI",
-            "StartingCClass": 0,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "msg": {
             "Title": "Messaging Tier",
             "Id": "msg",
             "Name": "messaging",
             "Description": "Supports system-to-system based interactions/services",
-            "StartingCClass": 16,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "app": {
             "Title": "Applications Tier",
             "Id": "app",
             "Name": "application",
             "Description": "Supports application logic execution",
-            "StartingCClass": 32,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "db": {
             "Title": "Database Tier",
             "Id": "db",
             "Name": "database",
             "Description": "Supports long term storage of content and customer data",
-            "StartingCClass": 48,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "db"
-            ]
+            "NetworkACL": "open"
         },
         "dir": {
             "Title": "Directories Tier",
             "Id": "dir",
             "Name": "directories",
             "Description": "Supports directories or domain controllers",
-            "StartingCClass": 64,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "ana": {
             "Title": "Analytics Tier",
             "Id": "ana",
             "Name": "analytics",
             "Description": "Suports things like search engines",
-            "StartingCClass": 80,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "ana"
-            ]
-        },
-        "spare-96": {
-            "Title": "Spare-96",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 96,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-112": {
-            "Title": "Spare-112",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 112,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "elb": {
             "Title": "External Load Balancer Tier",
             "Id": "elb",
             "Name": "elb",
             "Description": "Publically accessible application load balancers",
-            "StartingCClass": 128,
             "RouteTable": "external",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "ilb": {
             "Title": "Internal Load Balancer Tier",
             "Id": "ilb",
             "Name": "ilb",
             "Description": "Internally accessible application load balancers",
-            "StartingCClass": 144,
             "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-160": {
-            "Title": "Spare-160",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 160,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-176": {
-            "Title": "Spare-176",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 176,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-192": {
-            "Title": "Spare-192",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 192,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-208": {
-            "Title": "Spare-208",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 208,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
-        },
-        "spare-224": {
-            "Title": "Spare-224",
-            "Id": "",
-            "Name": "",
-            "Description": "",
-            "StartingCClass": 224,
-            "RouteTable": "internal",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         },
         "mgmt": {
             "Title": "Management Tier",
             "Id": "mgmt",
             "Name": "management",
             "Description": "Supports vpn based host access and internet access for internal hosts",
-            "StartingCClass": 240,
             "RouteTable": "external",
-            "NetworkACL": "open",
-            "Slices": [
-                "svr"
-            ]
+            "NetworkACL": "open"
         }
     },
     "RouteTables": {
@@ -1018,16 +822,26 @@
         }
     },
     "Segment" : {
-        "BClass" : "10.0",
+        "CIDR" : {
+            "Address" : "10.0.0.0",
+            "Mask" : 16
+        },
         "InternetAccess" : true,
         "DNSSupport" : true,
         "DNSHostnames" : true,
-        "AZList" : ["a", "b"],
         "NAT" : {
             "Enabled" : true,
             "MultiAZ" : false
         },
         "SSHPerSegment" : false,
-        "RotateKey" : true
-    }
+        "RotateKey" : true,
+        "Tiers" : {
+            "Order" : ["web", "msg", "app", "db", "dir", "ana", "spare", "spare",
+            "elb", "ilb", "spare", "spare", "spare", "spare", "spare", "mgmt"]
+        },
+        "Zones" : {
+            "Order" : ["a", "b", "spare", "spare"]
+        }
+    },
+    "PowersOf2" : [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
 }

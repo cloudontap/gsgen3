@@ -10,14 +10,12 @@
 [#assign accountObject = blueprintObject.Account]
 [#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
-[#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
 
 [#-- Reference data --]
 [#assign regions = blueprintObject.Regions]
 [#assign environments = blueprintObject.Environments]
 [#assign categories = blueprintObject.Categories]
-[#assign tiers = blueprintObject.Tiers]
 [#assign routeTables = blueprintObject.RouteTables]
 [#assign networkACLs = blueprintObject.NetworkACLs]
 [#assign storage = blueprintObject.Storage]
@@ -57,15 +55,6 @@
 [#assign logsBucket = getKey("s3XsegmentXlogs")]
 [#assign backupsBucket = getKey("s3XsegmentXbackups")]
 
-[#-- AZ List --]
-[#assign azList = segmentObject.AZList]
-
-[#-- Loop optimisation --]
-[#assign lastTier = solutionTiers?last]
-[#assign firstZone = azList?first]
-[#assign lastZone = azList?last]
-[#assign zoneCount = azList?size]
-
 [#-- Get stack output --]
 [#function getKey key]
     [#list stackOutputsObject as pair]
@@ -80,6 +69,26 @@
 [#assign solnMultiAZ = solutionObject.MultiAZ!environmentObject.MultiAZ!false]
 [#assign vpc = getKey("vpcXsegmentXvpc")]
 [#assign securityGroupNAT = getKey("securityGroupXmgmtXnat")!"none"]
+
+[#-- Required tiers --]
+[#assign tiers = []]
+[#list segmentObject.Tiers.Order as tierId]
+    [#if blueprintObject.Tiers[tierId]??]
+        [#assign tier = blueprintObject.Tiers[tierId]]
+        [#if tier.Components??]
+            [#assign tiers += [tier + { "Id" : tierId}]]
+        [/#if]
+    [/#if]
+[/#list]
+
+[#-- Required zones --]
+[#assign zones = []]
+[#list segmentObject.Zones.Order as zoneId]
+    [#if regions[region].Zones[zoneId]??]
+        [#assign zone = regions[region].Zones[zoneId]]
+        [#assign zones += [zone + {"Id" : zoneId}]]
+    [/#if]
+[/#list]
 
 [#-- Get processor settings --]
 [#function getProcessor tier component type]
@@ -185,12 +194,11 @@
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Resources" : {
         [#assign count = 0]
-        [#list solutionTiers as solutionTier]
-            [#assign tier = tiers[solutionTier.Id]]
-            [#if solutionTier.Components??]
-                [#list solutionTier.Components as component]
-                    [#assign slices = component.Slices!solutionTier.Slices!tier.Slices]
-                    [#if !(slice??) || (slices?seq_contains(slice))]
+        [#list tiers as tier]
+            [#if tier.Components??]
+                [#list tier.Components as component]
+                    [#assign slices = component.Slices]
+                    [#if slices?seq_contains(slice)]
                         [#if count > 0],[/#if]
                         [#if component.MultiAZ??] 
                             [#assign multiAZ =  component.MultiAZ]
@@ -316,7 +324,7 @@
                                     }
                                 [/#list]
                             [/#if]
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- SQS --]
@@ -337,7 +345,7 @@
                                     [#if sqs.VisibilityTimeout??],"VisibilityTimeout" : ${sqs.VisibilityTimeout?c}[/#if]
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- ELB --]
@@ -361,14 +369,14 @@
                                 "Properties" : {
                                     [#if multiAZ]
                                         "Subnets" : [
-                                            [#list azList as zone]
-                                                "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
+                                            [#list zones as zone]
+                                                "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
                                             [/#list]
                                         ],
                                         "CrossZone" : true,
                                     [#else]
                                         "Subnets" : [
-                                            "${getKey("subnetX"+tier.Id+"X"+firstZone)}"
+                                            "${getKey("subnetX"+tier.Id+"X"+zones[0])}"
                                         ],
                                     [/#if]
                                     "Listeners" : [
@@ -416,7 +424,7 @@
                                             "S3BucketName" : "${logsBucket}"
                                         },
                                     [/#if]
-                                    "Scheme" : "${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("internet-facing","internal")}",
+                                    "Scheme" : "${(tier.RouteTable == "external")?string("internet-facing","internal")}",
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
@@ -432,7 +440,7 @@
                                     ]
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
         
                         [#-- ALB --]
@@ -492,11 +500,11 @@
                                 "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
                                 "Properties" : {
                                     "Subnets" : [
-                                        [#list azList as zone]
-                                            "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
+                                        [#list zones as zone]
+                                            "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
                                         [/#list]
                                     ],
-                                    "Scheme" : "${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("internet-facing","internal")}",
+                                    "Scheme" : "${(tier.RouteTable == "external")?string("internet-facing","internal")}",
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "Name" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
@@ -512,7 +520,7 @@
                                     ]
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- EC2 --]
@@ -618,8 +626,8 @@
                             },
             
                             [#assign ec2Count = 0]
-                            [#list regionObject.Zones as zone]
-                                [#if azList?seq_contains(zone.Id) && (multiAZ || firstZone = zone.Id)]
+                            [#list zones as zone]
+                                [#if multiAZ || (zones[0].Id = zone.Id)]
                                     [#if ec2Count > 0],[/#if]
                                     "ec2InstanceX${tier.Id}X${component.Id}X${zone.Id}": {
                                         "Type": "AWS::EC2::Instance",
@@ -730,7 +738,7 @@
                                             "Monitoring" : false,
                                             "NetworkInterfaces" : [
                                                 {
-                                                    "AssociatePublicIpAddress" : ${(((solutionTier.RouteTable!tier.RouteTable) == "external") && !fixedIP)?string("true","false")},
+                                                    "AssociatePublicIpAddress" : ${(((tier.RouteTable) == "external") && !fixedIP)?string("true","false")},
                                                     "DeleteOnTermination" : true,
                                                     "DeviceIndex" : "0",
                                                     "SubnetId" : "${getKey("subnetX"+tier.Id+"X"+zone.Id)}",
@@ -786,10 +794,10 @@
                                             }
                                         }
                                     [/#if]
-                                    [#assign ec2Count = ec2Count + 1]
+                                    [#assign ec2Count += 1]
                                 [/#if]
                             [/#list]
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- ECS --]
@@ -1056,15 +1064,15 @@
                                         "MaxSize": "${maxSize}",
                                         "DesiredCapacity": "${processorProfile.DesiredPerZone * zoneCount}",
                                         "VPCZoneIdentifier": [ 
-                                            [#list azList as zone]
-                                                "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
+                                            [#list zones as zone]
+                                                "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
                                             [/#list]
                                         ],
                                     [#else]
                                         "MinSize": "${processorProfile.MinPerZone}",
                                         "MaxSize": "${maxSize}",
                                         "DesiredCapacity": "${processorProfile.DesiredPerZone}",
-                                        "VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+firstZone)}"],
+                                        "VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+zones[0].Id)}"],
                                     [/#if]
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
@@ -1089,7 +1097,7 @@
                                     [@createBlockDevices storageProfile=storageProfile /]
                                     "SecurityGroups" : [ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} [#if securityGroupNAT != "none"], "${securityGroupNAT}"[/#if] ], 
                                     "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}X${component.Id}" },
-                                    "AssociatePublicIpAddress" : ${((solutionTier.RouteTable!tier.RouteTable) == "external")?string("true","false")},
+                                    "AssociatePublicIpAddress" : ${(tier.RouteTable == "external")?string("true","false")},
                                     [#if (processorProfile.ConfigSet)??]
                                         [#assign configSet = processorProfile.ConfigSet]
                                     [#else]
@@ -1114,7 +1122,7 @@
                                     }
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- ElastiCache --]
@@ -1157,8 +1165,8 @@
                                 "Properties" : {
                                     "Description" : "${productName}-${segmentName}-${tier.Name}-${component.Name}",
                                     "SubnetIds" : [ 
-                                        [#list azList as zone]
-                                            "${getKey("subnetX"+tier.Id+"X"+zone)}"[#if !(zone == lastZone)],[/#if]
+                                        [#list zones as zone]
+                                            "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
                                         [/#list]
                                     ]
                                 }
@@ -1187,24 +1195,18 @@
                                         "PreferredAvailabilityZones" : [
                                             [#assign countPerZone = processorProfile.CountPerZone]
                                             [#assign zoneCount = 0]
-                                            [#list regionObject.Zones as zone]
-                                                [#if azList?seq_contains(zone.Id)]
-                                                    [#list 1..countPerZone as i]
-                                                        [#if zoneCount > 0],[/#if]
-                                                        "${zone.AWSZone}"
-                                                        [#assign zoneCount = zoneCount + 1]
-                                                    [/#list]
-                                                [/#if]
-                                            [/#list]
+                                            [#list zones as zone]
+                                                [#list 1..countPerZone as i]
+                                                    [#if zoneCount > 0],[/#if]
+                                                    "${zone.AWSZone}"
+                                                    [#assign zoneCount += 1]
+                                                [/#list]
+                                        [/#list]
                                         ],
                                         "NumCacheNodes" : "${processorProfile.CountPerZone * zoneCount}",
                                     [#else]
                                         "AZMode": "single-az",
-                                        [#list regionObject.Zones as zone]
-                                            [#if firstZone == zone.Id]
-                                                "PreferredAvailabilityZone" : "${zone.AWSZone}",
-                                            [/#if]
-                                        [/#list]
+                                        "PreferredAvailabilityZone" : "${zones[0].AWSZone}",
                                         "NumCacheNodes" : "${processorProfile.CountPerZone}",
                                     [/#if]
                                     [#if (cache.SnapshotRetentionLimit)??]
@@ -1226,7 +1228,7 @@
                                     ]
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- RDS --]
@@ -1267,9 +1269,8 @@
                                 "Properties" : {
                                     "DBSubnetGroupDescription" : "${productName}-${segmentName}-${tier.Name}-${component.Name}",
                                     "SubnetIds" : [ 
-                                        [#list azList as zone]
-                                            "${getKey("subnetX"+tier.Id+"X"+zone)}"
-                                            [#if !(zone == lastZone)],[/#if]
+                                        [#list zones as zone]
+                                            "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
                                         [/#list]
                                     ],
                                     "Tags" : [
@@ -1347,11 +1348,7 @@
                                     [#if multiAZ]
                                         "MultiAZ": true,
                                     [#else]
-                                        [#list regionObject.Zones as zone]
-                                            [#if firstZone == zone.Id]
-                                                "AvailabilityZone" : "${zone.AWSZone}",
-                                            [/#if]
-                                        [/#list]
+                                        "AvailabilityZone" : "${zone[0].AWSZone}",
                                     [/#if]
                                     "VPCSecurityGroups":[
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
@@ -1369,7 +1366,7 @@
                                     ]
                                 }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         [#-- ElasticSearch --]
                         [#if component.ElasticSearch??]
@@ -1394,18 +1391,18 @@
                                                     "IpAddress": {
                                                         [#assign ipCount = 0]
                                                         "aws:SourceIp": [
-                                                            [#list azList as zone]
-                                                                [#if (getKey("eipXmgmtXnatX" + zone + "Xip")??)]
+                                                            [#list zones as zone]
+                                                                [#if (getKey("eipXmgmtXnatX" + zone.Id + "Xip")??)]
                                                                     [#if ipCount > 0],[/#if]
-                                                                    "${getKey("eipXmgmtXnatX" + zone + "Xip")}"
-                                                                    [#assign ipCount = ipCount + 1]
+                                                                    "${getKey("eipXmgmtXnatX" + zone.Id + "Xip")}"
+                                                                    [#assign ipCount += 1]
                                                                 [/#if]
                                                             [/#list]
                                                             [#list 1..20 as i]
                                                                 [#if (getKey("eipXmgmtXnatXexternalX" + i)??)]
                                                                     [#if ipCount > 0],[/#if]
                                                                     "${getKey("eipXmgmtXnatXexternalX" + i)}"
-                                                                    [#assign ipCount = ipCount + 1]
+                                                                    [#assign ipCount += 1]
                                                                 [/#if]
                                                             [/#list]
                                                         ]
@@ -1481,12 +1478,11 @@
     
     "Outputs" : {
         [#assign count = 0]
-        [#list solutionObject.Tiers as solutionTier]
-            [#assign tier = tiers[solutionTier.Id]]
-            [#if solutionTier.Components??]
-                [#list solutionTier.Components as component]
-                    [#assign slices = component.Slices!solutionTier.Slices!tier.Slices]
-                    [#if !(slice??) || (slices?seq_contains(slice))]
+        [#list tiers as tier]
+             [#if tier.Components??]
+                [#list tier.Components as component]
+                    [#assign slices = component.Slices]
+                    [#if slices?seq_contains(slice)]
                         [#if component.MultiAZ??] 
                             [#assign multiAZ =  component.MultiAZ]
                         [#else]
@@ -1499,7 +1495,7 @@
                             "securityGroupX${tier.Id}X${component.Id}" : {
                                 "Value" : { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- S3 --]
@@ -1511,7 +1507,7 @@
                             "s3X${tier.Id}X${component.Id}Xurl" : {
                                 "Value" : { "Fn::GetAtt" : ["s3X${tier.Id}X${component.Id}", "WebsiteURL"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- SQS --]
@@ -1527,7 +1523,7 @@
                             "sqsX${tier.Id}X${component.Id}Xarn" : {
                                 "Value" : { "Fn::GetAtt" : ["sqsX${tier.Id}X${component.Id}", "Arn"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count +=  1]
                         [/#if]
                         
                         [#-- ELB --]
@@ -1539,7 +1535,7 @@
                             "elbX${tier.Id}X${component.Id}Xdns" : {
                                 "Value" : { "Fn::GetAtt" : ["elbX${tier.Id}X${component.Id}", "DNSName"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- ALB --]
@@ -1561,7 +1557,7 @@
                             "albX${tier.Id}X${component.Id}Xdns" : {
                                 "Value" : { "Fn::GetAtt" : ["albX${tier.Id}X${component.Id}", "DNSName"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- EC2 --]
@@ -1573,7 +1569,7 @@
                             "roleX${tier.Id}X${component.Id}Xarn" : {
                                 "Value" : { "Fn::GetAtt" : ["roleX${tier.Id}X${component.Id}", "Arn"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- ECS --]
@@ -1599,7 +1595,7 @@
                                 [#assign processorProfile = getProcessor(tier, component, "ECS")]
                                 [#assign maxSize = processorProfile.MaxPerZone]
                                 [#if multiAZ]
-                                    [#assign maxSize = maxSize * zoneCount]
+                                    [#assign maxSize *= zoneCount]
                                 [/#if]
                                 [#list 1..maxSize as index]
                                     ,"eipX${tier.Id}X${component.Id}X${index}Xip": {
@@ -1610,7 +1606,7 @@
                                     }
                                 [/#list]
                             [/#if]
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                         
                         [#-- ElastiCache --]
@@ -1624,7 +1620,7 @@
                                 "cacheX${tier.Id}X${component.Id}Xport" : {
                                     "Value" : { "Fn::GetAtt" : ["cacheX${tier.Id}X${component.Id}", "ConfigurationEndpoint.Port"] }
                                 }
-                                [#assign count = count + 1]
+                                [#assign count += 1]
                             [/#if]
                         [/#if]
                         
@@ -1646,7 +1642,7 @@
                             "rdsX${tier.Id}X${component.Id}Xpassword" : {
                                 "Value" : "${credentialsObject[tier.Id + "-" + component.Id].Login.Password}"
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
 
                         [#-- ElasticSearch --]
@@ -1662,7 +1658,7 @@
                             "esX${tier.Id}X${component.Id}Xarn" : {
                                 "Value" : { "Fn::GetAtt" : ["esX${tier.Id}X${component.Id}", "DomainArn"] }
                             }
-                            [#assign count = count + 1]
+                            [#assign count += 1]
                         [/#if]
                     [/#if]
                 [/#list]

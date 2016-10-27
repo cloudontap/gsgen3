@@ -10,14 +10,13 @@
 [#assign accountObject = blueprintObject.Account]
 [#assign productObject = blueprintObject.Product]
 [#assign solutionObject = blueprintObject.Solution]
-[#assign solutionTiers = solutionObject.Tiers]
 [#assign segmentObject = blueprintObject.Segment]
+[#assign powersOf2 = blueprintObject.PowersOf2]
 
 [#-- Reference data --]
 [#assign regions = blueprintObject.Regions]
 [#assign environments = blueprintObject.Environments]
 [#assign categories = blueprintObject.Categories]
-[#assign tiers = blueprintObject.Tiers]
 [#assign routeTables = blueprintObject.RouteTables]
 [#assign networkACLs = blueprintObject.NetworkACLs]
 [#assign storage = blueprintObject.Storage]
@@ -80,15 +79,6 @@
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
 [#assign codeBucket = getKey("s3XaccountXcode")!"unknown"]
 
-[#-- AZ List --]
-[#assign azList = segmentObject.AZList]
-
-[#-- Loop optimisation --]
-[#assign lastTier = solutionTiers?last]
-[#assign firstZone = azList?first]
-[#assign lastZone = azList?last]
-[#assign zoneCount = azList?size]
-
 [#-- Get stack output --]
 [#function getKey key]
     [#list stackOutputsObject as pair]
@@ -98,8 +88,26 @@
     [/#list]
 [/#function]
 
+[#-- Calculate the closest power of 2 --]
+[#function getPowerOf2 value]
+    [#assign exponent = -1]
+    [#list powersOf2 as powerOf2]
+        [#if powerOf2 <= value]
+            [#assign exponent = powerOf2?index]
+        [#else]
+            [#break]
+        [/#if]
+    [/#list]
+    [#return exponent]
+[/#function]
+
 [#-- Segment --]
-[#assign bClass = segmentObject.BClass]
+[#assign baseAddress = segmentObject.CIDR.Address?split(".")]
+[#assign addressOffset = baseAddress[2]?number*256 + baseAddress[3]?number]
+[#assign addressesPerTier = powersOf2[getPowerOf2(powersOf2[32 - segmentObject.CIDR.Mask]/(segmentObject.Tiers.Order?size))]]
+[#assign addressesPerZone = powersOf2[getPowerOf2(addressesPerTier / (segmentObject.Zones.Order?size))]]
+[#assign subnetMask = 32 - powersOf2?seq_index_of(addressesPerZone)]
+
 [#assign internetAccess = segmentObject.InternetAccess]
 [#assign dnsSupport = segmentObject.DNSSupport]
 [#assign dnsHostnames = segmentObject.DNSHostnames]
@@ -111,6 +119,38 @@
 [#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
+
+[#-- Required tiers --]
+[#function isTier tierId]
+    [#return (blueprintObject.Tiers[tierId])??]
+[/#function]
+
+[#function getTier tierId]
+    [#return blueprintObject.Tiers[tierId]]
+[/#function]
+
+[#assign tiers = []]
+[#list segmentObject.Tiers.Order as tierId]
+    [#if isTier(tierId)]
+        [#assign tier = getTier(tierId)]
+        [#if tier.Components??
+            || ((tier.Required)?? && tier.Required)
+            || (jumpServer && (tierId == "mgmt"))]
+            [#assign tiers += [tier + 
+                { "Id" : tierId, "Index" : tierId?index}]]
+        [/#if]
+    [/#if]
+[/#list]
+
+[#-- Required zones --]
+[#assign zones = []]
+[#list segmentObject.Zones.Order as zoneId]
+    [#if regions[region].Zones[zoneId]??]
+        [#assign zone = regions[region].Zones[zoneId]]
+        [#assign zones += [zone +  
+            {"Id" : zoneId, "Index" : zoneId?index}]]
+    [/#if]
+[/#list]
 
 [#-- Get processor settings --]
 [#function getProcessor tier component type]
@@ -143,21 +183,19 @@
             [#assign eipCount = 0]
             [#if jumpServer]
                 [#assign tier = tiers["mgmt"]]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        [#if jumpServerPerAZ || (azList[0] == zone.Id)]
-                            [#if eipCount > 0],[/#if]
-                            "eipX${tier.Id}XnatX${zone.Id}": {
-                                "Type" : "AWS::EC2::EIP",
-                                "Properties" : {
-                                    "Domain" : "vpc"
-                                }
+                [#list zones as zone]
+                    [#if jumpServerPerAZ || (zones[0].Id == zone.Id)]
+                        [#if eipCount > 0],[/#if]
+                        "eipX${tier.Id}XnatX${zone.Id}": {
+                            "Type" : "AWS::EC2::EIP",
+                            "Properties" : {
+                                "Domain" : "vpc"
                             }
-                            [#assign eipCount = eipCount + 1]
-                        [/#if]
+                        }
+                        [#assign eipCount += 1]
                     [/#if]
                 [/#list]
-                [#assign sliceCount = sliceCount + 1]
+                [#assign sliceCount += 1]
             [/#if]
         [/#if]
                 
@@ -194,7 +232,7 @@
                     }
                 }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
 
         [#if slice?contains("cert")]
@@ -212,7 +250,7 @@
                     ]
                 }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("dns")]
@@ -238,7 +276,7 @@
                     ]
                 }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("vpc")]
@@ -247,7 +285,7 @@
             "vpc" : {
                 "Type" : "AWS::EC2::VPC",
                 "Properties" : {
-                    "CidrBlock" : "${bClass}.0.0/16",
+                    "CidrBlock" : "${segmentObject.CIDR.Address}/${segmentObject.CIDR.Mask}",
                     "EnableDnsSupport" : ${(dnsSupport)?string("true","false")},
                     "EnableDnsHostnames" : ${(dnsHostnames)?string("true","false")},
                     "Tags" : [ 
@@ -289,57 +327,53 @@
             
             [#-- Define route tables --]
             [#assign solutionRouteTables = []]
-            [#list solutionTiers as solutionTier]
-                [#assign tier = tiers[solutionTier.Id]]
-                [#assign routeTable = routeTables[solutionTier.RouteTable!tier.RouteTable]]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        [#assign tableId = routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")]
-                        [#assign tableName = routeTable.Name + jumpServerPerAZ?string("-" + zone.Id,"")]
-                        [#if !solutionRouteTables?seq_contains(tableId)]
-                            [#assign solutionRouteTables = solutionRouteTables + [tableId]]
-                            ,"routeTableX${tableId}" : {
-                                "Type" : "AWS::EC2::RouteTable",
+            [#list tiers as tier]
+                [#assign routeTable = routeTables[tier.RouteTable]]
+                [#list zones as zone]
+                    [#assign tableId = routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")]
+                    [#assign tableName = routeTable.Name + jumpServerPerAZ?string("-" + zone.Id,"")]
+                    [#if !solutionRouteTables?seq_contains(tableId)]
+                        [#assign solutionRouteTables = solutionRouteTables + [tableId]]
+                        ,"routeTableX${tableId}" : {
+                            "Type" : "AWS::EC2::RouteTable",
+                            "Properties" : {
+                                "VpcId" : { "Ref" : "vpc" },
+                                "Tags" : [ 
+                                    { "Key" : "cot:request", "Value" : "${request}" },
+                                    { "Key" : "cot:account", "Value" : "${accountId}" },
+                                    { "Key" : "cot:product", "Value" : "${productId}" },
+                                    { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                    { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                    { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                    [#if jumpServerPerAZ]
+                                        { "Key" : "cot:zone", "Value" : "${zone.Id}" },
+                                    [/#if]
+                                    { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tableName}" } 
+                                ]
+                            }
+                        }
+                        [#list routeTable.Routes as route]
+                            ,"routeX${tableId}X${route.Id}" : {
+                                "Type" : "AWS::EC2::Route",
                                 "Properties" : {
-                                    "VpcId" : { "Ref" : "vpc" },
-                                    "Tags" : [ 
-                                        { "Key" : "cot:request", "Value" : "${request}" },
-                                        { "Key" : "cot:account", "Value" : "${accountId}" },
-                                        { "Key" : "cot:product", "Value" : "${productId}" },
-                                        { "Key" : "cot:segment", "Value" : "${segmentId}" },
-                                        { "Key" : "cot:environment", "Value" : "${environmentId}" },
-                                        { "Key" : "cot:category", "Value" : "${categoryId}" },
-                                        [#if jumpServerPerAZ]
-                                            { "Key" : "cot:zone", "Value" : "${zone.Id}" },
-                                        [/#if]
-                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tableName}" } 
-                                    ]
+                                    "RouteTableId" : { "Ref" : "routeTableX${tableId}" },
+                                    [#switch route.Type]
+                                        [#case "gateway"]
+                                            "DestinationCidrBlock" : "0.0.0.0/0",
+                                            "GatewayId" : { "Ref" : "igw" }
+                                            [#break]
+                                    [/#switch]
                                 }
                             }
-                            [#list routeTable.Routes as route]
-                                ,"routeX${tableId}X${route.Id}" : {
-                                    "Type" : "AWS::EC2::Route",
-                                    "Properties" : {
-                                        "RouteTableId" : { "Ref" : "routeTableX${tableId}" },
-                                        [#switch route.Type]
-                                            [#case "gateway"]
-                                                "DestinationCidrBlock" : "0.0.0.0/0",
-                                                "GatewayId" : { "Ref" : "igw" }
-                                                [#break]
-                                        [/#switch]
-                                    }
-                                }
-                            [/#list]
-                        [/#if]
+                        [/#list]
                     [/#if]
                 [/#list]
             [/#list]
             
             [#-- Define network ACLs --]
             [#assign solutionNetworkACLs = []]
-            [#list solutionTiers as solutionTier]
-                [#assign tier = tiers[solutionTier.Id]]
-                [#assign networkACL = networkACLs[solutionTier.NetworkACL!tier.NetworkACL]]
+            [#list tiers as tier]
+                [#assign networkACL = networkACLs[tier.NetworkACL]]
                 [#if !solutionNetworkACLs?seq_contains(networkACL.Id)]
                     [#assign solutionNetworkACLs = solutionNetworkACLs + [networkACL.Id]]
                     ,"networkACLX${networkACL.Id}" : {
@@ -395,56 +429,54 @@
             [/#list]
 
             [#-- Define subnets --]
-            [#list solutionTiers as solutionTier]
-                [#assign tier = tiers[solutionTier.Id]]
-                [#assign routeTable = routeTables[solutionTier.RouteTable!tier.RouteTable]]
-                [#assign networkACL = networkACLs[solutionTier.NetworkACL!tier.NetworkACL]]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        ,"subnetX${tier.Id}X${zone.Id}" : {
-                            "Type" : "AWS::EC2::Subnet",
-                            "Properties" : {
-                                "VpcId" : { "Ref" : "vpc" },
-                                "AvailabilityZone" : "${zone.AWSZone}",
-                                "CidrBlock" : "${bClass}.${tier.StartingCClass+zone.CClassOffset}.0/${zone.CIDRMask}",
-                                "Tags" : [
-                                    { "Key" : "cot:request", "Value" : "${request}" },
-                                    { "Key" : "cot:account", "Value" : "${accountId}" },
-                                    { "Key" : "cot:product", "Value" : "${productId}" },
-                                    { "Key" : "cot:segment", "Value" : "${segmentId}" },
-                                    { "Key" : "cot:environment", "Value" : "${environmentId}" },
-                                    { "Key" : "cot:category", "Value" : "${categoryId}" },
-                                    { "Key" : "cot:tier", "Value" : "${tier.Id}" },
-                                    { "Key" : "cot:zone", "Value" : "${zone.Id}" },
-                                    [#if routeTable.Private!false]
-                                        { "Key" : "network", "Value" : "private" },
-                                    [/#if]
-                                    { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${zone.Name}" } 
-                                ]
-                            }
-                        },
-                        
-                        "routeTableXassociationX${tier.Id}X${zone.Id}" : {
-                            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
-                            "Properties" : {
-                                "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-                                "RouteTableId" : { "Ref" : "routeTableX${routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")}" }
-                            }
-                        },
-                        
-                        "networkACLXassociationX${tier.Id}X${zone.Id}" : {
-                            "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-                            "Properties" : {
-                                "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-                                "NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" }
-                            }
+            [#list tiers as tier]
+                [#assign routeTable = routeTables[tier.RouteTable]]
+                [#assign networkACL = networkACLs[tier.NetworkACL]]
+                [#list zones as zone]
+                    ,"subnetX${tier.Id}X${zone.Id}" : {
+                        "Type" : "AWS::EC2::Subnet",
+                        "Properties" : {
+                            "VpcId" : { "Ref" : "vpc" },
+                            "AvailabilityZone" : "${zone.AWSZone}",
+                            [#assign subnetAddress = addressOffset + (tier.Index * addressesPerTier) + (zone.Index * addressesPerZone)]
+                            "CidrBlock" : "${baseAddress[0]}.${baseAddress[1]}.${(subnetAddress/256)?int}.${(subnetAddress%256)}/${subnetMask}",
+                            "Tags" : [
+                                { "Key" : "cot:request", "Value" : "${request}" },
+                                { "Key" : "cot:account", "Value" : "${accountId}" },
+                                { "Key" : "cot:product", "Value" : "${productId}" },
+                                { "Key" : "cot:segment", "Value" : "${segmentId}" },
+                                { "Key" : "cot:environment", "Value" : "${environmentId}" },
+                                { "Key" : "cot:category", "Value" : "${categoryId}" },
+                                { "Key" : "cot:tier", "Value" : "${tier.Id}" },
+                                { "Key" : "cot:zone", "Value" : "${zone.Id}" },
+                                [#if routeTable.Private!false]
+                                    { "Key" : "network", "Value" : "private" },
+                                [/#if]
+                                { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-${zone.Name}" } 
+                            ]
                         }
-                    [/#if]
+                    },
+                    
+                    "routeTableXassociationX${tier.Id}X${zone.Id}" : {
+                        "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+                        "Properties" : {
+                            "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
+                            "RouteTableId" : { "Ref" : "routeTableX${routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")}" }
+                        }
+                    },
+                    
+                    "networkACLXassociationX${tier.Id}X${zone.Id}" : {
+                        "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+                        "Properties" : {
+                            "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
+                            "NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" }
+                        }
+                    }
                 [/#list]
             [/#list]
                         
             [#if jumpServer]
-                [#assign tier = tiers["mgmt"]]
+                [#assign tier = getTier("mgmt")]
                 ,"roleX${tier.Id}Xnat": {
                     "Type" : "AWS::IAM::Role",
                     "Properties" : {
@@ -531,7 +563,7 @@
                         ],
                         "SecurityGroupIngress" : [
                             { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
-                            { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "CidrIp": "${bClass}.0.0/16" }
+                            { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "CidrIp": "${segmentObject.CIDR.Address}/${segmentObject.CIDR.Mask}" }
                         ]
                     }
                 },
@@ -557,175 +589,172 @@
                     }
                 }
                         
-                [#assign solutionNATInstances = []]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        [#if jumpServerPerAZ || (azList[0] == zone.Id)]
-                            ,"asgX${tier.Id}XnatX${zone.Id}": {
-                                "DependsOn" : [ "subnetX${tier.Id}X${zone.Id}" ],
-                                "Type": "AWS::AutoScaling::AutoScalingGroup",
-                                "Metadata": {
-                                    "AWS::CloudFormation::Init": {
-                                        "configSets" : {
-                                            "nat" : ["dirs", "bootstrap", "nat"]
-                                        },
-                                        "dirs": {
-                                            "commands": {
-                                                "01Directories" : {
-                                                    "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /var/log/codeontap",
-                                                    "ignoreErrors" : "false"
-                                                }
+                [#list zones as zone]
+                    [#if jumpServerPerAZ || (zones[0].Id == zone.Id)]
+                        ,"asgX${tier.Id}XnatX${zone.Id}": {
+                            "DependsOn" : [ "subnetX${tier.Id}X${zone.Id}" ],
+                            "Type": "AWS::AutoScaling::AutoScalingGroup",
+                            "Metadata": {
+                                "AWS::CloudFormation::Init": {
+                                    "configSets" : {
+                                        "nat" : ["dirs", "bootstrap", "nat"]
+                                    },
+                                    "dirs": {
+                                        "commands": {
+                                            "01Directories" : {
+                                                "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /var/log/codeontap",
+                                                "ignoreErrors" : "false"
                                             }
-                                        },
-                                        "bootstrap": {
-                                            "packages" : {
-                                                "yum" : {
-                                                    "aws-cli" : []
-                                                }
-                                            },  
-                                            "files" : {
-                                                "/etc/codeontap/facts.sh" : {
-                                                    "content" : { 
-                                                        "Fn::Join" : [
-                                                            "", 
-                                                            [
-                                                                "#!/bin/bash\n",
-                                                                "echo \"cot:request=${request}\"\n",
-                                                                "echo \"cot:accountRegion=${accountRegionId}\"\n",
-                                                                "echo \"cot:account=${accountId}\"\n",
-                                                                "echo \"cot:product=${productId}\"\n",
-                                                                "echo \"cot:region=${regionId}\"\n",
-                                                                "echo \"cot:segment=${segmentId}\"\n",
-                                                                "echo \"cot:environment=${environmentId}\"\n",
-                                                                "echo \"cot:tier=${tier.Id}\"\n",
-                                                                "echo \"cot:component=nat\"\n",
-                                                                "echo \"cot:zone=${zone.Id}\"\n",
-                                                                "echo \"cot:role=nat\"\n",
-                                                                "echo \"cot:credentials=${credentialsBucket}\"\n",
-                                                                "echo \"cot:code=${codeBucket}\"\n",
-                                                                "echo \"cot:logs=${logsBucket}\"\n",
-                                                                "echo \"cot:backups=${backupsBucket}\"\n"
-                                                            ]
+                                        }
+                                    },
+                                    "bootstrap": {
+                                        "packages" : {
+                                            "yum" : {
+                                                "aws-cli" : []
+                                            }
+                                        },  
+                                        "files" : {
+                                            "/etc/codeontap/facts.sh" : {
+                                                "content" : { 
+                                                    "Fn::Join" : [
+                                                        "", 
+                                                        [
+                                                            "#!/bin/bash\n",
+                                                            "echo \"cot:request=${request}\"\n",
+                                                            "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                            "echo \"cot:account=${accountId}\"\n",
+                                                            "echo \"cot:product=${productId}\"\n",
+                                                            "echo \"cot:region=${regionId}\"\n",
+                                                            "echo \"cot:segment=${segmentId}\"\n",
+                                                            "echo \"cot:environment=${environmentId}\"\n",
+                                                            "echo \"cot:tier=${tier.Id}\"\n",
+                                                            "echo \"cot:component=nat\"\n",
+                                                            "echo \"cot:zone=${zone.Id}\"\n",
+                                                            "echo \"cot:role=nat\"\n",
+                                                            "echo \"cot:credentials=${credentialsBucket}\"\n",
+                                                            "echo \"cot:code=${codeBucket}\"\n",
+                                                            "echo \"cot:logs=${logsBucket}\"\n",
+                                                            "echo \"cot:backups=${backupsBucket}\"\n"
                                                         ]
-                                                    },
-                                                    "mode" : "000755"
+                                                    ]
                                                 },
-                                                "/opt/codeontap/bootstrap/fetch.sh" : {
-                                                    "content" : { 
-                                                        "Fn::Join" : [
-                                                            "", 
-                                                            [
-                                                                "#!/bin/bash -ex\n",
-                                                                "exec > >(tee /var/log/codeontap/fetch.log|logger -t codeontap-fetch -s 2>/dev/console) 2>&1\n",
-                                                                "REGION=$(/etc/codeontap/facts.sh | grep cot:accountRegion | cut -d '=' -f 2)\n",
-                                                                "CODE=$(/etc/codeontap/facts.sh | grep cot:code | cut -d '=' -f 2)\n",
-                                                                "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/codeontap/bootstrap && chmod 0500 /opt/codeontap/bootstrap/*.sh\n"
-                                                            ]
-                                                        ]
-                                                    },
-                                                    "mode" : "000755"
-                                                }
+                                                "mode" : "000755"
                                             },
-                                            "commands": {
-                                                "01Fetch" : {
-                                                    "command" : "/opt/codeontap/bootstrap/fetch.sh",
-                                                    "ignoreErrors" : "false"
+                                            "/opt/codeontap/bootstrap/fetch.sh" : {
+                                                "content" : { 
+                                                    "Fn::Join" : [
+                                                        "", 
+                                                        [
+                                                            "#!/bin/bash -ex\n",
+                                                            "exec > >(tee /var/log/codeontap/fetch.log|logger -t codeontap-fetch -s 2>/dev/console) 2>&1\n",
+                                                            "REGION=$(/etc/codeontap/facts.sh | grep cot:accountRegion | cut -d '=' -f 2)\n",
+                                                            "CODE=$(/etc/codeontap/facts.sh | grep cot:code | cut -d '=' -f 2)\n",
+                                                            "aws --region ${r"${REGION}"} s3 sync s3://${r"${CODE}"}/bootstrap/centos/ /opt/codeontap/bootstrap && chmod 0500 /opt/codeontap/bootstrap/*.sh\n"
+                                                        ]
+                                                    ]
                                                 },
-                                                "02Initialise" : {
-                                                    "command" : "/opt/codeontap/bootstrap/init.sh",
-                                                    "ignoreErrors" : "false"
-                                                }
+                                                "mode" : "000755"
                                             }
                                         },
-                                        "nat": {
-                                            "commands": {
-                                                "01ExecuteRouteUpdateScript" : {
-                                                    "command" : "/opt/codeontap/bootstrap/nat.sh",
+                                        "commands": {
+                                            "01Fetch" : {
+                                                "command" : "/opt/codeontap/bootstrap/fetch.sh",
+                                                "ignoreErrors" : "false"
+                                            },
+                                            "02Initialise" : {
+                                                "command" : "/opt/codeontap/bootstrap/init.sh",
+                                                "ignoreErrors" : "false"
+                                            }
+                                        }
+                                    },
+                                    "nat": {
+                                        "commands": {
+                                            "01ExecuteRouteUpdateScript" : {
+                                                "command" : "/opt/codeontap/bootstrap/nat.sh",
+                                                "ignoreErrors" : "false"
+                                            }
+                                            [#if slice?contains("eip")]
+                                                ,"02ExecuteAllocateEIPScript" : {
+                                                    "command" : "/opt/codeontap/bootstrap/eip.sh",
+                                                    "env" : { 
+                                                        [#-- Legacy code to support definition of eip and vpc in one template (slice = "eipvpc" or "eips3vpc" depending on how S3 to be defined)  --]
+                                                        "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                                                    },
                                                     "ignoreErrors" : "false"
                                                 }
-                                                [#if slice?contains("eip")]
+                                            [#else]
+                                                [#if getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")??]
                                                     ,"02ExecuteAllocateEIPScript" : {
                                                         "command" : "/opt/codeontap/bootstrap/eip.sh",
                                                         "env" : { 
-                                                            [#-- Legacy code to support definition of eip and vpc in one template (slice = "eipvpc" or "eips3vpc" depending on how S3 to be defined)  --]
-                                                            "EIP_ALLOCID" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                                                            [#-- Normally assume eip defined in a separate template to the vpc --]
+                                                            "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
                                                         },
                                                         "ignoreErrors" : "false"
                                                     }
-                                                [#else]
-                                                    [#if getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")??]
-                                                        ,"02ExecuteAllocateEIPScript" : {
-                                                            "command" : "/opt/codeontap/bootstrap/eip.sh",
-                                                            "env" : { 
-                                                                [#-- Normally assume eip defined in a separate template to the vpc --]
-                                                                "EIP_ALLOCID" : "${getKey("eipX" + tier.Id + "XnatX" + zone.Id + "Xid")}"
-                                                            },
-                                                            "ignoreErrors" : "false"
-                                                        }
-                                                    [/#if]
                                                 [/#if]
-                                            }
+                                            [/#if]
                                         }
                                     }
-                                },
-                                "Properties": {
-                                    "Cooldown" : "30",
-                                    "LaunchConfigurationName": {"Ref": "launchConfigX${tier.Id}XnatX${zone.Id}"},
-                                    "MinSize": "1",
-                                    "MaxSize": "1",
-                                    "VPCZoneIdentifier": [ 
-                                        { "Ref" : "subnetX${tier.Id}X${zone.Id}"} 
-                                    ],
-                                    "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "cot:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
-                                        { "Key" : "cot:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
-                                        { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
-                                    ]
                                 }
                             },
-                        
-                            [#assign component = { "Id" : ""}]
-                            [#assign processorProfile = getProcessor(tier, component, "NAT")]
-                            "launchConfigX${tier.Id}XnatX${zone.Id}": {
-                                "Type": "AWS::AutoScaling::LaunchConfiguration",
-                                "Properties": {
-                                    "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
-                                    "ImageId": "${regionObject.AMIs.Centos.NAT}",
-                                    "InstanceType": "${processorProfile.Processor}",
-                                    "SecurityGroups" : [ { "Ref": "securityGroupX${tier.Id}Xnat" } ],
-                                    "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}Xnat" },
-                                    "AssociatePublicIpAddress": true,
-                                    "UserData": {
-                                        "Fn::Base64": { 
-                                            "Fn::Join": [ 
-                                                "", 
-                                                [
-                                                    "#!/bin/bash -ex\n",
-                                                    "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n",
-                                                    "yum install -y aws-cfn-bootstrap\n",
-                                                    "# Remainder of configuration via metadata\n",
-                                                    "/opt/aws/bin/cfn-init -v",
-                                                    "         --stack ", { "Ref" : "AWS::StackName" },
-                                                    "         --resource asgX${tier.Id}XnatX${zone.Id}",
-                                                    "         --region ${regionId} --configsets nat\n"
-                                                ]
+                            "Properties": {
+                                "Cooldown" : "30",
+                                "LaunchConfigurationName": {"Ref": "launchConfigX${tier.Id}XnatX${zone.Id}"},
+                                "MinSize": "1",
+                                "MaxSize": "1",
+                                "VPCZoneIdentifier": [ 
+                                    { "Ref" : "subnetX${tier.Id}X${zone.Id}"} 
+                                ],
+                                "Tags" : [
+                                    { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:environment", "Value" : "${environmentId}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:category", "Value" : "${categoryId}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:tier", "Value" : "${tier.Id}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:component", "Value" : "nat", "PropagateAtLaunch" : "True"},
+                                    { "Key" : "cot:zone", "Value" : "${zone.Id}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat-${zone.Name}", "PropagateAtLaunch" : "True" }
+                                ]
+                            }
+                        },
+                    
+                        [#assign component = { "Id" : ""}]
+                        [#assign processorProfile = getProcessor(tier, component, "NAT")]
+                        "launchConfigX${tier.Id}XnatX${zone.Id}": {
+                            "Type": "AWS::AutoScaling::LaunchConfiguration",
+                            "Properties": {
+                                "KeyName": "${productName + sshPerSegment?string("-" + segmentName,"")}",
+                                "ImageId": "${regionObject.AMIs.Centos.NAT}",
+                                "InstanceType": "${processorProfile.Processor}",
+                                "SecurityGroups" : [ { "Ref": "securityGroupX${tier.Id}Xnat" } ],
+                                "IamInstanceProfile" : { "Ref" : "instanceProfileX${tier.Id}Xnat" },
+                                "AssociatePublicIpAddress": true,
+                                "UserData": {
+                                    "Fn::Base64": { 
+                                        "Fn::Join": [ 
+                                            "", 
+                                            [
+                                                "#!/bin/bash -ex\n",
+                                                "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n",
+                                                "yum install -y aws-cfn-bootstrap\n",
+                                                "# Remainder of configuration via metadata\n",
+                                                "/opt/aws/bin/cfn-init -v",
+                                                "         --stack ", { "Ref" : "AWS::StackName" },
+                                                "         --resource asgX${tier.Id}XnatX${zone.Id}",
+                                                "         --region ${regionId} --configsets nat\n"
                                             ]
-                                        }
+                                        ]
                                     }
                                 }
                             }
-                        [/#if]
+                        }
                     [/#if]
                 [/#list]
             [/#if]
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("s3")]
@@ -795,7 +824,7 @@
                     }
                 }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
     },
     "Outputs" : 
@@ -805,22 +834,20 @@
             [#if sliceCount > 0],[/#if]
             [#assign eipCount = 0]
             [#if jumpServer]
-                [#assign tier = tiers["mgmt"]]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        [#if jumpServerPerAZ || (azList[0] == zone.Id)]
-                            [#if eipCount > 0],[/#if]
-                                "eipX${tier.Id}XnatX${zone.Id}Xip": {
-                                    "Value" : { "Ref" : "eipX${tier.Id}XnatX${zone.Id}" }
-                                },
-                                "eipX${tier.Id}XnatX${zone.Id}Xid": {
-                                    "Value" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
-                                }
-                                [#assign eipCount = eipCount + 1]
-                        [/#if]
+                [#assign tier = getTier("mgmt")]
+                [#list zones as zone]
+                    [#if jumpServerPerAZ || (zones[0].Id == zone.Id)]
+                        [#if eipCount > 0],[/#if]
+                            "eipX${tier.Id}XnatX${zone.Id}Xip": {
+                                "Value" : { "Ref" : "eipX${tier.Id}XnatX${zone.Id}" }
+                            },
+                            "eipX${tier.Id}XnatX${zone.Id}Xid": {
+                                "Value" : { "Fn::GetAtt" : ["eipX${tier.Id}XnatX${zone.Id}", "AllocationId"] }
+                            }
+                            [#assign eipCount += 1]
                     [/#if]
                 [/#list]
-                [#assign sliceCount = sliceCount + 1]
+                [#assign sliceCount += 1]
             [/#if]
         [/#if]
         
@@ -829,7 +856,7 @@
             "cmkXsegmentXcmk" : {
                 "Value" : { "Ref" : "cmk" }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("cert")]
@@ -837,7 +864,7 @@
             "certificateX${segmentDomainCertificateId}" : {
                 "Value" : { "Ref" : "certificate" }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("dns")]
@@ -845,7 +872,7 @@
             "dnsXsegmentXdns" : {
                 "Value" : { "Ref" : "dns" }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("vpc")]
@@ -867,22 +894,19 @@
                 "Value" : { "Ref" : "igw" }
             }
             [#if jumpServer]
-                [#assign tier = tiers["mgmt"]]
+                [#assign tier = getTier("mgmt")]
                 ,"securityGroupXmgmtXnat" : {
                     "Value" : { "Ref" : "securityGroupX${tier.Id}XallXnat" }
                 }
             [/#if]
-            [#list solutionTiers as solutionTier]
-                [#assign tier = tiers[solutionTier.Id]]
-                [#list regionObject.Zones as zone]
-                    [#if azList?seq_contains(zone.Id)]
-                        ,"subnetX${tier.Id}X${zone.Id}" : {
-                            "Value" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" }
-                        }
-                    [/#if]
+            [#list tiers as tier]
+                [#list zones as zone]
+                    ,"subnetX${tier.Id}X${zone.Id}" : {
+                        "Value" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" }
+                    }
                 [/#list]
             [/#list]
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
         
         [#if slice?contains("s3")]
@@ -893,7 +917,7 @@
             "s3XsegmentXbackups" : {
                 "Value" : { "Ref" : "s3Xbackups" }
             }
-            [#assign sliceCount = sliceCount + 1]
+            [#assign sliceCount += 1]
         [/#if]
     }
 }
