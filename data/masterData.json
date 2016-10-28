@@ -2,27 +2,19 @@
     "Regions": {
         "ap-northeast-1": {
             "Id": "ap-northeast-1",
+            "Locality": "Tokyo",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "ap-northeast-1a",
-                    "Locality": "Tokyo"
-                },
-                "b" : {
-                    "Title": "Zone B",
-                    "Name": "b",
-                    "Description": "Zone B",
-                    "AWSZone": "ap-northeast-1b",
-                    "Locality": "Tokyo"
+                    "AWSZone": "ap-northeast-1a"
                 },
                 "c" : {
                     "Title": "Zone C",
                     "Name": "c",
                     "Description": "Zone C",
-                    "AWSZone": "ap-northeast-1c",
-                    "Locality": "Tokyo"
+                    "AWSZone": "ap-northeast-1c"
                 }
             },
             "Accounts": {
@@ -31,44 +23,63 @@
         },
         "ap-northeast-2": {
             "Id": "ap-northeast-2",
+            "Locality": "Seoul",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "ap-northeast-2a",
-                    "Locality": "Seoul"
+                    "AWSZone": "ap-northeast-2a"
                 },
                 "c" : {
                     "Title": "Zone C",
                     "Name": "c",
                     "Description": "Zone C",
-                    "AWSZone": "ap-northeast-2c",
-                    "Locality": "Seoul"
+                    "AWSZone": "ap-northeast-2c"
                 }
             },
             "Accounts": {
                 "ELB": "600734575887"
             }
         },
+        "ap-south-1": {
+            "Id": "ap-south-1",
+            "Locality": "Mumbai",
+            "Zones": {
+                "a" : {
+                    "Title": "Zone A",
+                    "Name": "a",
+                    "Description": "Zone A",
+                    "AWSZone": "ap-south-1a"
+                },
+                "b" : {
+                    "Title": "Zone B",
+                    "Name": "b",
+                    "Description": "Zone B",
+                    "AWSZone": "ap-south-1b"
+                }
+            },
+            "Accounts": {
+                "ELB": ""
+            }
+        },
         "ap-southeast-1": {
             "Id": "ap-southeast-1",
+            "Locality": "Singapore",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
                     "Index": 0,
-                    "AWSZone": "ap-southeast-1a",
-                    "Locality": "Singapore"
+                    "AWSZone": "ap-southeast-1a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Singapore Zone B",
                     "Index": 1,
-                    "AWSZone": "ap-southeast-1b",
-                    "Locality": "Singapore"
+                    "AWSZone": "ap-southeast-1b"
                 }
             },
             "Accounts": {
@@ -77,27 +88,25 @@
         },
         "ap-southeast-2": {
             "Id": "ap-southeast-2",
+            "Locality": "Sydney",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "ap-southeast-2a",
-                    "Locality": "Sydney"
+                    "AWSZone": "ap-southeast-2a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "ap-southeast-2b",
-                    "Locality": "Sydney"
+                    "AWSZone": "ap-southeast-2b"
                 },
                 "c" : {
                     "Title": "Zone C",
                     "Name": "c",
                     "Description": "Zone C",
-                    "AWSZone": "ap-southeast-2c",
-                    "Locality": "Sydney"
+                    "AWSZone": "ap-southeast-2c"
                 }
             },
             "Accounts": {
@@ -113,20 +122,19 @@
         },
         "eu-central-1": {
             "Id": "eu-central-1",
+            "Locality": "Frankfurt",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "eu-central-1a",
-                    "Locality": "Frankfurt"
+                    "AWSZone": "eu-central-1a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "eu-central-1b",
-                    "Locality": "Frankfurt"
+                    "AWSZone": "eu-central-1b"
                 }
             },
             "Accounts": {
@@ -135,27 +143,25 @@
         },
         "eu-west-1": {
             "Id": "eu-west-1",
+            "Locality": "Ireland",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "eu-west-1a",
-                    "Locality": "Ireland"
+                    "AWSZone": "eu-west-1a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "eu-west-1b",
-                    "Locality": "Ireland"
+                    "AWSZone": "eu-west-1b"
                 },
                 "c" : {
                     "Title": "Zone C",
                     "Name": "c",
                     "Description": "Zone C",
-                    "AWSZone": "eu-west-1c",
-                    "Locality": "Ireland"
+                    "AWSZone": "eu-west-1c"
                 }
             },
             "Accounts": {
@@ -164,20 +170,25 @@
         },
         "sa-east-1": {
             "Id": "sa-east-1",
+            "Locality": "Sao Paulo",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "sa-east-1a",
-                    "Locality": "Sao Paulo"
+                    "AWSZone": "sa-east-1a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "sa-east-1b",
-                    "Locality": "Sao Paulo"
+                    "AWSZone": "sa-east-1b"
+                },
+                "c" : {
+                    "Title": "Zone C",
+                    "Name": "c",
+                    "Description": "Zone C",
+                    "AWSZone": "sa-east-1c"
                 }
             },
             "Accounts": {
@@ -186,56 +197,79 @@
         },
         "us-east-1": {
             "Id": "us-east-1",
+            "Locality": "North Virginia",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "us-east-1a",
-                    "Locality": "North Virginia"
+                    "AWSZone": "us-east-1a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "us-east-1b",
-                    "Locality": "North Virginia"
-                },
-                "c" : {
-                    "Title": "Zone C",
-                    "Name": "c",
-                    "Description": "Zone C",
-                    "AWSZone": "us-east-1c",
-                    "Locality": "North Virginia"
+                    "AWSZone": "us-east-1b"
                 },
                 "d" : {
                     "Title": "Zone D",
                     "Name": "d",
                     "Description": "Zone D",
-                    "AWSZone": "us-east-1e",
-                    "Locality": "North Virginia"
+                    "AWSZone": "us-east-1d"
+                },
+                "e" : {
+                    "Title": "Zone E",
+                    "Name": "e",
+                    "Description": "Zone E",
+                    "AWSZone": "us-east-1e"
                 }
             },
             "Accounts": {
                 "ELB": "127311923021"
             }
         },
-        "us-west-1": {
-            "Id": "us-west-1",
+        "us-east-2": {
+            "Id": "us-east-2",
+            "Locality": "Ohio",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "us-west-1b",
-                    "Locality": "North California"
+                    "AWSZone": "us-east-2a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "us-west-1c",
-                    "Locality": "North California"
+                    "AWSZone": "us-east-2b"
+                },
+                "c" : {
+                    "Title": "Zone C",
+                    "Name": "c",
+                    "Description": "Zone C",
+                    "AWSZone": "us-east-2c"
+                }
+            },
+            "Accounts": {
+                "ELB": ""
+            }
+        },
+        "us-west-1": {
+            "Id": "us-west-1",
+            "Locality": "North California",
+            "Zones": {
+                "a" : {
+                    "Title": "Zone A",
+                    "Name": "a",
+                    "Description": "Zone A",
+                    "AWSZone": "us-west-1a"
+                },
+                "c" : {
+                    "Title": "Zone C",
+                    "Name": "c",
+                    "Description": "Zone C",
+                    "AWSZone": "us-west-1c"
                 }
             },
             "Accounts": {
@@ -244,27 +278,25 @@
         },
         "us-west-2": {
             "Id": "us-west-2",
+            "Locality": "Oregon",
             "Zones": {
                 "a" : {
                     "Title": "Zone A",
                     "Name": "a",
                     "Description": "Zone A",
-                    "AWSZone": "us-west-2a",
-                    "Locality": "Oregon"
+                    "AWSZone": "us-west-2a"
                 },
                 "b" : {
                     "Title": "Zone B",
                     "Name": "b",
                     "Description": "Zone B",
-                    "AWSZone": "us-west-2b",
-                    "Locality": "Oregon"
+                    "AWSZone": "us-west-2b"
                 },
                 "c" : {
                     "Title": "Zone C",
                     "Name": "c",
                     "Description": "Zone C",
-                    "AWSZone": "us-west-2c",
-                    "Locality": "Oregon"
+                    "AWSZone": "us-west-2c"
                 }
             },
             "Accounts": {
