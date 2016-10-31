@@ -85,8 +85,8 @@ case ${CREDENTIAL_TYPE} in
         ATTRIBUTE_SECRET="SecretKey"
         ;;
     *)
-        echo -e "\nUnknown credential type \"${CREDENTIAL_TYPE}\""
-        usage
+        ATTRIBUTE_ID="Username"
+        ATTRIBUTE_SECRET="Password"
         ;;
 esac
 ATTRIBUTE_EMAIL="Email"
