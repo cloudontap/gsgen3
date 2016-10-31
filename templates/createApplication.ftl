@@ -428,7 +428,7 @@
                                                             [#assign targetGroupKey = "tgX" + lbTier.Id + "X" + lbComponent.Id + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
                                                             [#if ! getKey(targetGroupKey)??]
                                                                 ,[@createTargetGroup tier=lbTier component=lbComponent source=ports[lbPort] destination=ports[port.Id] name=lb.TargetGroup /]
-                                                                ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup})" : {
+                                                                ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup}" : {
                                                                     "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
                                                                     "Properties" : {
                                                                         [#if lb.Priority??]
