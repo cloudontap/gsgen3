@@ -162,7 +162,7 @@
     "tgX${tier.Id}X${component.Id}X${source.Port?c}X${name}" : {
         "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
         "Properties" : {
-            "HealthCheckPort" : "${(destination.HealthCheck.Port)!destination.Port?c}",
+            "HealthCheckPort" : "${(destination.HealthCheck.Port)!"traffic-port"}",
             "HealthCheckProtocol" : "${(destination.HealthCheck.Protocol)!destination.Protocol}",
             "HealthCheckPath" : "${destination.HealthCheck.Path}",
             "HealthCheckIntervalSeconds" : ${destination.HealthCheck.Interval},
