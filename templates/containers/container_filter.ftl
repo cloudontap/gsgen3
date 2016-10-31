@@ -5,7 +5,7 @@
             "Name" : "${filterContainer}",
             "Image" : "${docker.Registry}/esfilter${dockerTag}",
             "Environment" : [
-                [@standardEnvironmentVariables /]
+                [@standardEnvironmentVariables /],
                 {
                     "Name" : "CONFIGURATION",
                     "Value" : "${appsettings?json_string}"
