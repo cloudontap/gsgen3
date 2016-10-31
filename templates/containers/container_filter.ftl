@@ -10,9 +10,10 @@
                     "Name" : "CONFIGURATION",
                     "Value" : "${appsettings?json_string}"
                 },
+                [#assign es = component.Links["es"]]
                 {
                     "Name" : "ES",
-                    "Value" : "${getKey("esXanaX" + component.Id + "Xdns") + ":443"}"
+                    "Value" : "${getKey("esX" + es.Tier + "X" + es.Component + "Xdns") + ":443"}"
                 },
                 [#assign sharedCredential = credentialsObject["shared"]]
                 {
