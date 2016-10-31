@@ -130,10 +130,10 @@ for ATTRIBUTE in ID SECRET EMAIL; do
             if [[ "${RESULT}" -eq 0 ]]; then
                 echo -e "${!VAR_ATTRIBUTE}=${VALUE}"
             else
-                if [[ "${!VAR_ATTRIBUTE}" == "AccessKey" ]]; then
+#                if [[ "${!VAR_ATTRIBUTE}" == "AccessKey" ]]; then
                     # AccessKey value matches base64 regex so show raw value
                     echo -e "${!VAR_ATTRIBUTE}=${RAW_VALUE}"
-                fi
+#                fi
             fi
         else
             echo -e "${!VAR_ATTRIBUTE}=${RAW_VALUE}"
