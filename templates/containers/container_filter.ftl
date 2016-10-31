@@ -8,7 +8,7 @@
                 [@standardEnvironmentVariables /]
                 {
                     "Name" : "CONFIGURATION",
-                    "Value" : "${configuration?json_string}"
+                    "Value" : "${appsettings?json_string}"
                 },
                 {
                     "Name" : "ES",
