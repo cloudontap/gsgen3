@@ -402,7 +402,7 @@
                                                             "GroupId": "${ecsSG}",
                                                             "IpProtocol": "${ports[port.Id].IPProtocol}", 
                                                             [#if useDynamicHostPort]
-                                                                "FromPort": "49153",
+                                                                "FromPort": "32768",
                                                                 "ToPort": "65535",
                                                             [#else]
                                                                 "FromPort": "${ports[port.Id].Port?c}", 
