@@ -292,6 +292,7 @@
                             [#if ecs.Services??]
                                 [#list ecs.Services as service]
                                     [#assign serviceSlices = service.Slices!component.Slices]
+                                    [#assign serviceDependencies = []]
                                     [#if serviceSlices?seq_contains(slice)]
                                         [#if count > 0],[/#if]
                                         [@createTask tier=tier component=component task=service /],
@@ -346,6 +347,7 @@
                                                                                         "TargetGroupArn" : "${getKey(targetGroupKey)}",
                                                                                     [#else]
                                                                                         "TargetGroupArn" : { "Ref" : "${targetGroupKey}" },
+                                                                                        [#assign serviceDependencies += ["listenerRuleX${lb.Tier}X${lb.Component}X${ports[lbPort].Port?c}X${lb.TargetGroup}"]]
                                                                                     [/#if]
                                                                                 [#else]
                                                                                     "LoadBalancerName" : "${getKey("elbX" + port.lb.Tier + "X" + port.lb.Component)}",
@@ -370,6 +372,14 @@
                                                 [/#if]
                                                 "TaskDefinition" : { "Ref" : "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" }
                                             }
+                                            [#if serviceDependencies?size > 0 ]
+                                            ,"DependOn" : [
+                                                [#list serviceDependencies as dependency]
+                                                    "${dependency}"
+                                                    [#if !(dependency == serviceDependencies?last)],[/#if]
+                                                [/#list]
+                                            ]
+                                            [/#if]
                                         }
                                         [#list service.Containers as container]
                                             [#-- Supplemental definitions for the container --] 
@@ -429,6 +439,9 @@
                                                             [#if ! getKey(targetGroupKey)??]
                                                                 ,[@createTargetGroup tier=lbTier component=lbComponent source=ports[lbPort] destination=ports[port.Id] name=lb.TargetGroup /]
                                                                 ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup}" : {
+                                                                    "DependsOn" : [
+                                                                        "${targetGroupKey}"
+                                                                    ],
                                                                     "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
                                                                     "Properties" : {
                                                                         "Priority" : ${lb.Priority},
