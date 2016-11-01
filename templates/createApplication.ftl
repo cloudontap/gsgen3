@@ -345,7 +345,7 @@
                                                                                     [#if getKey(targetGroupKey)??]
                                                                                         "TargetGroupArn" : "${getKey(targetGroupKey)}",
                                                                                     [#else]
-                                                                                        "TargetGroupArn" : { "ref" : "${targetGroupKey}" },
+                                                                                        "TargetGroupArn" : { "Ref" : "${targetGroupKey}" },
                                                                                     [/#if]
                                                                                 [#else]
                                                                                     "LoadBalancerName" : "${getKey("elbX" + port.lb.Tier + "X" + port.lb.Component)}",
@@ -431,9 +431,7 @@
                                                                 ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup}" : {
                                                                     "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
                                                                     "Properties" : {
-                                                                        [#if lb.Priority??]
-                                                                            "Priority" : ${lb.Priority},
-                                                                        [/#if]
+                                                                        "Priority" : ${lb.Priority},
                                                                         "Actions" : [
                                                                             {
                                                                                 "Type": "forward",
