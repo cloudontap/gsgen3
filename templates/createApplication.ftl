@@ -373,7 +373,7 @@
                                                 "TaskDefinition" : { "Ref" : "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" }
                                             }
                                             [#if serviceDependencies?size > 0 ]
-                                            ,"DependOn" : [
+                                            ,"DependsOn" : [
                                                 [#list serviceDependencies as dependency]
                                                     "${dependency}"
                                                     [#if !(dependency == serviceDependencies?last)],[/#if]
