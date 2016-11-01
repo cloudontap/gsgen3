@@ -515,7 +515,7 @@
                                                                 [#assign targetGroupKey = "tgX" + lb.Tier + "X" + lb.Component + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
                                                                 [#if ! getKey(targetGroupKey)??]
                                                                     ,"${targetGroupKey}" : {
-                                                                        "Value" : { "Ref" : "targetGroupKey" }
+                                                                        "Value" : { "Ref" : "${targetGroupKey}" }
                                                                     }
                                                                 [/#if]
                                                             [/#if]
