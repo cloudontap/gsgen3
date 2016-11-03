@@ -118,12 +118,12 @@ TEMPLATE_DIR="${BIN_DIR}/templates"
 TEMPLATE="create${TYPE^}.ftl"
 
 # Determine the template name
+TYPE_PREFIX="$TYPE-"
 SLICE_PREFIX="${SLICE}-"
 REGION_PREFIX="${REGION}-"
 case $TYPE in
     account)
         CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        TYPE_PREFIX="account-"
         REGION_PREFIX="${ACCOUNT_REGION}-"
 
         # LEGACY: Support stacks created before slices added to account
@@ -133,20 +133,31 @@ case $TYPE in
             fi
         fi
         ;;
+
     product)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
-        TYPE_PREFIX="product-"
+
+        # LEGACY: Support stacks created before slices added to product
+        if [[ "${SLICE}" =~ cmk ]]; then
+            if [[ -f "${CF_DIR}/${TYPE_PREFIX}${REGION_PREFIX}template.json" ]]; then
+                SLICE_PREFIX=""
+                SLICE_SUFFIX=""
+            fi
+        fi
         ;;
+
     solution)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="soln-"
-         ;;
+        ;;
+
     segment)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
+
         # LEGACY: Support old formats for existing stacks so they can be updated 
         if [[ !("${SLICE}" =~ cmk|cert|dns ) ]]; then
-            if [[ -f "${CF_DIR}/cont-${SLICE}-${REGION}-template.json" ]]; then
+            if [[ -f "${CF_DIR}/cont-${SLICE_PREFIX}${REGION_PREFIX}template.json" ]]; then
                 TYPE_PREFIX="cont-"
             fi
             if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
@@ -159,11 +170,20 @@ case $TYPE in
                 REGION_PREFIX=""
             fi
         fi
+        # "cmk" now used instead of "key"
+        if [[ "${SLICE}" == "cmk" ]]; then
+            if [[ -f "${CF_DIR}/${TYPE_PREFIX}key-${REGION_PREFIX}template.json" ]]; then
+                SLICE_PREFIX="key-"
+                SLICE_SUFFIX="-key"
+            fi
+        fi
         ;;
+
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="app-"
         ;;
+
     *)
         echo -e "\n\"$TYPE\" is not one of the known stack types (account, product, segment, solution, application). Nothing to do."
         usage
