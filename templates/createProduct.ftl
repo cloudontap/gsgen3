@@ -100,6 +100,13 @@
                         ]
                     }
                 }
+            },
+            "aliasXcmk" : {
+                "Type" : "AWS::KMS::Alias",
+                "Properties" : {
+                    "AliasName" : "alias/${productName}",
+                    "TargetKeyId" : { "Fn::GetAtt" : ["cmk"] }
+                }
             }
             [#assign sliceCount = sliceCount + 1]
         [/#if]
