@@ -236,7 +236,7 @@
                 "Type" : "AWS::KMS::Alias",
                 "Properties" : {
                     "AliasName" : "alias/${productName}-${segmentName}",
-                    "TargetKeyId" : { "Fn::GetAtt" : ["cmk"] }
+                    "TargetKeyId" : { "Fn::GetAtt" : ["cmk", "Arn"] }
                 }
             }
             [#assign sliceCount += 1]

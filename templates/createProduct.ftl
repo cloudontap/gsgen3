@@ -45,7 +45,7 @@
         [#assign productDomain = productDomainStem]
         [#assign productDomainQualifier = ""]
         [#break]
-    [#case productInHost]    
+    [#case "productInHost"]
     [#default]
         [#assign productDomain = productDomainStem]
         [#assign productDomainQualifier = "-" + productName]
@@ -105,7 +105,7 @@
                 "Type" : "AWS::KMS::Alias",
                 "Properties" : {
                     "AliasName" : "alias/${productName}",
-                    "TargetKeyId" : { "Fn::GetAtt" : ["cmk"] }
+                    "TargetKeyId" : { "Fn::GetAtt" : ["cmk", "Arn"] }
                 }
             }
             [#assign sliceCount = sliceCount + 1]
