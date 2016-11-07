@@ -29,19 +29,19 @@ function usage() {
 while getopts ":d:hl:n:o:p:r:u" opt; do
     case $opt in
         d)
-            DESCRIPTION=$OPTARG
+            DESCRIPTION="$OPTARG"
             ;;
         h)
             usage
             ;;
         l)
-            TITLE=$OPTARG
+            TITLE="$OPTARG"
             ;;
         n)
             NAME=$OPTARG
             ;;
         o)
-            DOMAIN=$OPTARG
+            DOMAIN="$OPTARG"
             ;;
         p)
             PID=$OPTARG

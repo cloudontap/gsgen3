@@ -39,7 +39,7 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
       AWS_ID=$OPTARG
       ;;
     d)
-      DESCRIPTION=$OPTARG
+      DESCRIPTION="$OPTARG"
       ;;
     f)
       USE_SHELF_ACCOUNT="true"
@@ -48,13 +48,13 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
       usage
       ;;
     l)
-      TITLE=$OPTARG
+      TITLE="$OPTARG"
        ;;
     n)
       NAME=$OPTARG
        ;;
     o)
-      DOMAIN=$OPTARG
+      DOMAIN="$OPTARG"
        ;;
     r)
       AWS_REGION=$OPTARG

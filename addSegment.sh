@@ -34,7 +34,7 @@ function usage() {
 while getopts ":d:e:hl:n:o:r:s:u" opt; do
     case $opt in
         d)
-            DESCRIPTION=$OPTARG
+            DESCRIPTION="$OPTARG"
             ;;
         e)
             EID=$OPTARG
@@ -43,13 +43,13 @@ while getopts ":d:e:hl:n:o:r:s:u" opt; do
             usage
             ;;
         l)
-            TITLE=$OPTARG
+            TITLE="$OPTARG"
             ;;
         n)
             NAME=$OPTARG
             ;;
         o)
-            DOMAIN=$OPTARG
+            DOMAIN="$OPTARG"
             ;;
         r)
             AWS_REGION=$OPTARG
@@ -119,6 +119,7 @@ else
 fi
 
 # Generate the filter
+CERTIFICATE_ID="${PID}-${NAME}"
 FILTER="."
 if [[ -n "${SID}" ]]; then FILTER="${FILTER} | .Segment.Id=\$SID"; fi
 if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Segment.Name=\$NAME"; fi
@@ -127,7 +128,7 @@ if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Segment.Description=\$DE
 if [[ -n "${EID}" ]]; then FILTER="${FILTER} | .Segment.Environment=\$EID"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
-if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$PID-\$NAME"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$CERTIFICATE_ID"; fi
 
 # Generate the segment profile
 cat ${SEGMENT_PROFILE} | jq --indent 4 \
@@ -139,6 +140,7 @@ cat ${SEGMENT_PROFILE} | jq --indent 4 \
 --arg EID "${EID}" \
 --arg AWS_REGION "${AWS_REGION}" \
 --arg DOMAIN "${DOMAIN}" \
+--arg CERTIFICATE_ID "${CERTIFICATE_ID}" \
 "${FILTER}" > ${SEGMENT_SOLUTIONS_DIR}/temp_segment.json
 RESULT=$?
 
