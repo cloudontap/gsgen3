@@ -6,29 +6,37 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
     
 function usage() {
   echo -e "\nPopulate the account tree for an account"
-  echo -e "\nUsage: $(basename $0) -a TAID -t TID -u"
+  echo -e "\nUsage: $(basename $0) -t TID -a TAID -c CONFIG_DIR -i INFRASTRUCTURE_DIR -u"
   echo -e "\nwhere\n"
   echo -e "(m) -a TAID is the tenant account id"
+  echo -e "(m) -c CONFIG_DIR is the directory to hold the the config repo"
   echo -e "    -h shows this text"
+  echo -e "(m) -i INFRASTRUCTURE_DIR is the directory to hold the infrastructure repo"
   echo -e "(m) -t TID is the tenant id"
   echo -e "(o) -u if details should be updated"
   echo -e "\nDEFAULTS:\n"
   echo -e "\nNOTES:\n"
-  echo -e "1) The directory tree expected by gsgen3 is created under a TAID sub-directory"
-  echo -e "   of the account directory"
+  echo -e "1) The directory tree expected by gsgen3 is created under the "
+  echo -e "   provided directories, which are created if they don't exist"
   echo -e "2) To update the details, the update option must be explicitly set"
   echo -e ""
   exit
 }
 
 # Parse options
-while getopts ":a:ht:u" opt; do
+while getopts ":a:c:hi:t:u" opt; do
   case $opt in
     a)
       TAID=$OPTARG
       ;;
+    c)
+      CONFIG_DIR=$OPTARG
+      ;;
     h)
       usage
+      ;;
+    i)
+      INFRASTRUCTURE_DIR=$OPTARG
       ;;
     t)
       TID=$OPTARG
@@ -49,7 +57,9 @@ done
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TID}") ||
-      (-z "${TAID}") ]]; then
+      (-z "${TAID}") ||
+      (-z "${CONFIG_DIR}") ||
+      (-z "${INFRASTRUCTURE_DIR}") ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
@@ -72,19 +82,16 @@ if [[ ! -d "${ACCOUNT_DIR}" ]]; then
 fi
 
 # Check whether the tree is already in place
-ACCOUNT_TREE_DIR="${ACCOUNT_DIR}/${TAID}"
-ACCOUNT_CONFIG_DIR=${ACCOUNT_TREE_DIR}/config/${TAID}
-ACCOUNT_INFRASTRUCTURE_DIR=${ACCOUNT_TREE_DIR}/infrastructure/${TAID}
-if [[ -d ${ACCOUNT_TREE_DIR} ]]; then
+if [[ (-e "${CONFIG_DIR}/account.json") ]]; then
     if [[ ("${UPDATE_TREE}" != "true") ]]; then
         echo -e "\nAccount tree already exists. Maybe try using the update option?"
         usage
     fi
 fi
 
-# Create the config tree
-mkdir -p ${ACCOUNT_CONFIG_DIR}
-cd ${ACCOUNT_CONFIG_DIR}
+# Populate the config tree
+mkdir -p ${CONFIG_DIR}
+cd ${CONFIG_DIR}
 
 # Copy across key files
 cp -p ${TENANT_DIR}/tenant.json .
@@ -95,9 +102,9 @@ AWS_ID=$(jq -r '.[0] * .[1] | .Account.AWSId | select(.!=null)' -s tenant.json a
 AWS_REGION=$(jq -r '.[0] * .[1] | .Account.Region | select(.!=null)' -s tenant.json account.json)
 
 # Provide the docker registry endpoint by default
-ACCOUNT_APPSETTINGS_DIR=${ACCOUNT_CONFIG_DIR}/appsettings
-mkdir -p ${ACCOUNT_APPSETTINGS_DIR}
-cd ${ACCOUNT_APPSETTINGS_DIR}
+APPSETTINGS_DIR=${CONFIG_DIR}/appsettings
+mkdir -p ${APPSETTINGS_DIR}
+cd ${APPSETTINGS_DIR}
 
 if [[ -f appsettings.json ]]; then
     ACCOUNT_APPSETTINGS=appsettings.json
@@ -110,22 +117,27 @@ FILTER=". | .Docker.Registry=\"${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\""
 
 # Generate the account appsettings
 cat ${ACCOUNT_APPSETTINGS} | jq --indent 4 \
-"${FILTER}" > ${ACCOUNT_APPSETTINGS_DIR}/temp_appsettings.json
+"${FILTER}" > temp_appsettings.json
 RESULT=$?
 
 if [[ ${RESULT} -eq 0 ]]; then
-    mv ${ACCOUNT_APPSETTINGS_DIR}/temp_appsettings.json ${ACCOUNT_APPSETTINGS_DIR}/appsettings.json
+    mv temp_appsettings.json appsettings.json
 else
     echo -e "\nError creating account appsettings" 
     exit
 fi
 
-# Create the infrastructure tree
-ACCOUNT_CREDENTIALS_DIR=${ACCOUNT_INFRASTRUCTURE_DIR}/credentials
-mkdir -p ${ACCOUNT_CREDENTIALS_DIR}
+# Populate the infrastructure tree
+mkdir -p ${INFRASTRUCTURE_DIR}
+cd ${INFRASTRUCTURE_DIR}
 
-if [[ ! -f ${ACCOUNT_CREDENTIALS_DIR}/credentials.json ]]; then
-    echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${ACCOUNT_CREDENTIALS_DIR}/credentials.json
+# Generate default credentials 
+CREDENTIALS_DIR=${INFRASTRUCTURE_DIR}/credentials
+mkdir -p ${CREDENTIALS_DIR}
+cd ${CREDENTIALS_DIR}
+
+if [[ ! -f credentials.json ]]; then
+    echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > credentials.json
 fi
 
 # All good
