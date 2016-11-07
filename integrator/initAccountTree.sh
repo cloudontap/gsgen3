@@ -6,12 +6,12 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
     
 function usage() {
   echo -e "\nPopulate the account tree for an account"
-  echo -e "\nUsage: $(basename $0) -t TID -a TAID -c CONFIG_DIR -i INFRASTRUCTURE_DIR -u"
+  echo -e "\nUsage: $(basename $0) -t TID -a TAID -c INIT_CONFIG_DIR -i INIT_INFRASTRUCTURE_DIR -u"
   echo -e "\nwhere\n"
   echo -e "(m) -a TAID is the tenant account id"
-  echo -e "(m) -c CONFIG_DIR is the directory to hold the the config repo"
+  echo -e "(m) -c INIT_CONFIG_DIR is the directory to hold the the config repo"
   echo -e "    -h shows this text"
-  echo -e "(m) -i INFRASTRUCTURE_DIR is the directory to hold the infrastructure repo"
+  echo -e "(m) -i INIT_INFRASTRUCTURE_DIR is the directory to hold the infrastructure repo"
   echo -e "(m) -t TID is the tenant id"
   echo -e "(o) -u if details should be updated"
   echo -e "\nDEFAULTS:\n"
@@ -30,13 +30,13 @@ while getopts ":a:c:hi:t:u" opt; do
       TAID=$OPTARG
       ;;
     c)
-      CONFIG_DIR=$OPTARG
+      INIT_CONFIG_DIR=$OPTARG
       ;;
     h)
       usage
       ;;
     i)
-      INFRASTRUCTURE_DIR=$OPTARG
+      INIT_INFRASTRUCTURE_DIR=$OPTARG
       ;;
     t)
       TID=$OPTARG
@@ -58,8 +58,8 @@ done
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TID}") ||
       (-z "${TAID}") ||
-      (-z "${CONFIG_DIR}") ||
-      (-z "${INFRASTRUCTURE_DIR}") ]]; then
+      (-z "${INIT_CONFIG_DIR}") ||
+      (-z "${INIT_INFRASTRUCTURE_DIR}") ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
@@ -82,7 +82,7 @@ if [[ ! -d "${ACCOUNT_DIR}" ]]; then
 fi
 
 # Check whether the tree is already in place
-if [[ (-e "${CONFIG_DIR}/account.json") ]]; then
+if [[ (-e "${INIT_CONFIG_DIR}/account.json") ]]; then
     if [[ ("${UPDATE_TREE}" != "true") ]]; then
         echo -e "\nAccount tree already exists. Maybe try using the update option?"
         usage
@@ -90,8 +90,8 @@ if [[ (-e "${CONFIG_DIR}/account.json") ]]; then
 fi
 
 # Populate the config tree
-mkdir -p ${CONFIG_DIR}
-cd ${CONFIG_DIR}
+mkdir -p ${INIT_CONFIG_DIR}
+cd ${INIT_CONFIG_DIR}
 
 # Copy across key files
 cp -p ${TENANT_DIR}/tenant.json .
@@ -102,7 +102,7 @@ AWS_ID=$(jq -r '.[0] * .[1] | .Account.AWSId | select(.!=null)' -s tenant.json a
 AWS_REGION=$(jq -r '.[0] * .[1] | .Account.Region | select(.!=null)' -s tenant.json account.json)
 
 # Provide the docker registry endpoint by default
-APPSETTINGS_DIR=${CONFIG_DIR}/appsettings
+APPSETTINGS_DIR=${INIT_CONFIG_DIR}/appsettings
 mkdir -p ${APPSETTINGS_DIR}
 cd ${APPSETTINGS_DIR}
 
@@ -128,11 +128,11 @@ else
 fi
 
 # Populate the infrastructure tree
-mkdir -p ${INFRASTRUCTURE_DIR}
-cd ${INFRASTRUCTURE_DIR}
+mkdir -p ${INIT_INFRASTRUCTURE_DIR}
+cd ${INIT_INFRASTRUCTURE_DIR}
 
 # Generate default credentials 
-CREDENTIALS_DIR=${INFRASTRUCTURE_DIR}/credentials
+CREDENTIALS_DIR=${INIT_INFRASTRUCTURE_DIR}/credentials
 mkdir -p ${CREDENTIALS_DIR}
 cd ${CREDENTIALS_DIR}
 
