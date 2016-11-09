@@ -315,7 +315,6 @@
         "alm": {
             "Title": "Application Lifecycle Management Environment",
             "Id": "alm",
-            "Name": "alm",
             "Description": "Normally only one environment for the alm. Entry mainly here for naming consistency",
             "Category": "alm",
             "Logs": {
@@ -328,7 +327,6 @@
         "shared": {
             "Title": "Shared Services Environment",
             "Id": "shared",
-            "Name": "shared",
             "Description": "One shared environment per account. Entry mainly here for naming consistency",
             "Category": "alm",
             "Logs": {
@@ -348,14 +346,12 @@
         "alpha": {
             "Title": "Alpha Environment",
             "Id": "alpha",
-            "Name": "alpha",
             "Description": "Prototyping environment according to DTO classification",
             "Category": "test"
         },
         "beta": {
             "Title": "Beta Environment",
             "Id": "beta",
-            "Name": "beta",
             "Description": "Preproduction environment according to DTO classification",
             "Category": "stg",
             "MultiAZ": true
@@ -422,40 +418,33 @@
     "Categories": {
         "alm": {
             "Title": "Application Lifecycle Management Environments",
-            "Id": "alm",
-            "Name": "alm",
-            "Description": ""
+            "Id": "alm"
         },
         "dev": {
             "Title": "Development Environments",
             "Id": "dev",
-            "Name": "development",
-            "Description": ""
+            "Name": "development"
         },
         "test": {
             "Title": "Testing Environments",
             "Id": "test",
-            "Name": "testing",
-            "Description": ""
+            "Name": "testing"
         },
         "stg": {
             "Title": "Staging Environments",
             "Id": "stg",
-            "Name": "staging",
-            "Description": ""
+            "Name": "staging"
         },
         "prod": {
             "Title": "Production Environments",
             "Id": "prod",
-            "Name": "production",
-            "Description": ""
+            "Name": "production"
         }
     },
     "Tiers": {
         "web": {
             "Title": "Web Tier",
             "Id": "web",
-            "Name": "web",
             "Description": "Supports HMI",
             "RouteTable": "internal",
             "NetworkACL": "open"
@@ -503,7 +492,6 @@
         "elb": {
             "Title": "External Load Balancer Tier",
             "Id": "elb",
-            "Name": "elb",
             "Description": "Publically accessible application load balancers",
             "RouteTable": "external",
             "NetworkACL": "open"
@@ -511,7 +499,6 @@
         "ilb": {
             "Title": "Internal Load Balancer Tier",
             "Id": "ilb",
-            "Name": "ilb",
             "Description": "Internally accessible application load balancers",
             "RouteTable": "internal",
             "NetworkACL": "open"
@@ -529,7 +516,6 @@
         "internal": {
             "Title": "Internal Subnet Route Table",
             "Id": "internal",
-            "Name": "internal",
             "Description": "Route table supporting routing only to local subnets - default route always present. No internet access provided.",
             "Routes": [],
             "Private": true
@@ -537,7 +523,6 @@
         "external": {
             "Title": "External Subnet Route Table",
             "Id": "external",
-            "Name": "external",
             "Description": "Route table supporting direct internet access",
             "Routes": [
                 {
