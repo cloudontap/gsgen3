@@ -114,7 +114,7 @@ fi
 # Build the composite solution ( aka blueprint)
 export COMPOSITE_BLUEPRINT="${CONFIG_DIR}/composite_blueprint.json"
 if [[ -n "${BLUEPRINT_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_BLUEPRINT} "${BIN_DIR}/data/masterData.json" ${BLUEPRINT_LIST}
+    ${BIN_DIR}/manageJSON.sh -d -o ${COMPOSITE_BLUEPRINT} "${BIN_DIR}/data/masterData.json" ${BLUEPRINT_LIST}
 else
     echo "{}" > ${COMPOSITE_BLUEPRINT}
 fi

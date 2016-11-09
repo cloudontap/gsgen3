@@ -7,9 +7,10 @@ trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 JSON_FORMAT_DEFAULT="--indent 4"
 function usage() {
   echo -e "\nManage JSON files" 
-  echo -e "\nUsage: $(basename $0) -f JSON_FILTER -o JSON_OUTPUT -c JSON_LIST\n"
+  echo -e "\nUsage: $(basename $0) -f JSON_FILTER -o JSON_OUTPUT -c -d JSON_LIST\n"
   echo -e "\nwhere\n"
   echo -e "(o) -c compact rather than pretty output formatting"
+  echo -e "(o) -d to default missing attributes"
   echo -e "(o) -f JSON_FILTER is the filter to use"
   echo -e "(m) -o JSON_OUTPUT is the desired output file"
   echo -e "\nDEFAULTS:\n"
@@ -19,15 +20,20 @@ function usage() {
   echo -e "1. parameters can be provided in an environment variables of the same name"
   echo -e "2. Any positional arguments will be appended to the existing value"
   echo -e "   (if any) of JSON_LIST"
+  echo -e "3. If defaulting is turned on, Name attributes will be found where an Id"
+  echo -e "   attribute exists and no Name attribute exists"
   echo -e ""
   exit
 }
 
 # Parse options
-while getopts ":cf:ho:" opt; do
+while getopts ":cdf:ho:" opt; do
   case $opt in
     c)
       JSON_FORMAT="-c"
+      ;;
+    d)
+      JSON_ADD_DEFAULTS="true"
       ;;
     f)
       JSON_FILTER=$OPTARG
@@ -51,7 +57,8 @@ done
 
 # Set defaults
 JSON_FORMAT="${JSON_FORMAT:-$JSON_FORMAT_DEFAULT}"
-# Determine the file list                                   
+
+# Determine the file list
 shift $((OPTIND-1))
 JSON_ARRAY=(${JSON_LIST})
 JSON_ARRAY+=("$@")
@@ -85,8 +92,11 @@ if [[ -z "${JSON_FILTER}" ]]; then
         FILTER_INDEX=$(( $FILTER_INDEX + 1 ))
     done
 fi
-# jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY[@]}" > ${JSON_OUTPUT} 
-jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" > ${JSON_OUTPUT} 
+if [[ "${JSON_ADD_DEFAULTS}" == "true" ]]; then
+    jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" | jq -f ${BIN_DIR}/addDefaults.jq > ${JSON_OUTPUT}
+else
+    jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" > ${JSON_OUTPUT}
+fi
 RESULT=$?
 if [[ "${RESULT}" -eq 0 ]]; then dos2unix "${JSON_OUTPUT}" 2> /dev/null; fi
 if [[ ! -n "${GSGEN_DEBUG}" ]]; then rm -f "${JSON_ARRAY_SHORT[@]}"; fi
