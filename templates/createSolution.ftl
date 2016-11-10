@@ -1405,6 +1405,19 @@
                                                                     [#assign ipCount += 1]
                                                                 [/#if]
                                                             [/#list]
+                                                            [#if (segmentObject.IPAddressBlocks)??]
+                                                                [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
+                                                                    [#list groupValue as entryKey, entryValue]
+                                                                        [#if (entryValue.CIDR)?has_content ]
+                                                                            [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("es") ]
+                                                                                [#if ipCount > 0],[/#if]
+                                                                                "${entryValue.CIDR}"
+                                                                                [#assign ipCount += 1]
+                                                                            [/#if]
+                                                                        [/#if]
+                                                                    [/#list]
+                                                                [/#list]
+                                                            [/#if]
                                                         ]
                                                     }
                                                 }

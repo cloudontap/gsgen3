@@ -577,7 +577,9 @@
                                 [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
                                     [#list groupValue as entryKey, entryValue]
                                         [#if (entryValue.CIDR)?has_content ]
-                                            { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                            [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("nat") ]
+                                                { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                            [/#if]
                                         [/#if]
                                     [/#list]
                                 [/#list]
