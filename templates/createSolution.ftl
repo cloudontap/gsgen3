@@ -176,6 +176,7 @@
             "Protocol" : "${destination.Protocol}",
             "Tags" : [
                 { "Key" : "cot:request", "Value" : "${request}" },
+                { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                 { "Key" : "cot:account", "Value" : "${accountId}" },
                 { "Key" : "cot:product", "Value" : "${productId}" },
                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -215,6 +216,7 @@
                                     "VpcId": "${vpc}",
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -241,6 +243,7 @@
                                     [/#if]
                                     "Tags" : [ 
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -429,6 +432,7 @@
                                     "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -509,6 +513,7 @@
                                     "Name" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -659,6 +664,7 @@
                                                                         "#!/bin/bash\n",
                                                                         "echo \"cot:request=${request}\"\n",
                                                                         "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                                        "echo \"cot:tenant=${tenantId}\"\n",
                                                                         "echo \"cot:account=${accountId}\"\n",
                                                                         "echo \"cot:product=${productId}\"\n",
                                                                         "echo \"cot:region=${regionId}\"\n",
@@ -753,6 +759,7 @@
                                             "SourceDestCheck" : true,
                                             "Tags" : [
                                                 { "Key" : "cot:request", "Value" : "${request}" },
+                                                { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                                 { "Key" : "cot:product", "Value" : "${productId}" },
                                                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -975,6 +982,7 @@
                                                                 "#!/bin/bash\n",
                                                                 "echo \"cot:request=${request}\"\n",
                                                                 "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                                "echo \"cot:tenant=${tenantId}\"\n",
                                                                 "echo \"cot:account=${accountId}\"\n",
                                                                 "echo \"cot:product=${productId}\"\n",
                                                                 "echo \"cot:region=${regionId}\"\n",
@@ -1076,6 +1084,7 @@
                                     [/#if]
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
@@ -1217,6 +1226,7 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1275,6 +1285,7 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1295,6 +1306,7 @@
                                     },
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1316,6 +1328,7 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1355,6 +1368,7 @@
                                     ],
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -1471,6 +1485,7 @@
                                     [/#if]
                                     "Tags" : [
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:segment", "Value" : "${segmentId}" },

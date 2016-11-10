@@ -271,6 +271,7 @@
                     },
                     "HostedZoneTags" : [ 
                         { "Key" : "cot:request", "Value" : "${request}" },
+                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                         { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -297,6 +298,7 @@
                     "EnableDnsHostnames" : ${(dnsHostnames)?string("true","false")},
                     "Tags" : [ 
                         { "Key" : "cot:request", "Value" : "${request}" },
+                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                         { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -314,6 +316,7 @@
                     "Properties" : {
                         "Tags" : [ 
                             { "Key" : "cot:request", "Value" : "${request}" },
+                            { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -348,6 +351,7 @@
                                 "VpcId" : { "Ref" : "vpc" },
                                 "Tags" : [ 
                                     { "Key" : "cot:request", "Value" : "${request}" },
+                                    { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                     { "Key" : "cot:account", "Value" : "${accountId}" },
                                     { "Key" : "cot:product", "Value" : "${productId}" },
                                     { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -391,6 +395,7 @@
                             "VpcId" : { "Ref" : "vpc" },
                             "Tags" : [ 
                                 { "Key" : "cot:request", "Value" : "${request}" },
+                                { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                 { "Key" : "cot:product", "Value" : "${productId}" },
                                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -453,6 +458,7 @@
                             "CidrBlock" : "${baseAddress[0]}.${baseAddress[1]}.${(subnetAddress/256)?int}.${(subnetAddress%256)}/${subnetMask}",
                             "Tags" : [
                                 { "Key" : "cot:request", "Value" : "${request}" },
+                                { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                 { "Key" : "cot:product", "Value" : "${productId}" },
                                 { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -563,6 +569,7 @@
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
                             { "Key" : "cot:request", "Value" : "${request}" },
+                            { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -597,6 +604,7 @@
                         "VpcId": { "Ref": "vpc" },
                         "Tags" : [
                             { "Key" : "cot:request", "Value" : "${request}" },
+                            { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:product", "Value" : "${productId}" },
                             { "Key" : "cot:segment", "Value" : "${segmentId}" },
@@ -645,6 +653,7 @@
                                                             "#!/bin/bash\n",
                                                             "echo \"cot:request=${request}\"\n",
                                                             "echo \"cot:accountRegion=${accountRegionId}\"\n",
+                                                            "echo \"cot:tenant=${tenantId}\"\n",
                                                             "echo \"cot:account=${accountId}\"\n",
                                                             "echo \"cot:product=${productId}\"\n",
                                                             "echo \"cot:region=${regionId}\"\n",
@@ -731,6 +740,7 @@
                                 ],
                                 "Tags" : [
                                     { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
+                                    { "Key" : "cot:tenant", "Value" : "${tenantId}", "PropagateAtLaunch" : "True" },
                                     { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
                                     { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
                                     { "Key" : "cot:segment", "Value" : "${segmentId}", "PropagateAtLaunch" : "True" },
@@ -789,6 +799,8 @@
                     "BucketName" : "${logsBucket}",
                     "Tags" : [ 
                         { "Key" : "cot:request", "Value" : "${request}" },
+                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
+                        { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
                         { "Key" : "cot:environment", "Value" : "${environmentId}" },
@@ -831,6 +843,8 @@
                     "BucketName" : "${backupsBucket}",
                     "Tags" : [ 
                         { "Key" : "cot:request", "Value" : "${request}" },
+                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
+                        { "Key" : "cot:account", "Value" : "${accountId}" },
                         { "Key" : "cot:product", "Value" : "${productId}" },
                         { "Key" : "cot:segment", "Value" : "${segmentId}" },
                         { "Key" : "cot:environment", "Value" : "${environmentId}" },

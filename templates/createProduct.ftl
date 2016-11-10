@@ -167,6 +167,8 @@
                                     [/#if]
                                     "Tags" : [ 
                                         { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:tenant", "Value" : "${tenantId}" },
+                                        { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
                                         { "Key" : "cot:category", "Value" : "${categoryId}" }
                                     ]
