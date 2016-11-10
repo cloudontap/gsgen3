@@ -25,25 +25,25 @@
 [#assign portMappings = blueprintObject.PortMappings]
 
 [#-- Reference Objects --]
-[#assign regionObject = regions[region]]
-[#assign accountRegionObject = regions[accountRegion]]
-[#assign productRegionObject = regions[productRegion]]
-[#assign environmentObject = environments[segmentObject.Environment]]
-[#assign categoryObject = categories[segmentObject.Category!environmentObject.Category]]
+[#assign regionId = region]
+[#assign regionObject = regions[regionId]]
+[#assign accountRegionId = accountRegion]
+[#assign accountRegionObject = regions[accountRegionId]]
+[#assign productRegionId = productRegion]
+[#assign productRegionObject = regions[productRegionId]]
+[#assign environmentId = segmentObject.Environment]
+[#assign environmentObject = environments[environmentId]]
+[#assign categoryId = segmentObject.Category!environmentObject.Category]
+[#assign categoryObject = categories[categoryId]]
 
 [#-- Key ids/names --]
 [#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
 [#assign productId = productObject.Id]
 [#assign productName = productObject.Name]
-[#assign segmentId = segmentObject.Id!environmentObject.Id]
+[#assign segmentId = segmentObject.Id!environmentObjectId]
 [#assign segmentName = segmentObject.Name!environmentObject.Name]
-[#assign regionId = regionObject.Id]
-[#assign accountRegionId = accountRegionObject.Id]
-[#assign productRegionId = productRegionObject.Id]
-[#assign environmentId = environmentObject.Id]
 [#assign environmentName = environmentObject.Name]
-[#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
 [#assign productDomainStem = productObject.Domain.Stem]
@@ -335,9 +335,10 @@
             [#-- Define route tables --]
             [#assign solutionRouteTables = []]
             [#list tiers as tier]
-                [#assign routeTable = routeTables[tier.RouteTable]]
+                [#assign routeTableId = tier.RouteTable]
+                [#assign routeTable = routeTables[routeTableId]]
                 [#list zones as zone]
-                    [#assign tableId = routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")]
+                    [#assign tableId = routeTableId + jumpServerPerAZ?string("X" + zone.Id,"")]
                     [#assign tableName = routeTable.Name + jumpServerPerAZ?string("-" + zone.Id,"")]
                     [#if !solutionRouteTables?seq_contains(tableId)]
                         [#assign solutionRouteTables = solutionRouteTables + [tableId]]
@@ -380,10 +381,11 @@
             [#-- Define network ACLs --]
             [#assign solutionNetworkACLs = []]
             [#list tiers as tier]
-                [#assign networkACL = networkACLs[tier.NetworkACL]]
-                [#if !solutionNetworkACLs?seq_contains(networkACL.Id)]
-                    [#assign solutionNetworkACLs = solutionNetworkACLs + [networkACL.Id]]
-                    ,"networkACLX${networkACL.Id}" : {
+                [#assign networkACLId = tier.NetworkACL]
+                [#assign networkACL = networkACLs[networkACLId]]
+                [#if !solutionNetworkACLs?seq_contains(networkACLId)]
+                    [#assign solutionNetworkACLs = solutionNetworkACLs + [networkACLId]]
+                    ,"networkACLX${networkACLId}" : {
                         "Type" : "AWS::EC2::NetworkAcl",
                         "Properties" : {
                             "VpcId" : { "Ref" : "vpc" },
@@ -401,10 +403,10 @@
                     [#list ["Inbound", "Outbound"] as direction]
                         [#if networkACL.Rules[direction]??]
                             [#list networkACL.Rules[direction] as rule]
-                                ,"ruleX${networkACL.Id}X${(direction="Outbound")?string("out", "in")}X${rule.Id}" : {
+                                ,"ruleX${networkACLId}X${(direction="Outbound")?string("out", "in")}X${rule.Id}" : {
                                     "Type" : "AWS::EC2::NetworkAclEntry",
                                     "Properties" : {
-                                        "NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" },
+                                        "NetworkAclId" : { "Ref" : "networkACLX${networkACLId}" },
                                         "Egress" : "${(direction="Outbound")?string("true","false")}",
                                         "RuleNumber" : "${rule.RuleNumber}",
                                         "RuleAction" : "${rule.Allow?string("allow","deny")}",
@@ -437,8 +439,10 @@
 
             [#-- Define subnets --]
             [#list tiers as tier]
-                [#assign routeTable = routeTables[tier.RouteTable]]
-                [#assign networkACL = networkACLs[tier.NetworkACL]]
+                [#assign routeTableId = tier.RouteTable]
+                [#assign routeTable = routeTables[routeTableId]]
+                [#assign networkACLId = tier.NetworkACL]
+                [#assign networkACL = networkACLs[networkACLId]]
                 [#list zones as zone]
                     ,"subnetX${tier.Id}X${zone.Id}" : {
                         "Type" : "AWS::EC2::Subnet",
@@ -468,7 +472,7 @@
                         "Type" : "AWS::EC2::SubnetRouteTableAssociation",
                         "Properties" : {
                             "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-                            "RouteTableId" : { "Ref" : "routeTableX${routeTable.Id + jumpServerPerAZ?string("X" + zone.Id,"")}" }
+                            "RouteTableId" : { "Ref" : "routeTableX${routeTableId + jumpServerPerAZ?string("X" + zone.Id,"")}" }
                         }
                     },
                     
@@ -476,7 +480,7 @@
                         "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
                         "Properties" : {
                             "SubnetId" : { "Ref" : "subnetX${tier.Id}X${zone.Id}" },
-                            "NetworkAclId" : { "Ref" : "networkACLX${networkACL.Id}" }
+                            "NetworkAclId" : { "Ref" : "networkACLX${networkACLId}" }
                         }
                     }
                 [/#list]
@@ -569,7 +573,17 @@
                             { "Key" : "Name", "Value" : "${productName}-${segmentName}-${tier.Name}-nat" }
                         ],
                         "SecurityGroupIngress" : [
-                            { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
+                            [#if (segmentObject.IPAddressBlocks)??]
+                                [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
+                                    [#list groupValue as entryKey, entryValue]
+                                        [#if (entryValue.CIDR)?has_content ]
+                                            { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                        [/#if]
+                                    [/#list]
+                                [/#list]
+                            [#else]
+                                { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
+                            [/#if]
                             { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "CidrIp": "${segmentObject.CIDR.Address}/${segmentObject.CIDR.Mask}" }
                         ]
                     }

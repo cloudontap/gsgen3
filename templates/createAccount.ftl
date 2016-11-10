@@ -14,15 +14,15 @@
 [#assign categories = blueprintObject.Categories]
 
 [#-- Reference Objects --]
-[#assign regionObject = regions[accountRegion]]
-[#assign categoryObject = categories["alm"]]
+[#assign regionId = accountRegion]
+[#assign regionObject = regions[regionId]]
+[#assign categoryId = "alm"]
+[#assign categoryObject = categories[categoryId]]
 
 [#-- Key ids/names --]
 [#assign tenantId = tenantObject.Id]
 [#assign accountId = accountObject.Id]
 [#assign accountName = accountObject.Name]
-[#assign regionId = regionObject.Id]
-[#assign categoryId = categoryObject.Id]
 
 [#-- Domains --]
 [#assign accountDomainStem = accountObject.Domain.Stem]
