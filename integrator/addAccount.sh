@@ -125,15 +125,15 @@ if [[ ! -d "${ACCOUNT_DIR}" ]]; then
 fi
 
 # Check whether the account profile is already in place
-if [[ -f ${ACCOUNT_DIR}/account.json ]]; then
+ACCOUNT_PROFILE=${ACCOUNT_DIR}/account.json
+if [[ -f ${ACCOUNT_PROFILE} ]]; then
     if [[ ("${UPDATE_ACCOUNT}" != "true") &&
           (-z "${LAST_SHELF_ACCOUNT}") ]]; then
         echo -e "\nAccount profile already exists. Maybe try using update option?"
         usage
     fi
-    ACCOUNT_PROFILE=${ACCOUNT_DIR}/account.json
 else
-    ACCOUNT_PROFILE=${BIN_DIR}/templates/blueprint/account.json
+    echo "{\"Account\":{}}" > ${ACCOUNT_PROFILE}
 fi
 
 # Generate the filter

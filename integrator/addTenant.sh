@@ -89,18 +89,17 @@ TENANT_DIR="${ROOT_DIR}/tenants/${TID}"
 mkdir -p ${TENANT_DIR}
 
 # Check whether the tenant profile is already in place
-if [[ -f ${TENANT_DIR}/tenant.json ]]; then
+INTEGRATOR_PROFILE=integrator.json
+TENANT_PROFILE=${TENANT_DIR}/tenant.json
+if [[ -f ${TENANT_PROFILE} ]]; then
     if [[ "${UPDATE_TENANT}" != "true" ]]; then
         echo -e "\nTenant profile already exists. Maybe try using update option?"
         usage
     fi
-    TENANT_PROFILE=${TENANT_DIR}/tenant.json
 else
-    TENANT_PROFILE=${BIN_DIR}/templates/blueprint/tenant.json
-    INTEGRATOR_DOMAIN=$(cat integrator.json | jq -r '.Integrator.Domain.Stem | select(.!=null)')
+    jq 'del(.Integrator)' ${INTEGRATOR_PROFILE} > ${TENANT_PROFILE}
+    INTEGRATOR_DOMAIN=$(jq -r '.Integrator.Domain.Stem | select(.!=null)' ${INTEGRATOR_PROFILE})
     DOMAIN=${DOMAIN:-${TID}.${INTEGRATOR_DOMAIN}}
-    AWS_REGION=${AWS_REGION:-$(cat integrator.json | jq -r '.Integrator.Region | select(.!=null)')}
-    AWS_SES_REGION=${AWS_SES_REGION:-$(cat integrator.json | jq -r '.Integrator.SES.Region | select(.!=null)')}
 fi
 
 # Generate the filter
@@ -108,7 +107,7 @@ FILTER=". | .Tenant.Id=\$TID"
 if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Tenant.Name=\$NAME"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Tenant.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Tenant.Description=\$DESCRIPTION"; fi
-if [[ -n "${INTEGRATOR_DOMAIN}" ]]; then FILTER="${FILTER} | .Tenant.Domain.Validation=\$INTEGRATOR_DOMAIN"; fi
+if [[ -n "${VALIDATION_DOMAIN}" ]]; then FILTER="${FILTER} | .Tenant.Domain.Validation=\$VALIDATION_DOMAIN"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.SES.Region=\$AWS_SES_REGION"; fi
@@ -116,6 +115,7 @@ if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Account.Domain.Stem=\$DOMAIN"
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Account.Domain.Certificate.Id=\$TID"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TID"; fi
+if [[ -n "${IP_ADDRESS_BLOCKS}" ]]; then FILTER="${FILTER} | .Segment.IPAddressBlocks.global=\$IP_ADDRESS_BLOCKS"; fi
 
 # Generate the tenant profile
 cat ${TENANT_PROFILE} | jq --indent 4 \
@@ -126,7 +126,8 @@ cat ${TENANT_PROFILE} | jq --indent 4 \
 --arg AWS_REGION "${AWS_REGION}" \
 --arg AWS_SES_REGION "${AWS_SES_REGION}" \
 --arg DOMAIN "${DOMAIN}" \
---arg INTEGRATOR_DOMAIN "${INTEGRATOR_DOMAIN}" \
+--arg VALIDATION_DOMAIN "${VALIDATION_DOMAIN}" \
+--arg IP_ADDRESS_BLOCKS "${IP_ADDRESS_BLOCKS}" \
 "${FILTER}" > ${TENANT_DIR}/temp_tenant.json
 RESULT=$?
 

@@ -106,10 +106,9 @@ APPSETTINGS_DIR=${INIT_CONFIG_DIR}/appsettings
 mkdir -p ${APPSETTINGS_DIR}
 cd ${APPSETTINGS_DIR}
 
-if [[ -f appsettings.json ]]; then
-    ACCOUNT_APPSETTINGS=appsettings.json
-else
-    ACCOUNT_APPSETTINGS=${BIN_DIR}/templates/blueprint/accountAppSettings.json
+ACCOUNT_APPSETTINGS=appsettings.json
+if [[ ! -f ${ACCOUNT_APPSETTINGS} ]]; then
+    echo "{}" > ${ACCOUNT_APPSETTINGS}
 fi
 
 # Generate the filter

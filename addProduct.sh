@@ -6,12 +6,12 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
 
 function usage() {
     echo -e "\nAdd a new product"
-    echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -p PID -o DOMAIN -r AWS_REGION  -u"
+    echo -e "\nUsage: $(basename $0) -l TITLE -n PRODUCT -d DESCRIPTION -p PID -o DOMAIN -r AWS_REGION  -u"
     echo -e "\nwhere\n"
     echo -e "(o) -d DESCRIPTION is the product description"
     echo -e "    -h shows this text"
     echo -e "(o) -l TITLE is the product title"
-    echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the product id"
+    echo -e "(o) -n PRODUCT is the human readable form (one word, lowercase and no spaces) of the product id"
     echo -e "(o) -o DOMAIN is the default DNS domain to be used for the product"
     echo -e "(m) -p PID is the product id"
     echo -e "(o) -r AWS_REGION is the default AWS region for the product"
@@ -38,7 +38,7 @@ while getopts ":d:hl:n:o:p:r:u" opt; do
             TITLE="$OPTARG"
             ;;
         n)
-            NAME=$OPTARG
+            PRODUCT=$OPTARG
             ;;
         o)
             DOMAIN="$OPTARG"
@@ -92,20 +92,20 @@ fi
 mkdir -p ${CREDENTIALS_DIR}
 
 # Check whether the product profile is already in place
-if [[ -f ${PRODUCT_DIR}/product.json ]]; then
+PRODUCT_PROFILE=${PRODUCT_DIR}/product.json
+if [[ -f ${PRODUCT_PROFILE} ]]; then
     if [[ "${UPDATE_PRODUCT}" != "true" ]]; then
         echo -e "\nProduct profile already exists. Maybe try using update option?"
         usage
     fi
-    PRODUCT_PROFILE=${PRODUCT_DIR}/product.json
 else
-    PRODUCT_PROFILE=${BIN_DIR}/templates/blueprint/product.json
-    if [[ -z "${NAME}" ]]; then NAME=${PID}; fi
+    echo "{\"Product\":{}}" > ${PRODUCT_PROFILE}
+    if [[ -z "${PRODUCT}" ]]; then PRODUCT=${PID}; fi
 fi
 
 # Generate the filter
 FILTER=". | .Product.Id=\$PID"
-if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Product.Name=\$NAME"; fi
+if [[ -n "${PRODUCT}" ]]; then FILTER="${FILTER} | .Product.Name=\$PRODUCT"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Product.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Product.Description=\$DESCRIPTION"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
@@ -115,7 +115,7 @@ if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id
 # Generate the product profile
 cat ${PRODUCT_PROFILE} | jq --indent 4 \
 --arg PID "${PID}" \
---arg NAME "${NAME}" \
+--arg PRODUCT "${PRODUCT}" \
 --arg TITLE "${TITLE}" \
 --arg DESCRIPTION "${DESCRIPTION}" \
 --arg AWS_REGION "${AWS_REGION}" \

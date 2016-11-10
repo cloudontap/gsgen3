@@ -100,14 +100,14 @@ fi
 mkdir -p ${SEGMENT_CREDENTIALS_DIR}
 
 # Check whether the segment profile is already in place
-if [[ -f ${SEGMENT_SOLUTIONS_DIR}/segment.json ]]; then
+SEGMENT_PROFILE=${SEGMENT_SOLUTIONS_DIR}/segment.json
+if [[ -f ${SEGMENT_PROFILE} ]]; then
     if [[ "${UPDATE_SEGMENT}" != "true" ]]; then
         echo -e "\nSegment profile already exists. Maybe try using update option?"
         usage
     fi
-    SEGMENT_PROFILE=${SEGMENT_SOLUTIONS_DIR}/segment.json
 else
-    SEGMENT_PROFILE=${BIN_DIR}/templates/blueprint/segment.json
+    echo "{\"Segment\":{}}" > ${SEGMENT_PROFILE}
     ENVIRONMENT_TITLE=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Title | select(.!=null)")
     if [[ -z "${ENVIRONMENT_TITLE}" ]]; then 
         echo -e "\nEnvironment not defined in masterData.json. Was SID or EID provided?"
