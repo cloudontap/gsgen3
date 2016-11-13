@@ -1,11 +1,22 @@
 # Apply f to composite entities recursively, and to atoms
-def walk(f):
+def walk($parentKey):
   . as $in
   | if type == "object" then
       reduce keys[] as $key
-        ( {}; . + { ($key):  ($in[$key] | walk(f)) } ) | f
-  elif type == "array" then map( walk(f) ) | f
-  else f
+        ( {}; . + { ($key):  ($in[$key] | walk($key)) } ) |
+            if (.Id|not) and $parentKey then
+                .Id = $parentKey
+            else
+                .
+            end |
+                if (.Name|not) and .Id then
+                    .Name = .Id
+                else
+                    .
+                end
+  elif type == "array" then map( walk(null) )
+  else
+    .
   end;
 
-walk(if type == "object" and .Id and (.Name|not) then .Name=.Id else . end)
+walk(null)

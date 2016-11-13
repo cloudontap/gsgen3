@@ -1,7 +1,6 @@
 {
     "Regions": {
         "ap-northeast-1": {
-            "Id": "ap-northeast-1",
             "Locality": "Tokyo",
             "Zones": {
                 "a" : {
@@ -22,7 +21,6 @@
             }
         },
         "ap-northeast-2": {
-            "Id": "ap-northeast-2",
             "Locality": "Seoul",
             "Zones": {
                 "a" : {
@@ -43,7 +41,6 @@
             }
         },
         "ap-south-1": {
-            "Id": "ap-south-1",
             "Locality": "Mumbai",
             "Zones": {
                 "a" : {
@@ -64,7 +61,6 @@
             }
         },
         "ap-southeast-1": {
-            "Id": "ap-southeast-1",
             "Locality": "Singapore",
             "Zones": {
                 "a" : {
@@ -87,7 +83,6 @@
             }
         },
         "ap-southeast-2": {
-            "Id": "ap-southeast-2",
             "Locality": "Sydney",
             "Zones": {
                 "a" : {
@@ -121,7 +116,6 @@
             }
         },
         "eu-central-1": {
-            "Id": "eu-central-1",
             "Locality": "Frankfurt",
             "Zones": {
                 "a" : {
@@ -142,7 +136,6 @@
             }
         },
         "eu-west-1": {
-            "Id": "eu-west-1",
             "Locality": "Ireland",
             "Zones": {
                 "a" : {
@@ -169,7 +162,6 @@
             }
         },
         "sa-east-1": {
-            "Id": "sa-east-1",
             "Locality": "Sao Paulo",
             "Zones": {
                 "a" : {
@@ -196,7 +188,6 @@
             }
         },
         "us-east-1": {
-            "Id": "us-east-1",
             "Locality": "North Virginia",
             "Zones": {
                 "a" : {
@@ -229,7 +220,6 @@
             }
         },
         "us-east-2": {
-            "Id": "us-east-2",
             "Locality": "Ohio",
             "Zones": {
                 "a" : {
@@ -256,7 +246,6 @@
             }
         },
         "us-west-1": {
-            "Id": "us-west-1",
             "Locality": "North California",
             "Zones": {
                 "a" : {
@@ -277,7 +266,6 @@
             }
         },
         "us-west-2": {
-            "Id": "us-west-2",
             "Locality": "Oregon",
             "Zones": {
                 "a" : {
@@ -314,7 +302,6 @@
     "Environments": {
         "alm": {
             "Title": "Application Lifecycle Management Environment",
-            "Id": "alm",
             "Description": "Normally only one environment for the alm. Entry mainly here for naming consistency",
             "Category": "alm",
             "Logs": {
@@ -326,7 +313,6 @@
         },
         "shared": {
             "Title": "Shared Services Environment",
-            "Id": "shared",
             "Description": "One shared environment per account. Entry mainly here for naming consistency",
             "Category": "alm",
             "Logs": {
@@ -338,27 +324,23 @@
         },
         "dev": {
             "Title": "Development Environment",
-            "Id": "dev",
             "Name": "development",
             "Description": "Potentially holds individual dev servers for multiple devs",
             "Category": "dev"
         },
         "alpha": {
             "Title": "Alpha Environment",
-            "Id": "alpha",
             "Description": "Prototyping environment according to DTO classification",
             "Category": "test"
         },
         "beta": {
             "Title": "Beta Environment",
-            "Id": "beta",
             "Description": "Preproduction environment according to DTO classification",
             "Category": "stg",
             "MultiAZ": true
         },
         "int": {
             "Title": "Integration Environment",
-            "Id": "int",
             "Name": "integration",
             "Description": "Mainly for devs to confirm components work together",
             "Category": "test",
@@ -371,21 +353,18 @@
         },
         "aat": {
             "Title": "Automated Acceptance Environment",
-            "Id": "aat",
             "Name": "automatedacceptance",
             "Description": "Execution of automated tests",
             "Category": "test"
         },
         "uat": {
             "Title": "User Acceptance Environment",
-            "Id": "uat",
             "Name": "useracceptance",
             "Description": "Manual customer testing",
             "Category": "test"
         },
         "preprod": {
             "Title": "Preproduction Environment",
-            "Id": "preprod",
             "Name": "preproduction",
             "Description": "Deployment, performance, volume testing",
             "Category": "stg",
@@ -393,7 +372,6 @@
         },
         "stg": {
             "Title": "Staging Environment",
-            "Id": "stg",
             "Name": "staging",
             "Description": "Deployment, performance, volume testing. Staging is used both as a specific environment and as a category of environments.",
             "Category": "stg",
@@ -401,7 +379,6 @@
         },
         "prod": {
             "Title": "Production Environment",
-            "Id": "prod",
             "Name": "production",
             "Description": "Kind of obvious...",
             "Category": "prod",
@@ -409,7 +386,6 @@
         },
         "trn": {
             "Title": "Training Environment",
-            "Id": "trn",
             "Name": "training",
             "Description": "",
             "Category": "prod"
@@ -417,41 +393,34 @@
     },
     "Categories": {
         "alm": {
-            "Title": "Application Lifecycle Management Environments",
-            "Id": "alm"
+            "Title": "Application Lifecycle Management Environments"
         },
         "dev": {
             "Title": "Development Environments",
-            "Id": "dev",
             "Name": "development"
         },
         "test": {
             "Title": "Testing Environments",
-            "Id": "test",
             "Name": "testing"
         },
         "stg": {
             "Title": "Staging Environments",
-            "Id": "stg",
             "Name": "staging"
         },
         "prod": {
             "Title": "Production Environments",
-            "Id": "prod",
             "Name": "production"
         }
     },
     "Tiers": {
         "web": {
             "Title": "Web Tier",
-            "Id": "web",
             "Description": "Supports HMI",
             "RouteTable": "internal",
             "NetworkACL": "open"
         },
         "msg": {
             "Title": "Messaging Tier",
-            "Id": "msg",
             "Name": "messaging",
             "Description": "Supports system-to-system based interactions/services",
             "RouteTable": "internal",
@@ -459,7 +428,6 @@
         },
         "app": {
             "Title": "Applications Tier",
-            "Id": "app",
             "Name": "application",
             "Description": "Supports application logic execution",
             "RouteTable": "internal",
@@ -467,7 +435,6 @@
         },
         "db": {
             "Title": "Database Tier",
-            "Id": "db",
             "Name": "database",
             "Description": "Supports long term storage of content and customer data",
             "RouteTable": "internal",
@@ -475,7 +442,6 @@
         },
         "dir": {
             "Title": "Directories Tier",
-            "Id": "dir",
             "Name": "directories",
             "Description": "Supports directories or domain controllers",
             "RouteTable": "internal",
@@ -483,7 +449,6 @@
         },
         "ana": {
             "Title": "Analytics Tier",
-            "Id": "ana",
             "Name": "analytics",
             "Description": "Suports things like search engines",
             "RouteTable": "internal",
@@ -491,21 +456,18 @@
         },
         "elb": {
             "Title": "External Load Balancer Tier",
-            "Id": "elb",
             "Description": "Publically accessible application load balancers",
             "RouteTable": "external",
             "NetworkACL": "open"
         },
         "ilb": {
             "Title": "Internal Load Balancer Tier",
-            "Id": "ilb",
             "Description": "Internally accessible application load balancers",
             "RouteTable": "internal",
             "NetworkACL": "open"
         },
         "mgmt": {
             "Title": "Management Tier",
-            "Id": "mgmt",
             "Name": "management",
             "Description": "Supports vpn based host access and internet access for internal hosts",
             "RouteTable": "external",
@@ -515,14 +477,12 @@
     "RouteTables": {
         "internal": {
             "Title": "Internal Subnet Route Table",
-            "Id": "internal",
             "Description": "Route table supporting routing only to local subnets - default route always present. No internet access provided.",
             "Routes": [],
             "Private": true
         },
         "external": {
             "Title": "External Subnet Route Table",
-            "Id": "external",
             "Description": "Route table supporting direct internet access",
             "Routes": [
                 {
@@ -535,8 +495,6 @@
     "NetworkACLs": {
         "open": {
             "Title": "Completely open subnet",
-            "Id": "open",
-            "Name": "open",
             "Rules": {
                 "Inbound": [
                     {

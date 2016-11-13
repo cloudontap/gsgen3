@@ -137,7 +137,7 @@
             || ((tier.Required)?? && tier.Required)
             || (jumpServer && (tierId == "mgmt"))]
             [#assign tiers += [tier + 
-                { "Id" : tierId, "Index" : tierId?index}]]
+                {"Index" : tierId?index}]]
         [/#if]
     [/#if]
 [/#list]
@@ -148,7 +148,7 @@
     [#if regions[region].Zones[zoneId]??]
         [#assign zone = regions[region].Zones[zoneId]]
         [#assign zones += [zone +  
-            {"Id" : zoneId, "Index" : zoneId?index}]]
+            {"Index" : zoneId?index}]]
     [/#if]
 [/#list]
 
@@ -582,13 +582,15 @@
                         "SecurityGroupIngress" : [
                             [#if (segmentObject.IPAddressBlocks)??]
                                 [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
-                                    [#list groupValue as entryKey, entryValue]
-                                        [#if (entryValue.CIDR)?has_content ]
-                                            [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("nat") ]
-                                                { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                    [#if groupValue?is_hash]
+                                        [#list groupValue as entryKey, entryValue]
+                                            [#if entryValue?is_hash && (entryValue.CIDR)?has_content ]
+                                                [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("nat") ]
+                                                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                                [/#if]
                                             [/#if]
-                                        [/#if]
-                                    [/#list]
+                                        [/#list]
+                                    [/#if]
                                 [/#list]
                             [#else]
                                 { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },

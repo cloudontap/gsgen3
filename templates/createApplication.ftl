@@ -102,7 +102,7 @@
     [#if isTier(tierId)]
         [#assign tier = getTier(tierId)]
         [#if tier.Components??]
-            [#assign tiers += [tier + { "Id" : tierId}]]
+            [#assign tiers += [tier]]
         [/#if]
     [/#if]
 [/#list]
@@ -112,7 +112,7 @@
 [#list segmentObject.Zones.Order as zoneId]
     [#if regions[region].Zones[zoneId]??]
         [#assign zone = regions[region].Zones[zoneId]]
-        [#assign zones += [zone + {"Id" : zoneId}]]
+        [#assign zones += [zone]]
     [/#if]
 [/#list]
 
