@@ -133,18 +133,20 @@
 [/#function]
 
 [#macro createBlockDevices storageProfile]
-    [#if (storageProfile.Volumes)?? && (storageProfile.Volumes?size > 0)]
+    [#if (storageProfile.Volumes)?? ]
         "BlockDeviceMappings" : [
-            [#list storageProfile.Volumes as volume]
-                {
-                    "DeviceName" : "${volume.Device}",
-                    "Ebs" : {
-                        "DeleteOnTermination" : true,
-                        "Encrypted" : false,
-                        "VolumeSize" : "${volume.Size}",
-                        "VolumeType" : "gp2"
-                    }
-                },
+            [#list storageProfile.Volumes?values as volume]
+                [#id volume?is_hash]
+                    {
+                        "DeviceName" : "${volume.Device}",
+                        "Ebs" : {
+                            "DeleteOnTermination" : true,
+                            "Encrypted" : false,
+                            "VolumeSize" : "${volume.Size}",
+                            "VolumeType" : "gp2"
+                        }
+                    },
+                [/#if]
             [/#list]
             {
                 "DeviceName" : "/dev/sdc",
@@ -197,9 +199,8 @@
         [#assign count = 0]
         [#list tiers as tier]
             [#if tier.Components??]
-                [#list tier.Components as component]
-                    [#assign slices = component.Slices]
-                    [#if slices?seq_contains(slice)]
+                [#list tier.Components?values as component]
+                    [#if component?is_hash && component.Slices?seq_contains(slice)]
                         [#if count > 0],[/#if]
                         [#if component.MultiAZ??] 
                             [#assign multiAZ =  component.MultiAZ]
@@ -236,7 +237,7 @@
                             "s3X${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
-                                    [#if s3.Name??]
+                                    [#if s3.Name != "S3"]
                                         "BucketName" : "${s3.Name}${segmentDomainQualifier}.${segmentDomain}",
                                     [#else]
                                         "BucketName" : "${component.Name}${segmentDomainQualifier}.${segmentDomain}",
@@ -269,20 +270,24 @@
                                         ,"NotificationConfiguration" : {
                                         [#if s3.Notifications.SQS??]
                                             "QueueConfigurations" : [
-                                                [#list s3.Notifications.SQS as queue]
-                                                    {
-                                                        "Event" : "s3:ObjectCreated:*",
-                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
-                                                    },
-                                                    {
-                                                        "Event" : "s3:ObjectRemoved:*",
-                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
-                                                    },
-                                                    {
-                                                        "Event" : "s3:ReducedRedundancyLostObject",
-                                                        "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
-                                                    }
-                                                    [#if !(queue.Id == (s3.Notifications.SQS?last).Id)],[/#if]
+                                                [#assign queueCount = 0]
+                                                [#list s3.Notifications.SQS?values as queue]
+                                                    [#if queue?is_hash]
+                                                        [#if queueCount > 0],[/#if]
+                                                        {
+                                                            "Event" : "s3:ObjectCreated:*",
+                                                            "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                        },
+                                                        {
+                                                            "Event" : "s3:ObjectRemoved:*",
+                                                            "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                        },
+                                                        {
+                                                            "Event" : "s3:ReducedRedundancyLostObject",
+                                                            "Queue" : "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xarn")}"
+                                                        }
+                                                        [#assign queueCount += 1]
+                                                    [/#if]
                                                 [/#list]
                                             ]
                                         [/#if]
@@ -292,39 +297,46 @@
                                 [#if s3.Notifications??]
                                     ,"DependsOn" : [
                                         [#if (s3.Notifications.SQS)??]
-                                            [#list s3.Notifications.SQS as queue]
-                                                "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy"
-                                                [#if !(queue.Id == (s3.Notifications.SQS?last).Id)],[/#if]
+                                            [#assign queueCount = 0]
+                                            [#list s3.Notifications.SQS?values as queue]
+                                                 [#if queue?is_hash]
+                                                    [#if queueCount > 0],[/#if]
+                                                    "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy"
+                                                    [#assign queueCount += 1]
+                                                 [/#if]
                                             [/#list]
                                         [/#if]
                                     ]
                                 [/#if]
                             }
                             [#if (s3.Notifications.SQS)??]
-                                [#list s3.Notifications.SQS as queue]
-                                    ,"s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy" : {
-                                        "Type" : "AWS::SQS::QueuePolicy",
-                                        "Properties" : {
-                                            "PolicyDocument" : {
-                                                "Version" : "2012-10-17",
-                                                "Id" : "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy",
-                                                "Statement" : [
-                                                    {
-                                                        "Effect" : "Allow",
-                                                        "Principal" : "*",
-                                                        "Action" : "sqs:SendMessage",
-                                                        "Resource" : "*",
-                                                        "Condition" : {
-                                                            "ArnLike" : {
-                                                                "aws:sourceArn" : "arn:aws:s3:::*"
+                                [#assign queueCount = 0]
+                                [#list s3.Notifications.SQS?values as queue]
+                                    [#if queue?is_hash]
+                                        ,"s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy" : {
+                                            "Type" : "AWS::SQS::QueuePolicy",
+                                            "Properties" : {
+                                                "PolicyDocument" : {
+                                                    "Version" : "2012-10-17",
+                                                    "Id" : "s3X${tier.Id}X${component.Id}X${queue.Id}Xpolicy",
+                                                    "Statement" : [
+                                                        {
+                                                            "Effect" : "Allow",
+                                                            "Principal" : "*",
+                                                            "Action" : "sqs:SendMessage",
+                                                            "Resource" : "*",
+                                                            "Condition" : {
+                                                                "ArnLike" : {
+                                                                    "aws:sourceArn" : "arn:aws:s3:::*"
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                ]
-                                            },
-                                            "Queues" : [ "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xurl")}" ]
+                                                    ]
+                                                },
+                                                "Queues" : [ "${getKey("sqsX"+tier.Id+"X"+queue.Id+"Xurl")}" ]
+                                            }
                                         }
-                                    }
+                                    [/#if]
                                 [/#list]
                             [/#if]
                             [#assign count += 1]
@@ -1420,9 +1432,9 @@
                                                                 [/#if]
                                                             [/#list]
                                                             [#if (segmentObject.IPAddressBlocks)??]
-                                                                [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
+                                                                [#list segmentObject.IPAddressBlocks?values as groupValue]
                                                                     [#if groupValue?is_hash]
-                                                                        [#list groupValue as entryKey, entryValue]
+                                                                        [#list groupValue?values as entryValue]
                                                                             [#if entryValue?is_hash && (entryValue.CIDR)?has_content ]
                                                                                 [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("es") ]
                                                                                     [#if ipCount > 0],[/#if]
@@ -1450,8 +1462,8 @@
                                     [/#if]
                                     "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}",
                                     "ElasticsearchVersion" : "2.3",
-                                    [#if (storageProfile.Volumes)?? && (storageProfile.Volumes?size > 0)]
-                                        [#assign volume = storageProfile.Volumes[0]]
+                                    [#if (storageProfile.Volumes["codeontap"])??]
+                                        [#assign volume = storageProfile.Volumes["codeontap"]]
                                         "EBSOptions" : {
                                             "EBSEnabled" : true,
                                             [#if volume.Iops??]"Iops" : ${volume.Iops},[/#if]
@@ -1510,9 +1522,8 @@
         [#assign count = 0]
         [#list tiers as tier]
              [#if tier.Components??]
-                [#list tier.Components as component]
-                    [#assign slices = component.Slices]
-                    [#if slices?seq_contains(slice)]
+                [#list tier.Components?values as component]
+                    [#if component?is_hash && component.Slices?seq_contains(slice)]
                         [#if component.MultiAZ??] 
                             [#assign multiAZ =  component.MultiAZ]
                         [#else]

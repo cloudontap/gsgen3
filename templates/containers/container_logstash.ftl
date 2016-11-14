@@ -1,7 +1,7 @@
 [#case "logstash"]
     [#switch containerListMode]
         [#case "definition"]
-            "Name" : "${tier.Name + "-" + component.Name + "-" + container.Id}",
+            "Name" : "${tier.Name + "-" + component.Name + "-" + container.Name}",
             "Image" : "${docker.Registry}/logstash${dockerTag}",
             "Environment" : [
                 [@standardEnvironmentVariables /]
@@ -77,7 +77,7 @@
                             }
                         ]
                     },
-                    "PolicyName": "${tier.Id}-${component.Id}-s3",
+                    "PolicyName": "${tier.Name}-${component.Name}-s3",
                     "Roles" : [ "${getKey("roleX" + tier.Id + "X" + component.Id)}"]
                 }
             }

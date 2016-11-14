@@ -75,7 +75,7 @@
 [#-- Locate the object for a component within tier --]
 [#function getComponent tierId componentId]
     [#assign tier = getTier(tierId)]
-    [#list tier.Components as component]
+    [#list tier.Components?values as component]
         [#if componentId == component.Id]
             [#return component]
         [/#if]
@@ -146,10 +146,12 @@
 [/#macro]
 
 [#macro createTask tier component task]
+    [#assign containerListMode = "policyCount"]
     [#assign policyCount = 0]
-    [#list task.Containers as container]
-        [#assign containerListMode = "policyCount"]
-        [#include containerList]
+    [#list task.Containers?values as container]
+        [#if container?is_hash]
+            [#include containerList]
+        [/#if]
     [/#list]
     [#if policyCount > 0]
         "roleX${tier.Id}X${component.Id}X${task.Id}" : {
@@ -168,65 +170,81 @@
                 "Path": "/"
             }
         },
-        [#list task.Containers as container]
-            [#assign containerListMode = "policy"]
-            [#include containerList]
+        [#assign containerListMode = "policy"]
+        [#list task.Containers?values as container]
+            [#if container?is_hash]
+                [#include containerList]
+            [/#if]
         [/#list]
     [/#if]
     "ecsTaskX${tier.Id}X${component.Id}X${task.Id}" : {
         "Type" : "AWS::ECS::TaskDefinition",
         "Properties" : {
             "ContainerDefinitions" : [
-                [#list task.Containers as container]
-                    [#assign dockerTag = ""]
-                    [#if container.Version??]
-                        [#assign dockerTag = ":" + container.Version]
-                    [/#if]
-                    {
-                        [#assign containerListMode = "definition"]
-                        [#include containerList]
-                        "Memory" : "${container.Memory?c}",
-                        "Cpu" : "${container.Cpu?c}",
-                        [#if container.Ports??]
-                            "PortMappings" : [
-                                [#list container.Ports as port]
-                                    {
-                                        [#if port.Container??]
-                                            "ContainerPort" : ${ports[port.Container].Port?c},
-                                        [#else]
-                                            "ContainerPort" : ${ports[port.Id].Port?c},
-                                        [/#if]
-                                        [#if port.DynamicHostPort?? && port.DynamicHostPort]
-                                            "HostPort" : 0
-                                        [#else]
-                                            "HostPort" : ${ports[port.Id].Port?c}
-                                        [/#if]
-                                    }[#if !(port.Id == (container.Ports?last).Id)],[/#if]
-                                [/#list]
-                            ],
+                [#assign containerListMode = "definition"]
+                [#assign containerCount = 0]
+                [#list task.Containers?values as container]
+                    [#if container?is_hash]
+                        [#assign dockerTag = ""]
+                        [#if container.Version??]
+                            [#assign dockerTag = ":" + container.Version]
                         [/#if]
-                        "LogConfiguration" : {
-                            [#if (docker.LocalLogging?? && (docker.LocalLogging == true)) || (container.LocalLogging?? && (container.LocalLogging == true))]
-                                "LogDriver" : "json-file"
-                            [#else]
-                                "LogDriver" : "fluentd",
-                                "Options" : { "tag" : "docker.${productId}.${segmentId}.${tier.Id}.${component.Id}.${container.Id}"}
+                        [#if containerCount > 0],[/#if]
+                        {
+                            [#include containerList]
+                            "Memory" : "${container.Memory?c}",
+                            "Cpu" : "${container.Cpu?c}",
+                            [#if container.Ports??]
+                                "PortMappings" : [
+                                    [#assign portCount = 0]
+                                    [#list container.Ports?values as port]
+                                        [#if port?is_hash]
+                                            [#if portCount > 0],[/#if]
+                                            {
+                                                [#if port.Container??]
+                                                    "ContainerPort" : ${ports[port.Container].Port?c},
+                                                [#else]
+                                                    "ContainerPort" : ${ports[port.Id].Port?c},
+                                                [/#if]
+                                                [#if port.DynamicHostPort?? && port.DynamicHostPort]
+                                                    "HostPort" : 0
+                                                [#else]
+                                                    "HostPort" : ${ports[port.Id].Port?c}
+                                                [/#if]
+                                            }
+                                            [#assign portCount += 1]
+                                        [/#if]
+                                    [/#list]
+                                ],
                             [/#if]
+                            "LogConfiguration" : {
+                                [#if (docker.LocalLogging?? && (docker.LocalLogging == true)) || (container.LocalLogging?? && (container.LocalLogging == true))]
+                                    "LogDriver" : "json-file"
+                                [#else]
+                                    "LogDriver" : "fluentd",
+                                    "Options" : { "tag" : "docker.${productId}.${segmentId}.${tier.Id}.${component.Id}.${container.Id}"}
+                                [/#if]
+                            }
                         }
-                    }[#if container.Id != (task.Containers?last).Id],[/#if]
+                        [#assign containerCount = 0]
+                    [/#if]
                 [/#list]
             ]
+            [#assign containerListMode = "volumeCount"]
             [#assign volumeCount = 0]
-            [#list task.Containers as container]
-                [#assign containerListMode = "volumeCount"]
-                [#include containerList]
+            [#list task.Containers?values as container]
+                [#if container?is_hash]
+                    [#include containerList]
+                [/#if]
             [/#list]
             [#if volumeCount > 0]
                 ,"Volumes" : [
+                    [#assign containerListMode = "volumes"]
                     [#assign volumeCount = 0]
-                    [#list task.Containers as container]
-                        [#assign containerListMode = "volumes"]
-                        [#include containerList]
+                    [#list task.Containers?values as container]
+                        [#if container?is_hash]
+                            [#include containerList]
+                        [/#if]
                     [/#list]
                 ]
             [/#if]
@@ -277,9 +295,8 @@
         [#assign count = 0]
         [#list tiers as tier]
             [#if tier.Components??]
-                [#list tier.Components as component]
-                    [#assign slices = component.Slices]
-                    [#if slices?seq_contains(slice)]
+                [#list tier.Components?values as component]
+                    [#if component?is_hash && component.Slices?seq_contains(slice)]
                         [#if component.MultiAZ??] 
                             [#assign multiAZ =  component.MultiAZ]
                         [#else]
@@ -291,10 +308,9 @@
                             [#assign fixedIP = ecs.FixedIP?? && ecs.FixedIP]
                             [#assign ecsSG = getKey("securityGroupX" + tier.Id + "X" + component.Id) ]
                             [#if ecs.Services??]
-                                [#list ecs.Services as service]
-                                    [#assign serviceSlices = service.Slices!component.Slices]
+                                [#list ecs.Services?values as service]
                                     [#assign serviceDependencies = []]
-                                    [#if serviceSlices?seq_contains(slice)]
+                                    [#if service?is_hash && (service.Slices!component.Slices)?seq_contains(slice)]
                                         [#if count > 0],[/#if]
                                         [@createTask tier=tier component=component task=service /],
                                         "ecsServiceX${tier.Id}X${component.Id}X${service.Id}" : {
@@ -316,10 +332,10 @@
                                                     "DesiredCount" : "${multiAZ?string(zones?size,"1")}",
                                                 [/#if]
                                                 [#assign portCount = 0]
-                                                [#list service.Containers as container]
-                                                    [#if container.Ports??]
-                                                        [#list container.Ports as port]
-                                                            [#if port.ELB?? || port.LB??]
+                                                [#list service.Containers?values as container]
+                                                    [#if container?is_hash && container.Ports??]
+                                                        [#list container.Ports?values as port]
+                                                            [#if port?is_hash && (port.ELB?? || port.LB??)]
                                                                 [#assign portCount += 1]
                                                                 [#break]
                                                             [/#if]
@@ -329,10 +345,10 @@
                                                 [#if portCount != 0]
                                                     "LoadBalancers" : [
                                                         [#assign portCount = 0]
-                                                        [#list service.Containers as container]
-                                                            [#if container.Ports??]
-                                                                [#list container.Ports as port]
-                                                                    [#if port.ELB?? || port.LB??]
+                                                        [#list service.Containers?value as container]
+                                                            [#if container?is_hash && container.Ports??]
+                                                                [#list container.Ports?values as port]
+                                                                    [#if port?is_hash) && (port.ELB?? || port.LB??)]
                                                                         [#if portCount > 0],[/#if]
                                                                         {
                                                                             [#if port.LB??]
@@ -356,7 +372,7 @@
                                                                             [#else]
                                                                                 "LoadBalancerName" : "${getKey("elbXelbX" + port.ELB)}",
                                                                             [/#if]
-                                                                            "ContainerName" : "${tier.Name + "-" + component.Name + "-" + container.Id}",
+                                                                            "ContainerName" : "${tier.Name + "-" + component.Name + "-" + container.Name}",
                                                                             [#if port.Container??]
                                                                                 "ContainerPort" : ${ports[port.Container].Port?c}
                                                                             [#else]
@@ -382,89 +398,93 @@
                                             ]
                                             [/#if]
                                         }
-                                        [#list service.Containers as container]
-                                            [#-- Supplemental definitions for the container --] 
-                                            [#assign containerListMode = "supplemental"]
-                                            [#include containerList]
-
-                                            [#-- Security Group ingress for the container ports --] 
-                                            [#if container.Ports??]
-                                                [#list container.Ports as port]
-                                                    [#assign useDynamicHostPort = port.DynamicHostPort?? && port.DynamicHostPort]
-                                                    [#if useDynamicHostPort]
-                                                        [#assign portRange = "dynamic"]
-                                                    [#else]
-                                                        [#assign portRange = ports[port.Id].Port?c]
-                                                    [/#if]
-                                                    
-                                                    [#assign fromSG = (port.ELB?? || port.LB??) && 
-                                                        (((port.LB.fromSGOnly)?? && port.LB.fromSGOnly) || fixedIP)]
-
-                                                    [#if fromSG]
-                                                        [#if port.ELB??]
-                                                            [#assign elbSG = getKey("securityGroupXelbX" + port.ELB)]
-                                                        [#else]
-                                                            [#assign elbSG = getKey("securityGroupX" + port.lb.Tier + "X" + port.lb.Component)]
-                                                        [/#if]
-                                                    [/#if]
-                                                    ,"securityGroupIngressX${tier.Id}X${component.Id}X${service.Id}X${container.Id}X${portRange}" : {
-                                                        "Type" : "AWS::EC2::SecurityGroupIngress",
-                                                        "Properties" : {
-                                                            "GroupId": "${ecsSG}",
-                                                            "IpProtocol": "${ports[port.Id].IPProtocol}", 
+                                        [#assign containerListMode = "supplemental"]
+                                        [#list service.Containers?values as container]
+                                            [#if container?is_hash]
+                                                [#-- Supplemental definitions for the container --] 
+                                                [#include containerList]
+    
+                                                [#-- Security Group ingress for the container ports --] 
+                                                [#if container.Ports??]
+                                                    [#list container.Ports?values as port]
+                                                        [#if port.is_hash]
+                                                            [#assign useDynamicHostPort = port.DynamicHostPort?? && port.DynamicHostPort]
                                                             [#if useDynamicHostPort]
-                                                                "FromPort": "32768",
-                                                                "ToPort": "65535",
+                                                                [#assign portRange = "dynamic"]
                                                             [#else]
-                                                                "FromPort": "${ports[port.Id].Port?c}", 
-                                                                "ToPort": "${ports[port.Id].Port?c}", 
+                                                                [#assign portRange = ports[port.Id].Port?c]
                                                             [/#if]
+                                                            
+                                                            [#assign fromSG = (port.ELB?? || port.LB??) && 
+                                                                (((port.LB.fromSGOnly)?? && port.LB.fromSGOnly) || fixedIP)]
+        
                                                             [#if fromSG]
-                                                                "SourceSecurityGroupId": "${elbSG}"
-                                                            [#else]
-                                                                "CidrIp": "0.0.0.0/0"
+                                                                [#if port.ELB??]
+                                                                    [#assign elbSG = getKey("securityGroupXelbX" + port.ELB)]
+                                                                [#else]
+                                                                    [#assign elbSG = getKey("securityGroupX" + port.lb.Tier + "X" + port.lb.Component)]
+                                                                [/#if]
                                                             [/#if]
-                                                        }
-                                                    }
-                                                    [#if port.LB??]
-                                                        [#assign lb = port.LB]
-                                                        [#assign lbTier = getTier(lb.Tier)]
-                                                        [#assign lbComponent = getComponent(lb.Tier, lb.Component)]
-                                                        [#if lb.Port??]
-                                                            [#assign lbPort = lb.Port]
-                                                        [#else]
-                                                            [#assign lbPort = port.Id]
-                                                        [/#if]
-                                                        [#if lb.TargetGroup??]
-                                                            [#assign targetGroupKey = "tgX" + lbTier.Id + "X" + lbComponent.Id + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
-                                                            [#if ! getKey(targetGroupKey)??]
-                                                                ,[@createTargetGroup tier=lbTier component=lbComponent source=ports[lbPort] destination=ports[port.Id] name=lb.TargetGroup /]
-                                                                ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup}" : {
-                                                                    "DependsOn" : [
-                                                                        "${targetGroupKey}"
-                                                                    ],
-                                                                    "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
-                                                                    "Properties" : {
-                                                                        "Priority" : ${lb.Priority},
-                                                                        "Actions" : [
-                                                                            {
-                                                                                "Type": "forward",
-                                                                                "TargetGroupArn": { "Ref": "${targetGroupKey}" }
-                                                                            }
-                                                                        ],
-                                                                        "Conditions": [
-                                                                            {
-                                                                                "Field": "path-pattern",
-                                                                                "Values": [ "${lb.Path}" ]
-                                                                            }
-                                                                        ],
-                                                                        "ListenerArn" : "${getKey("listenerX" + lbTier.Id + "X" +  lbComponent.Id + "X" + ports[lbPort].Port?c)}"
-                                                                    }
+                                                            ,"securityGroupIngressX${tier.Id}X${component.Id}X${service.Id}X${container.Id}X${portRange}" : {
+                                                                "Type" : "AWS::EC2::SecurityGroupIngress",
+                                                                "Properties" : {
+                                                                    "GroupId": "${ecsSG}",
+                                                                    "IpProtocol": "${ports[port.Id].IPProtocol}", 
+                                                                    [#if useDynamicHostPort]
+                                                                        "FromPort": "32768",
+                                                                        "ToPort": "65535",
+                                                                    [#else]
+                                                                        "FromPort": "${ports[port.Id].Port?c}", 
+                                                                        "ToPort": "${ports[port.Id].Port?c}", 
+                                                                    [/#if]
+                                                                    [#if fromSG]
+                                                                        "SourceSecurityGroupId": "${elbSG}"
+                                                                    [#else]
+                                                                        "CidrIp": "0.0.0.0/0"
+                                                                    [/#if]
                                                                 }
+                                                            }
+                                                            [#if port.LB??]
+                                                                [#assign lb = port.LB]
+                                                                [#assign lbTier = getTier(lb.Tier)]
+                                                                [#assign lbComponent = getComponent(lb.Tier, lb.Component)]
+                                                                [#if lb.Port??]
+                                                                    [#assign lbPort = lb.Port]
+                                                                [#else]
+                                                                    [#assign lbPort = port.Id]
+                                                                [/#if]
+                                                                [#if lb.TargetGroup??]
+                                                                    [#assign targetGroupKey = "tgX" + lbTier.Id + "X" + lbComponent.Id + "X" + ports[lbPort].Port?c + "X" + lb.TargetGroup]
+                                                                    [#if ! getKey(targetGroupKey)??]
+                                                                        ,[@createTargetGroup tier=lbTier component=lbComponent source=ports[lbPort] destination=ports[port.Id] name=lb.TargetGroup /]
+                                                                        ,"listenerRuleX${lbTier.Id}X${lbComponent.Id}X${ports[lbPort].Port?c}X${lb.TargetGroup}" : {
+                                                                            "DependsOn" : [
+                                                                                "${targetGroupKey}"
+                                                                            ],
+                                                                            "Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
+                                                                            "Properties" : {
+                                                                                "Priority" : ${lb.Priority},
+                                                                                "Actions" : [
+                                                                                    {
+                                                                                        "Type": "forward",
+                                                                                        "TargetGroupArn": { "Ref": "${targetGroupKey}" }
+                                                                                    }
+                                                                                ],
+                                                                                "Conditions": [
+                                                                                    {
+                                                                                        "Field": "path-pattern",
+                                                                                        "Values": [ "${lb.Path}" ]
+                                                                                    }
+                                                                                ],
+                                                                                "ListenerArn" : "${getKey("listenerX" + lbTier.Id + "X" +  lbComponent.Id + "X" + ports[lbPort].Port?c)}"
+                                                                            }
+                                                                        }
+                                                                    [/#if]
+                                                                [/#if]
                                                             [/#if]
                                                         [/#if]
-                                                    [/#if]
-                                                [/#list]
+                                                    [/#list]
+                                                [/#if]
                                             [/#if]
                                         [/#list]
                                         [#assign count += 1]
@@ -472,14 +492,15 @@
                                 [/#list]
                             [/#if]
                             [#if ecs.Tasks??]
-                                [#list ecs.Tasks as task]
-                                    [#assign taskSlices = task.Slices!component.Slices]
-                                    [#if taskSlices?seq_contains(slice)]
+                                [#list ecs.Tasks?values as task]
+                                    [#if task?is_hash && (task.Slices!component.Slices)?seq_contains(slice)]
                                         [#if count > 0],[/#if]
                                         [@createTask tier=tier component=component task=task /]
-                                        [#list task.Containers as container]
-                                            [#assign containerListMode = "supplemental"]
-                                            [#include containerList]
+                                        [#assign containerListMode = "supplemental"]
+                                        [#list task.Containers?values as container]
+                                            [#if container?is_hash]
+                                                [#include containerList]
+                                            [/#if]
                                         [/#list]
                                         [#assign count += 1]
                                     [/#if]
@@ -496,16 +517,15 @@
         [#assign count = 0]
         [#list tiers as tier]
             [#if tier.Components??]
-                [#list tier.Components as component]
-                    [#assign slices = component.Slices]
-                    [#if slices?seq_contains(slice)]
+                [#list tier.Components?values as component]
+                    [#if component?is_hash && component.Slices?seq_contains(slice)]
                         [#-- ECS --]
                         [#if component.ECS??]
                             [#assign ecs = component.ECS]
                             [#if ecs.Services??]
-                                [#list ecs.Services as service]
-                                    [#assign serviceSlices = service.Slices!component.Slices!solutionTier.Slices!tier.Slices]
-                                    [#if serviceSlices?seq_contains(slice)]
+                                [#list ecs.Services?values as service]
+                                    [#assign serviceDependencies = []]
+                                    [#if service?is_hash && (service.Slices!component.Slices)?seq_contains(slice)]
                                         [#if count > 0],[/#if]
                                             "ecsServiceX${tier.Id}X${component.Id}X${service.Id}" : {
                                                 "Value" : { "Ref" : "ecsServiceX${tier.Id}X${component.Id}X${service.Id}" }
@@ -513,10 +533,10 @@
                                             "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" : {
                                                 "Value" : { "Ref" : "ecsTaskX${tier.Id}X${component.Id}X${service.Id}" }
                                             }
-                                            [#list service.Containers as container]
-                                                [#if container.Ports??]
-                                                    [#list container.Ports as port]
-                                                        [#if port.LB??]
+                                            [#list service.Containers?values as container]
+                                                [#if container?is_hash && container.Ports??]
+                                                    [#list container.Ports?values as port]
+                                                        [#if port?is_hash && port.LB??]
                                                             [#assign lb = port.LB]
                                                             [#if lb.Port??]
                                                                 [#assign lbPort = lb.Port]
@@ -540,9 +560,8 @@
                                 [/#list]
                             [/#if]
                             [#if ecs.Tasks??]
-                                [#list ecs.Tasks as task]
-                                    [#assign taskSlices = task.Slices!component.Slices]
-                                    [#if taskSlices?seq_contains(slice)]
+                                [#list ecs.Tasks?values as task]
+                                    [#if task?is_hash && (task.Slices!component.Slices)?seq_contains(slice)]
                                         [#if count > 0],[/#if]
                                             "ecsTaskX${tier.Id}X${component.Id}X${task.Id}" : {
                                                 "Value" : { "Ref" : "ecsTaskX${tier.Id}X${component.Id}X${task.Id}" }

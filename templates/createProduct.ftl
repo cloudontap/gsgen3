@@ -9,10 +9,6 @@
 [#assign tenantObject = blueprintObject.Tenant]
 [#assign accountObject = blueprintObject.Account]
 [#assign productObject = blueprintObject.Product]
-[#assign sharedComponentsPresent = (blueprintObject.Solution.SharedComponents)?? ]
-[#if sharedComponentsPresent]
-    [#assign sharedComponents = blueprintObject.Solution.sharedComponents]
-[/#if]
     
 [#-- Reference data --]
 [#assign regions = blueprintObject.Regions]
@@ -149,18 +145,16 @@
         [/#if]
        
         [#if slice?contains("shared")]
-            [#if (regionId == productRegionId)]
-                [#if sharedComponentsPresent]
-                    [#if sliceCount > 0],[/#if]
-                    [#assign sharedCount = 0]
-                    [#list sharedComponents as component] 
+            [#if (regionId == productRegionId) && (blueprintObject.Tiers["shared"].Components)??]
+                [#list blueprintObject.Tiers["shared"].Components?values as component]
+                    [#if component?is_hash]
                         [#if component.S3??]
                             [#assign s3 = component.S3]
-                            [#if sharedCount > 0],[/#if]
+                            [#if sliceCount > 0],[/#if]
                             "s3X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
-                                    [#if s3.Name??]
+                                    [#if s3.Name != "S3"]
                                         "BucketName" : "${s3.Name}${productDomainQualifier}.${productDomain}",
                                     [#else]
                                         "BucketName" : "${component.Name}${productDomainQualifier}.${productDomain}",
@@ -187,11 +181,10 @@
                                     [/#if]
                                 }
                             }
-                            [#assign sharedCount = sharedCount + 1]
+                            [#assign sliceCount = sliceCount + 1]
                         [/#if]
-                    [/#list]
-                    [#assign sliceCount = sliceCount + 1]
-                [/#if]
+                    [/#if]
+                [/#list]
             [/#if]
         [/#if]
     },

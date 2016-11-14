@@ -1,8 +1,7 @@
 [#case "filter"]
     [#switch containerListMode]
         [#case "definition"]
-            [#assign filterContainer = tier.Name + "-" + component.Name + "-" + container.Id]
-            "Name" : "${filterContainer}",
+            "Name" : "${tier.Name + "-" + component.Name + "-" + container.Name}",
             "Image" : "${docker.Registry}/esfilter${dockerTag}",
             "Environment" : [
                 [@standardEnvironmentVariables /],

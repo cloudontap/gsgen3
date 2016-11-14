@@ -1,7 +1,7 @@
 [#case "mongodb"]
     [#switch containerListMode]
         [#case "definition"]
-            "Name" : "${tier.Name + "-" + component.Name + "-" + container.Id}",
+            "Name" : "${tier.Name + "-" + component.Name + "-" + container.Name}",
             "Image" : "${docker.Registry}/mongodb${dockerTag}",
             "MountPoints": [
                 {

@@ -478,61 +478,55 @@
         "internal": {
             "Title": "Internal Subnet Route Table",
             "Description": "Route table supporting routing only to local subnets - default route always present. No internet access provided.",
-            "Routes": [],
+            "Routes": {},
             "Private": true
         },
         "external": {
             "Title": "External Subnet Route Table",
             "Description": "Route table supporting direct internet access",
-            "Routes": [
-                {
-                    "Id": "gateway",
+            "Routes": {
+                "gateway" : {
                     "Type": "gateway"
                 }
-            ]
+            }
         }
     },
     "NetworkACLs": {
         "open": {
             "Title": "Completely open subnet",
             "Rules": {
-                "Inbound": [
-                    {
+                "Inbound": {
+                    "all" : {
+                        "RuleNumber": 100,
+                        "Protocol": "all",
+                        "CIDRBlock": "0.0.0.0/0",
+                        "Allow": true
+                    }
+                },
+                "Outbound": {
+                    "all" : {
                         "Id": "all",
                         "RuleNumber": 100,
                         "Protocol": "all",
                         "CIDRBlock": "0.0.0.0/0",
                         "Allow": true
                     }
-                ],
-                "Outbound": [
-                    {
-                        "Id": "all",
-                        "RuleNumber": 100,
-                        "Protocol": "all",
-                        "CIDRBlock": "0.0.0.0/0",
-                        "Allow": true
-                    }
-                ]
+                }
             }
         }
     },
     "Storage": {
         "default": {
             "EC2": {
-                "Volumes": [
-                    {
+                "Volumes": {
+                    "codeontap" : {
                         "Device": "/dev/sdp",
                         "Size": "30"
                     }
-                ]
+                }
             },
-            "ECS": {
-                "Volumes": []
-            },
-            "ElasticSearch": {
-                "Volumes": []
-            }
+            "ECS": {},
+            "ElasticSearch": {}
         }
     },
     "Processors": {

@@ -364,19 +364,21 @@
                                 ]
                             }
                         }
-                        [#list routeTable.Routes as route]
-                            ,"routeX${tableId}X${route.Id}" : {
-                                "Type" : "AWS::EC2::Route",
-                                "Properties" : {
-                                    "RouteTableId" : { "Ref" : "routeTableX${tableId}" },
-                                    [#switch route.Type]
-                                        [#case "gateway"]
-                                            "DestinationCidrBlock" : "0.0.0.0/0",
-                                            "GatewayId" : { "Ref" : "igw" }
-                                            [#break]
-                                    [/#switch]
+                        [#list routeTable.Routes?values as route]
+                            [#if route?is_hash]
+                                ,"routeX${tableId}X${route.Id}" : {
+                                    "Type" : "AWS::EC2::Route",
+                                    "Properties" : {
+                                        "RouteTableId" : { "Ref" : "routeTableX${tableId}" },
+                                        [#switch route.Type]
+                                            [#case "gateway"]
+                                                "DestinationCidrBlock" : "0.0.0.0/0",
+                                                "GatewayId" : { "Ref" : "igw" }
+                                                [#break]
+                                        [/#switch]
+                                    }
                                 }
-                            }
+                            [/#if]
                         [/#list]
                     [/#if]
                 [/#list]
@@ -407,35 +409,37 @@
                     }                    
                     [#list ["Inbound", "Outbound"] as direction]
                         [#if networkACL.Rules[direction]??]
-                            [#list networkACL.Rules[direction] as rule]
-                                ,"ruleX${networkACLId}X${(direction="Outbound")?string("out", "in")}X${rule.Id}" : {
-                                    "Type" : "AWS::EC2::NetworkAclEntry",
-                                    "Properties" : {
-                                        "NetworkAclId" : { "Ref" : "networkACLX${networkACLId}" },
-                                        "Egress" : "${(direction="Outbound")?string("true","false")}",
-                                        "RuleNumber" : "${rule.RuleNumber}",
-                                        "RuleAction" : "${rule.Allow?string("allow","deny")}",
-                                        "CidrBlock" : "${rule.CIDRBlock}",
-                                        [#switch rule.Protocol]
-                                            [#case "all"]
-                                                "Protocol" : "-1",
-                                                "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
-                                                [#break]
-                                            [#case "icmp"]
-                                                "Protocol" : "1",
-                                                "Icmp" : {"Code" : "${((rule.ICMP.Code)!-1)?c}", "Type" : "${((rule.ICMP.Type)!-1)?c}"}
-                                                [#break]
-                                            [#case "udp"]
-                                                "Protocol" : "17",
-                                                "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
-                                                [#break]
-                                            [#case "tcp"]
-                                                "Protocol" : "6",
-                                                "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
-                                                [#break]
-                                        [/#switch]
+                            [#list networkACL.Rules[direction]values as rule]
+                                [#if rule?is_hash]
+                                    ,"ruleX${networkACLId}X${(direction="Outbound")?string("out", "in")}X${rule.Id}" : {
+                                        "Type" : "AWS::EC2::NetworkAclEntry",
+                                        "Properties" : {
+                                            "NetworkAclId" : { "Ref" : "networkACLX${networkACLId}" },
+                                            "Egress" : "${(direction="Outbound")?string("true","false")}",
+                                            "RuleNumber" : "${rule.RuleNumber}",
+                                            "RuleAction" : "${rule.Allow?string("allow","deny")}",
+                                            "CidrBlock" : "${rule.CIDRBlock}",
+                                            [#switch rule.Protocol]
+                                                [#case "all"]
+                                                    "Protocol" : "-1",
+                                                    "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
+                                                    [#break]
+                                                [#case "icmp"]
+                                                    "Protocol" : "1",
+                                                    "Icmp" : {"Code" : "${((rule.ICMP.Code)!-1)?c}", "Type" : "${((rule.ICMP.Type)!-1)?c}"}
+                                                    [#break]
+                                                [#case "udp"]
+                                                    "Protocol" : "17",
+                                                    "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
+                                                    [#break]
+                                                [#case "tcp"]
+                                                    "Protocol" : "6",
+                                                    "PortRange" : { "From" : "${((rule.PortRange.From)!0)?c}", "To" : "${((rule.PortRange.To)!65535)?c}"}
+                                                    [#break]
+                                            [/#switch]
+                                        }
                                     }
-                                }
+                                [/#if]
                             [/#list]
                         [/#if]
                     [/#list]
@@ -581,9 +585,9 @@
                         ],
                         "SecurityGroupIngress" : [
                             [#if (segmentObject.IPAddressBlocks)??]
-                                [#list segmentObject.IPAddressBlocks as groupKey,groupValue]
+                                [#list segmentObject.IPAddressBlocks?values as groupValue]
                                     [#if groupValue?is_hash]
-                                        [#list groupValue as entryKey, entryValue]
+                                        [#list groupValue?values as entryValue]
                                             [#if entryValue?is_hash && (entryValue.CIDR)?has_content ]
                                                 [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("nat") ]
                                                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
