@@ -11,12 +11,13 @@ function usage() {
     echo -e "(o) -d DESCRIPTION is the product description"
     echo -e "    -h shows this text"
     echo -e "(o) -l TITLE is the product title"
-    echo -e "(o) -n PRODUCT is the human readable form (one word, lowercase and no spaces) of the product id"
+    echo -e "(m) -n PRODUCT is the human readable form (one word, lowercase and no spaces) of the product id"
     echo -e "(o) -o DOMAIN is the default DNS domain to be used for the product"
-    echo -e "(m) -p PID is the product id"
+    echo -e "(o) -p PID is the product id"
     echo -e "(o) -r AWS_REGION is the default AWS region for the product"
     echo -e "(o) -u if details should be updated"
-    echo -e "\nDEFAULTS:\n"
+    echo -e "\nDEFAULTS (creation only):\n"
+    echo -e "PID=PRODUCT"
     echo -e "\nNOTES:\n"
     echo -e "1. Subdirectories are created in the config and infrastructure subtrees"
     echo -e "2. The product information is saved in the product profile"
@@ -64,7 +65,7 @@ while getopts ":d:hl:n:o:p:r:u" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ (-z "${PID}") ]]; then
+if [[ (-z "${PRODUCT}") ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -79,10 +80,10 @@ if [[ "${LOCATION}" != "root" ]]; then
 fi
 
 # Create the directories for the product
-PRODUCT_DIR="${ROOT_DIR}/config/${PID}"
+PRODUCT_DIR="${ROOT_DIR}/config/${PRODUCT}"
 SOLUTIONS_DIR="${PRODUCT_DIR}/solutions"
 APPSETTINGS_DIR="${PRODUCT_DIR}/appsettings"
-INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure/${PID}"
+INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure/${PRODUCT}"
 CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/credentials"
 
 if [[ ! -d ${APPSETTINGS_DIR} ]]; then
@@ -100,17 +101,19 @@ if [[ -f ${PRODUCT_PROFILE} ]]; then
     fi
 else
     echo "{\"Product\":{}}" > ${PRODUCT_PROFILE}
-    if [[ -z "${PRODUCT}" ]]; then PRODUCT=${PID}; fi
+    PID="${PID:-${PRODUCT}}"
 fi
 
 # Generate the filter
-FILTER=". | .Product.Id=\$PID"
+CERTIFICATE_ID="${PRODUCT}"
+FILTER="."
+if [[ -n "${PID}" ]]; then FILTER="${FILTER} | .Product.Id=\$PID"; fi
 if [[ -n "${PRODUCT}" ]]; then FILTER="${FILTER} | .Product.Name=\$PRODUCT"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Product.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Product.Description=\$DESCRIPTION"; fi
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
-if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$PID"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$CERTIFICATE_ID"; fi
 
 # Generate the product profile
 cat ${PRODUCT_PROFILE} | jq --indent 4 \
@@ -120,6 +123,7 @@ cat ${PRODUCT_PROFILE} | jq --indent 4 \
 --arg DESCRIPTION "${DESCRIPTION}" \
 --arg AWS_REGION "${AWS_REGION}" \
 --arg DOMAIN "${DOMAIN}" \
+--arg CERTIFICATE_ID "${CERTIFICATE_ID}" \
 "${FILTER}" > ${PRODUCT_DIR}/temp_product.json
 RESULT=$?
 
@@ -135,16 +139,7 @@ if [[ ! -f ${CREDENTIALS_DIR}/credentials.json ]]; then
     echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${CREDENTIALS_DIR}/credentials.json
 fi
 
-# Create an SSH certificate at the product level
-. ${BIN_DIR}/createSSHCertificate.sh ${CREDENTIALS_DIR}
-
-# Check that the SSH certificate has been defined in AWS
-REGION=$(cat ${PRODUCT_DIR}/product.json | jq -r '.Product.Region | select(.!=null)')
-REGION=${REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Region | select(.!=null)')}
-${BIN_DIR}/manageSSHCertificate.sh -i ${PID} -p ${CREDENTIALS_DIR}/aws-ssh-crt.pem -r ${REGION}
-RESULT=$?
-
-# Ignore decrypted files
+# Ignore local files
 if [[ ! -f ${INFRASTRUCTURE_DIR}/.gitignore ]]; then
     cat > ${INFRASTRUCTURE_DIR}/.gitignore << EOF
 *.decrypted
@@ -163,3 +158,6 @@ if [[ ! -f ${INFRASTRUCTURE_DIR}/.gitattributes ]]; then
 *.pem text eol=lf
 EOF
 fi
+
+# All good
+RESULT=0

@@ -30,7 +30,7 @@ esac
 
 
 # Determine the details of the template to be created
-PRODUCT_PREFIX="${PID}"
+PRODUCT_PREFIX="${PRODUCT}"
 TYPE_PREFIX="${TYPE}-"
 SLICE_PREFIX="${SLICE}-"
 REGION_PREFIX="${REGION}-"
@@ -39,8 +39,8 @@ TYPE_SUFFIX="-${TYPE}"
 SLICE_SUFFIX="-${SLICE}"
 case $TYPE in
     account)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
-        PRODUCT_PREFIX="${AID}"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${ACCOUNT}/aws/cf"
+        PRODUCT_PREFIX="${ACCOUNT}"
         REGION_PREFIX="${ACCOUNT_REGION}-"
         SEGMENT_SUFFIX=""
 
@@ -54,7 +54,7 @@ case $TYPE in
         ;;
 
     product)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/cf"
         SEGMENT_SUFFIX=""
 
         # LEGACY: Support stacks created before slices added to product
@@ -67,13 +67,13 @@ case $TYPE in
         ;;
 
     solution)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="soln-"
         TYPE_SUFFIX="-soln"
         ;;
 
     segment)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
         TYPE_SUFFIX="-seg"
 
@@ -107,7 +107,7 @@ case $TYPE in
         ;;
 
     application)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="app-"
         TYPE_SUFFIX="-app"
         ;;

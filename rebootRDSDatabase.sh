@@ -80,7 +80,7 @@ if [[ "${FORCE_FAILOVER}" == "true" ]]; then
     FAILOVER_OPTION="--no-force-failover"
 fi
 
-DB_INSTANCE_IDENTIFIER="${PID}-${SEGMENT}-${TIER}-${COMPONENT}"
+DB_INSTANCE_IDENTIFIER="${PRODUCT}-${SEGMENT}-${TIER}-${COMPONENT}"
 
 # Trigger the reboot
 aws --region ${REGION} rds reboot-db-instance --db-instance-identifier ${DB_INSTANCE_IDENTIFIER}

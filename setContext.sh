@@ -68,7 +68,7 @@ if [[ -f "product.json" ]]; then
         export LOCATION="${LOCATION:-product}"
     fi
     export PRODUCT_DIR="$(pwd)"
-    export PID="$(basename $(pwd))"
+    export PRODUCT="$(basename $(pwd))"
 
     BLUEPRINT_LIST="${PRODUCT_DIR}/product.json ${BLUEPRINT_LIST}"
     export ROOT_DIR="$(cd ../..;pwd)"
@@ -92,16 +92,16 @@ fi
 
 # root directory
 cd "${ROOT_DIR}"
-export AID="$(basename $(pwd))"
+export ACCOUNT="$(basename $(pwd))"
 popd >/dev/null
 
 export CONFIG_DIR="${ROOT_DIR}/config"
 export INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure"
-export TENANT_DIR="${CONFIG_DIR}/${AID}"    
-export ACCOUNT_DIR="${CONFIG_DIR}/${AID}"    
-export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${AID}/credentials" 
-export ACCOUNT_APPSETTINGS_DIR="${ACCOUNT_DIR}/appsettings" 
-export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"    
+export TENANT_DIR="${CONFIG_DIR}/${ACCOUNT}"
+export ACCOUNT_DIR="${CONFIG_DIR}/${ACCOUNT}"
+export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${ACCOUNT}/credentials"
+export ACCOUNT_APPSETTINGS_DIR="${ACCOUNT_DIR}/appsettings"
+export ACCOUNT_CREDENTIALS="${ACCOUNT_CREDENTIALS_DIR}/credentials.json"
     
 if [[ -f "${ACCOUNT_DIR}/account.json" ]]; then
     BLUEPRINT_LIST="${ACCOUNT_DIR}/account.json ${BLUEPRINT_LIST}"
@@ -119,13 +119,34 @@ else
     echo "{}" > ${COMPOSITE_BLUEPRINT}
 fi
     
-# Extract and default key region settings from the composite solution
+# Extract key settings from the composite solution
+export TID=${TID:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Tenant.Id | select(.!=null)')}
+export TENANT=${TENANT:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Tenant.Name | select(.!=null)')}
+export AID=${AID:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.Id | select(.!=null)')}
 export ACCOUNT_REGION=${ACCOUNT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.Region | select(.!=null)')}
+export PID=${PID:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Id | select(.!=null)')}
 export PRODUCT_REGION=${PRODUCT_REGION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Region | select(.!=null)')}
+export SID=${SID:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Segment.Id | select(.!=null)')}
 export REGION="${REGION:-$PRODUCT_REGION}"
 
+# Perform a few consistency checks
 if [[ -z "${REGION}" ]]; then
     echo -e "\nThe region must be defined in the Account or Product blueprint section. Nothing to do."
+    usage
+fi
+BLUEPRINT_ACCOUNT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.Name | select(.!=null)')
+BLUEPRINT_PRODUCT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Name | select(.!=null)')
+BLUEPRINT_SEGMENT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Segment.Name | select(.!=null)')
+if [[ (-n "${ACCOUNT}") && (-n "${BLUEPRINT_ACCOUNT}") && ("${ACCOUNT}" != "${BLUEPRINT_ACCOUNT}") ]]; then
+    echo -e "\nDirectory structure doesn't match blueprint - account name mismatch"
+    usage
+fi
+if [[ (-n "${PRODUCT}") && (-n "${BLUEPRINT_PRODUCT}") && ("${PRODUCT}" != "${BLUEPRINT_PRODUCT}") ]]; then
+    echo -e "\nDirectory structure doesn't match blueprint - product name mismatch"
+    usage
+fi
+if [[ (-n "${SEGMENT}") && (-n "${BLUEPRINT_SEGMENT}") && ("${SEGMENT}" != "${BLUEPRINT_SEGMENT}") ]]; then
+    echo -e "\nDirectory structure doesn't match blueprint - segment name mismatch"
     usage
 fi
 
@@ -140,10 +161,10 @@ cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 # Product specific context if the product is known
 APPSETTINGS_LIST=
 CREDENTIALS_LIST=
-if [[ -n "${PID}" ]]; then
-    export SOLUTIONS_DIR="${CONFIG_DIR}/${PID}/solutions"
-    export APPSETTINGS_DIR="${CONFIG_DIR}/${PID}/appsettings"
-    export CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${PID}/credentials"
+if [[ -n "${PRODUCT}" ]]; then
+    export SOLUTIONS_DIR="${CONFIG_DIR}/${PRODUCT}/solutions"
+    export APPSETTINGS_DIR="${CONFIG_DIR}/${PRODUCT}/appsettings"
+    export CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/credentials"
     
     # slice level appsettings
     if [[ (-n "${SLICE}") ]]; then
@@ -211,14 +232,14 @@ fi
 
 # Create the composite stack outputs
 STACK_LIST=()
-if [[ (-n "${AID}") && (-d "${INFRASTRUCTURE_DIR}/${AID}/aws/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${AID}/aws/cf" -name acc*-stack.json))
+if [[ (-n "${ACCOUNT}") && (-d "${INFRASTRUCTURE_DIR}/${ACCOUNT}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${ACCOUNT}/aws/cf" -name acc*-stack.json))
 fi
-if [[ (-n "${PID}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/cf" -name product-${REGION}-stack.json))
+if [[ (-n "${PRODUCT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/cf" -name product-${REGION}-stack.json))
 fi
-if [[ (-n "${SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf") ]]; then
-    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf" -name *-${REGION}-stack.json))
+if [[ (-n "${SEGMENT}") && (-n "${REGION}") && (-d "${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf") ]]; then
+    STACK_LIST+=($(find "${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf" -name *-${REGION}-stack.json))
 fi
 
 export COMPOSITE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/composite_stack_outputs.json"
@@ -242,8 +263,8 @@ CHECK_AWS_SESSION_TOKEN="${CHECK_AWS_SESSION_TOKEN:-${!AID_AWS_SESSION_TOKEN_VAR
 if [[ -n "${CHECK_AWS_SESSION_TOKEN}" ]]; then export AWS_SESSION_TOKEN="${CHECK_AWS_SESSION_TOKEN}"; fi
 
 # Set the profile for IAM access if AWS credentials not in the environment
-if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${AID}") ]]; then
-    export AWS_DEFAULT_PROFILE="${AID}"
+if [[ ((-z "${AWS_ACCESS_KEY_ID}") || (-z "${AWS_SECRET_ACCESS_KEY}")) && (-n "${ACCOUNT}") ]]; then
+    export AWS_DEFAULT_PROFILE="${ACCOUNT}"
 fi
 
 # Handle some MINGW peculiarities

@@ -61,13 +61,11 @@ fi
 if [[ ("product" =~ "${LOCATION}") ]]; then
     TARGET_DIR="./solutions"
     mkdir -p ${TARGET_DIR}
+elif [[ ("segment" =~ "${LOCATION}") ]]; then
+    TARGET_DIR="."
 else
-    if [[ ("segment" =~ "${LOCATION}") ]]; then
-        TARGET_DIR="."
-    else
-        echo -e "\nWe don't appear to be in the product or segment directory. Are we in the right place?"
-        usage
-    fi
+    echo -e "\nWe don't appear to be in the product or segment directory. Are we in the right place?"
+    usage
 fi
 
 # Check whether the solution profile is already in place
@@ -89,6 +87,9 @@ if [[ -f "${SOLUTION_FILE}" ]]; then
     RESULT=$?
     if [[ "${RESULT}" -eq 0 ]]; then
         mv "${SOLUTION_TEMP_FILE}" "${SOLUTION_FILE}"
+    else
+        echo -e "\nUnable to add pattern reference to solution"
+        exit
     fi
 fi
 

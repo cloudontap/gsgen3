@@ -6,20 +6,21 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
 
 function usage() {
     echo -e "\nAdd a new segment"
-    echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -s SID -e EID -o DOMAIN -r AWS_REGION -u"
+    echo -e "\nUsage: $(basename $0) -l TITLE -n SEGMENT -d DESCRIPTION -s SID -e EID -o DOMAIN -r AWS_REGION -u"
     echo -e "\nwhere\n"
     echo -e "(o) -d DESCRIPTION is the segment description"
     echo -e "(o) -e EID is the ID of the environment of which this segment is part"
     echo -e "    -h shows this text"
     echo -e "(o) -l TITLE is the segment title"
-    echo -e "(m) -n NAME is the human readable form (one word, lowercase and no spaces) of the segment id"
+    echo -e "(m) -n SEGMENT is the human readable form (one word, lowercase and no spaces) of the segment id"
     echo -e "(o) -o DOMAIN is the default DNS domain to be used for the segment"
     echo -e "(o) -r AWS_REGION is the default AWS region for the segment"
     echo -e "(o) -s SID is the segment id"
     echo -e "(o) -u if details should be updated"
-    echo -e "\nDEFAULTS:\n"
+    echo -e "\nDEFAULTS (creation only):\n"
     echo -e "EID=SID"
-    echo -e "TITLE, NAME and DESCRIPTION from environment master data for EID"
+    echo -e "SID=EID"
+    echo -e "TITLE from environment master data for EID"
     echo -e "\nNOTES:\n"
     echo -e "1. Subdirectories are created in the config and infrastructure subtrees"
     echo -e "2. The segment information is saved in the segment profile"
@@ -46,7 +47,7 @@ while getopts ":d:e:hl:n:o:r:s:u" opt; do
             TITLE="$OPTARG"
             ;;
         n)
-            NAME=$OPTARG
+            SEGMENT=$OPTARG
             ;;
         o)
             DOMAIN="$OPTARG"
@@ -71,10 +72,8 @@ while getopts ":d:e:hl:n:o:r:s:u" opt; do
     esac
 done
 
-EID=${EID:-$SID}
-
 # Ensure mandatory arguments have been provided
-if [[ (-z "${NAME}") ]]; then
+if [[ (-z "${SEGMENT}") ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -89,9 +88,9 @@ if [[ ! ("product" =~ ${LOCATION}) ]]; then
 fi
 
 # Create the directories for the segment
-SEGMENT_SOLUTIONS_DIR="${SOLUTIONS_DIR}/${NAME}"
-SEGMENT_APPSETTINGS_DIR="${APPSETTINGS_DIR}/${NAME}"
-SEGMENT_CREDENTIALS_DIR="${CREDENTIALS_DIR}/${NAME}"
+SEGMENT_SOLUTIONS_DIR="${SOLUTIONS_DIR}/${SEGMENT}"
+SEGMENT_APPSETTINGS_DIR="${APPSETTINGS_DIR}/${SEGMENT}"
+SEGMENT_CREDENTIALS_DIR="${CREDENTIALS_DIR}/${SEGMENT}"
 mkdir -p ${SEGMENT_SOLUTIONS_DIR}
 if [[ ! -d ${SEGMENT_APPSETTINGS_DIR} ]]; then
     mkdir -p ${SEGMENT_APPSETTINGS_DIR}
@@ -107,22 +106,26 @@ if [[ -f ${SEGMENT_PROFILE} ]]; then
         usage
     fi
 else
+    if [[ (-z "${EID}") && (-z "${SID}") ]]; then
+        echo -e "\nOne of EID and SID required for segment creation"
+        usage
+    fi
     echo "{\"Segment\":{}}" > ${SEGMENT_PROFILE}
+    EID=${EID:-${SID}}
+    SID=${SID:-${EID}}
     ENVIRONMENT_TITLE=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Title | select(.!=null)")
     if [[ -z "${ENVIRONMENT_TITLE}" ]]; then 
         echo -e "\nEnvironment not defined in masterData.json. Was SID or EID provided?"
         usage
     fi
     TITLE=${TITLE:-$ENVIRONMENT_TITLE}
-    NAME=${NAME:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Name | select(.!=null)")}
-#    DESCRIPTION=${DESCRIPTION:-$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Environments[\"${EID}\"].Description | select(.!=null)")}
 fi
 
 # Generate the filter
-CERTIFICATE_ID="${PID}-${NAME}"
+CERTIFICATE_ID="${PRODUCT}-${SEGMENT}"
 FILTER="."
 if [[ -n "${SID}" ]]; then FILTER="${FILTER} | .Segment.Id=\$SID"; fi
-if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Segment.Name=\$NAME"; fi
+if [[ -n "${SEGMENT}" ]]; then FILTER="${FILTER} | .Segment.Name=\$SEGMENT"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Segment.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Segment.Description=\$DESCRIPTION"; fi
 if [[ -n "${EID}" ]]; then FILTER="${FILTER} | .Segment.Environment=\$EID"; fi
@@ -132,9 +135,8 @@ if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id
 
 # Generate the segment profile
 cat ${SEGMENT_PROFILE} | jq --indent 4 \
---arg PID "${PID}" \
 --arg SID "${SID}" \
---arg NAME "${NAME}" \
+--arg SEGMENT "${SEGMENT}" \
 --arg TITLE "${TITLE}" \
 --arg DESCRIPTION "${DESCRIPTION}" \
 --arg EID "${EID}" \
@@ -156,12 +158,7 @@ if [[ ! -f ${SEGMENT_CREDENTIALS_DIR}/credentials.json ]]; then
     echo "{\"Credentials\" : {}}" | jq --indent 4 '.' > ${SEGMENT_CREDENTIALS_DIR}/credentials.json
 fi
 
-# Create an SSH certificate at the segment level
-. ${BIN_DIR}/createSSHCertificate.sh ${SEGMENT_CREDENTIALS_DIR}
+# All good
+RESULT=0
 
-# Check that the SSH certificate has been defined in AWS
-REGION=$(cat ${SEGMENT_SOLUTIONS_DIR}/segment.json | jq -r '.Product.Region | select(.!=null)')
-REGION=${REGION:-$PRODUCT_REGION}
-${BIN_DIR}/manageSSHCertificate.sh -i ${PID}-${NAME} -p ${SEGMENT_CREDENTIALS_DIR}/aws-ssh-crt.pem -r ${REGION}
-RESULT=$?
 

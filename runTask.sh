@@ -5,23 +5,23 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 DELAY_DEFAULT=30
-TIER_DEFAULT="web"
-COMPONENT_DEFAULT="www"
+RID_DEFAULT="web"
+CID_DEFAULT="www"
 function usage() {
     echo -e "\nRun an ECS task" 
-    echo -e "\nUsage: $(basename $0) -t TIER -i COMPONENT -w TASK -e ENV -v VALUE -d DELAY\n"
+    echo -e "\nUsage: $(basename $0) -t RID -i CID -w KID -e ENV -v VALUE -d DELAY\n"
     echo -e "\nwhere\n"
     echo -e "(o) -d DELAY is the interval between checking the progress of the task"
     echo -e "(o) -e ENV is the name of an environment variable to define for the task"
     echo -e "    -h shows this text"
-    echo -e "(o) -i COMPONENT is the id of the solution component where the task is defined"
-    echo -e "(o) -t TIER is the id of the tier in the solution where the task is defined"
+    echo -e "(o) -i CID is the id of the component in the solution where the task is defined"
+    echo -e "(o) -t RID is the id of the tier in the solution where the task is defined"
     echo -e "(o) -v VALUE is the value for the last environment value defined (via -e) for the task"
-    echo -e "(m) -w TASK is the name of the task to be run"
+    echo -e "(m) -w KID is the id of the task to be run"
     echo -e "\nDEFAULTS:\n"
-    echo -e "DELAY     = ${DELAY_DEFAULT} seconds"
-    echo -e "TIER      = ${TIER_DEFAULT}"
-    echo -e "COMPONENT = ${COMPONENT_DEFAULT}"
+    echo -e "DELAY = ${DELAY_DEFAULT} seconds"
+    echo -e "RID   = ${RID_DEFAULT}"
+    echo -e "CID   = ${CID_DEFAULT}"
     echo -e "\nNOTES:\n"
     echo -e "1. The ECS cluster is found using the provided tier and component combined with the product and segment"
     echo -e "2. ENV and VALUE should always appear in pairs"
@@ -29,9 +29,6 @@ function usage() {
     exit
 }
 
-DELAY="${DELAY_DEFAULT}"
-TIER="${TIER_DEFAULT}"
-COMPONENT="${COMPONENT_DEFAULT}"
 ENV_STRUCTURE="\"environment\":["
 ENV_NAME=
 
@@ -52,16 +49,16 @@ while getopts ":d:e:hi:t:v:w:" opt; do
             usage
             ;;
         i)
-            COMPONENT=$OPTARG
+            CID=$OPTARG
             ;;
         t)
-            TIER=$OPTARG
+            RID=$OPTARG
             ;;
         v)
             ENV_STRUCTURE="${ENV_STRUCTURE}{\"name\":\"${ENV_NAME}\", \"value\":\"${OPTARG}\"}"
             ;;
         w)
-            TASK=$OPTARG
+            KID=$OPTARG
             ;;
         \?)
             echo -e "\nInvalid option: -$OPTARG" 
@@ -74,6 +71,9 @@ while getopts ":d:e:hi:t:v:w:" opt; do
     esac
 done
 
+DELAY="${DELAY:-${DELAY_DEFAULT}}"
+RID="${RID:-${RID_DEFAULT}}"
+CID="${CID:-${CID_DEFAULT}}"
 ENV_STRUCTURE="${ENV_STRUCTURE}]"
 
 # Ensure mandatory arguments have been provided
@@ -92,20 +92,20 @@ if [[ "${LOCATION}" != "segment" ]]; then
 fi
 
 # Find the cluster
-CLUSTER_ARN=$(aws --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsX${TIER}X${COMPONENT}.*)\").arn")
+CLUSTER_ARN=$(aws --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PRODUCT}-${SEGMENT}.*ecsX${RID}X${CID}.*)\").arn")
 if [[ -z "${CLUSTER_ARN}" ]]; then
     echo -e "\nUnable to locate ECS cluster"
     usage
 fi
 
 # Find the task definition
-TASK_DEFINITION_ARN=$(aws --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PID}-${SEGMENT}.*ecsTaskX${TIER}X${COMPONENT}X${TASK}.*)\").arn")
+TASK_DEFINITION_ARN=$(aws --region ${REGION} ecs list-task-definitions | jq -r ".taskDefinitionArns[] | capture(\"(?<arn>.*${PRODUCT}-${SEGMENT}.*ecsTaskX${RID}X${CID}X${KID}.*)\").arn")
 if [[ -z "${TASK_DEFINITION_ARN}" ]]; then
     echo -e "\nUnable to locate task definition"
     usage
 fi
 
-aws --region ${REGION} ecs run-task --cluster "${CLUSTER_ARN}" --task-definition "${TASK_DEFINITION_ARN}" --count 1 --overrides "{\"containerOverrides\":[{\"name\":\"${TIER}-${COMPONENT}-${TASK}\",${ENV_STRUCTURE}}]}" > STATUS.txt
+aws --region ${REGION} ecs run-task --cluster "${CLUSTER_ARN}" --task-definition "${TASK_DEFINITION_ARN}" --count 1 --overrides "{\"containerOverrides\":[{\"name\":\"${RID}-${CID}-${KID}\",${ENV_STRUCTURE}}]}" > STATUS.txt
 RESULT=$?
 if [ "$RESULT" -ne 0 ]; then exit; fi
 cat STATUS.txt

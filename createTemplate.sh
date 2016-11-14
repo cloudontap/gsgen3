@@ -123,7 +123,7 @@ SLICE_PREFIX="${SLICE}-"
 REGION_PREFIX="${REGION}-"
 case $TYPE in
     account)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${AID}/aws/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${ACCOUNT}/aws/cf"
         REGION_PREFIX="${ACCOUNT_REGION}-"
 
         # LEGACY: Support stacks created before slices added to account
@@ -135,7 +135,7 @@ case $TYPE in
         ;;
 
     product)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/cf"
 
         # LEGACY: Support stacks created before slices added to product
         if [[ "${SLICE}" =~ cmk ]]; then
@@ -147,12 +147,12 @@ case $TYPE in
         ;;
 
     solution)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="soln-"
         ;;
 
     segment)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="seg-"
 
         # LEGACY: Support old formats for existing stacks so they can be updated 
@@ -180,7 +180,7 @@ case $TYPE in
         ;;
 
     application)
-        CF_DIR="${INFRASTRUCTURE_DIR}/${PID}/aws/${SEGMENT}/cf"
+        CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="app-"
         ;;
 
