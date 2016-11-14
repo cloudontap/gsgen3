@@ -391,7 +391,7 @@
                                         "CrossZone" : true,
                                     [#else]
                                         "Subnets" : [
-                                            "${getKey("subnetX"+tier.Id+"X"+zones[0])}"
+                                            "${getKey("subnetX"+tier.Id+"X"+zones[0].Id)}"
                                         ],
                                     [/#if]
                                     "Listeners" : [
