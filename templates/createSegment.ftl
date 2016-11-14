@@ -182,7 +182,7 @@
             [#if sliceCount > 0],[/#if]
             [#assign eipCount = 0]
             [#if jumpServer]
-                [#assign tier = tiers["mgmt"]]
+                [#assign tier = getTier("mgmt")]
                 [#list zones as zone]
                     [#if jumpServerPerAZ || (zones[0].Id == zone.Id)]
                         [#if eipCount > 0],[/#if]
@@ -409,7 +409,7 @@
                     }                    
                     [#list ["Inbound", "Outbound"] as direction]
                         [#if networkACL.Rules[direction]??]
-                            [#list networkACL.Rules[direction]values as rule]
+                            [#list networkACL.Rules[direction]?values as rule]
                                 [#if rule?is_hash]
                                     ,"ruleX${networkACLId}X${(direction="Outbound")?string("out", "in")}X${rule.Id}" : {
                                         "Type" : "AWS::EC2::NetworkAclEntry",
