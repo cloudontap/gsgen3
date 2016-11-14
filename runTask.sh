@@ -92,9 +92,9 @@ if [[ "${LOCATION}" != "segment" ]]; then
 fi
 
 # Extract key identifiers
-RID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | select(.Name=\"${TIER}\") | .Id")
-CID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | select(.Name=\"${TIER}\") | .Components[] | select(.Name=\"${COMPONENT}\") | .Id")
-KID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | select(.Name=\"${TIER}\") | .Components[] | select(.Name=\"${COMPONENT}\") | .ECS.Tasks[] | select(.Name=\"${TASK}\") | .Id")
+RID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | objects | select(.Name==\"${TIER}\") | .Id")
+CID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | objects | select(.Name==\"${TIER}\") | .Components[] | objects | select(.Name==\"${COMPONENT}\") | .Id")
+KID=$(cat ${COMPOSITE_BLUEPRINT} | jq -r ".Tiers[] | objects | select(.Name==\"${TIER}\") | .Components[] | objects | select(.Name==\"${COMPONENT}\") | .ECS.Tasks[] | objects | select(.Name==\"${TASK}\") | .Id")
 
 # Find the cluster
 CLUSTER_ARN=$(aws --region ${REGION} ecs list-clusters | jq -r ".clusterArns[] | capture(\"(?<arn>.*${PRODUCT}-${SEGMENT}.*ecsX${RID}X${CID}.*)\").arn")
