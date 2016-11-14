@@ -226,7 +226,7 @@
                                 [/#if]
                             }
                         }
-                        [#assign containerCount = 0]
+                        [#assign containerCount += 1]
                     [/#if]
                 [/#list]
             ]
@@ -345,10 +345,10 @@
                                                 [#if portCount != 0]
                                                     "LoadBalancers" : [
                                                         [#assign portCount = 0]
-                                                        [#list service.Containers?value as container]
+                                                        [#list service.Containers?values as container]
                                                             [#if container?is_hash && container.Ports??]
                                                                 [#list container.Ports?values as port]
-                                                                    [#if port?is_hash) && (port.ELB?? || port.LB??)]
+                                                                    [#if port?is_hash && (port.ELB?? || port.LB??)]
                                                                         [#if portCount > 0],[/#if]
                                                                         {
                                                                             [#if port.LB??]
@@ -407,7 +407,7 @@
                                                 [#-- Security Group ingress for the container ports --] 
                                                 [#if container.Ports??]
                                                     [#list container.Ports?values as port]
-                                                        [#if port.is_hash]
+                                                        [#if port?is_hash]
                                                             [#assign useDynamicHostPort = port.DynamicHostPort?? && port.DynamicHostPort]
                                                             [#if useDynamicHostPort]
                                                                 [#assign portRange = "dynamic"]
