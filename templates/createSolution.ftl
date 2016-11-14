@@ -136,7 +136,7 @@
     [#if (storageProfile.Volumes)?? ]
         "BlockDeviceMappings" : [
             [#list storageProfile.Volumes?values as volume]
-                [#id volume?is_hash]
+                [#if volume?is_hash]
                     {
                         "DeviceName" : "${volume.Device}",
                         "Ebs" : {
@@ -209,7 +209,7 @@
                         [/#if]
     
                         [#-- Security Group --]
-                        [#if ! (component.S3?? || component.SQS??) ]
+                        [#if ! (component.S3?? || component.SQS?? || component.ElasticSearch??) ]
                             "securityGroupX${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::EC2::SecurityGroup",
                                 "Properties" : {
@@ -348,10 +348,10 @@
                             "sqsX${tier.Id}X${component.Id}":{
                                 "Type" : "AWS::SQS::Queue",
                                 "Properties" : {
-                                    [#if sqs.Name??]
+                                    [#if sqs.Name != "SQS"]
                                         "QueueName" : "${sqs.Name}"
                                     [#else]
-                                        "QueueName" : "${productId}-${environmentName}-${component.Name}"
+                                        "QueueName" : "${productName}-${environmentName}-${component.Name}"
                                     [/#if]
                                     [#if sqs.DelaySeconds??],"DelaySeconds" : ${sqs.DelaySeconds?c}[/#if]
                                     [#if sqs.MaximumMessageSize??],"MaximumMessageSize" : ${sqs.MaximumMessageSize?c}[/#if]
@@ -1531,7 +1531,7 @@
                         [/#if]
                         
                         [#-- Security Group --]
-                        [#if ! (component.S3?? || component.SQS??) ]
+                        [#if ! (component.S3?? || component.SQS?? || component.ElasticSearch??) ]
                             [#if count > 0],[/#if]
                             "securityGroupX${tier.Id}X${component.Id}" : {
                                 "Value" : { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
