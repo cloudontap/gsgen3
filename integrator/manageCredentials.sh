@@ -4,48 +4,55 @@ if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && cd .. && pwd )
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
+CREDENTIAL_NAME_DEFAULT="root+aws"
+CREDENTIAL_TYPE_DEFAULT="Login"
 function usage() {
-  echo -e "\nManage account credentials"
-  echo -e "\nUsage: $(basename $0) -t TID -a TAID -k ACCESS_KEY -s SECREY_KEY -u AWS_USERNAME -p AWS_PASSWORD\n"
+  echo -e "\nManage tenant/account credentials"
+  echo -e "\nUsage: $(basename $0) -t TENANT -a ACCOUNT -n CREDENTIAL_NAME -y CREDENTIAL_TYPE -i CREDENTIAL_ID -s CREDENTIAL_SECRET -e CREDENTIAL_EMAIL\n"
   echo -e "\nwhere\n"
-  echo -e "(m) -a TAID is the tenant account id"
+  echo -e "(o) -a ACCOUNT is the tenant account name"
+  echo -e "(o) -e CREDENTIAL_EMAIL is the email associated with the credential (not encrypted)"
   echo -e "    -h shows this text"
-  echo -e "(o) -k ACCESS_KEY specifies the API access key value"
-  echo -e "(o) -p AWS_PASSWORD specifies the AWS account password"
-  echo -e "(o) -s SECRET_KEY specifies the API secret key value"
-  echo -e "(m) -t TID is the tenant id"
-  echo -e "(o) -u AWS_USERNAME specifies the AWS account username"
+  echo -e "(o) -i CREDENTIAL_ID of credential (i.e. Username/Client Key/Access Key value) - not encrypted"
+  echo -e "(m) -n CREDENTIAL_NAME for the set of values (id, secret, email)"
+  echo -e "(o) -s CREDENTIAL_SECRET of credential (i.e. Password/Secret Key value) - encrypted"
+  echo -e "(m) -t TENANT is the tenant name"
+  echo -e "(m) -y CREDENTIAL_TYPE of credential"
   echo -e "\nDEFAULTS:\n"
+  echo -e "CREDENTIAL_NAME = ${CREDENTIAL_NAME_DEFAULT} (account only)"
+  echo -e "CREDENTIAL_TYPE = ${CREDENTIAL_TYPE_DEFAULT}"
   echo -e "\nNOTES:\n"
-  echo -e "1. Provided values (if any) are updated"
-  echo -e "2. Current values are displayed"
+  echo -e "1. Omit the account to manage tenant credentials"
+  echo -e "2. Provided values (if any) are updated"
+  echo -e "3. Current values are displayed"
+  echo -e "4. Common CREDENTIAL_NAME values are \"Login\" for interactive credentials and \"API\" for AWS access keys"  
   echo -e ""
   exit
 }
 
 # Parse options
-while getopts ":a:hk:p:s:t:u:" opt; do
+while getopts ":a:e:hi:n:s:t:y:" opt; do
     case $opt in
         a)
-            TAID="${OPTARG}"
+            ACCOUNT="${OPTARG}"
             ;;
         h)
             usage
             ;;
-        k)
-            ACCESS_KEY="${OPTARG}"
+        i)
+            export CREDENTIAL_ID="${OPTARG}"
             ;;
-        p)
-            AWS_PASSWORD="${OPTARG}"
+        n)
+            export CREDENTIAL_NAME="${OPTARG}"
             ;;
         s)
-            SECRET_KEY="${OPTARG}"
+            export CREDENTIAL_SECRET="${OPTARG}"
             ;;
         t)
-            TID="${OPTARG}"
+            TENANT="${OPTARG}"
             ;;
-        u)
-            AWS_USERNAME="${OPTARG}"
+        y)
+            export CREDENTIAL_TYPE="${OPTARG}"
             ;;
         \?)
             echo -e "\nInvalid option: -$OPTARG"
@@ -58,25 +65,22 @@ while getopts ":a:hk:p:s:t:u:" opt; do
     esac
 done
 
+# Apply defaults
+if [[ -n "${ACCOUNT}" ]]; then
+    CRYPTO_FILE_PATH="tenants/${TENANT}/accounts/${ACCOUNT}"
+    export CREDENTIAL_NAME="${CREDENTIAL_NAME:-${CREDENTIAL_NAME_DEFAULT}}"
+else
+    CRYPTO_FILE_PATH="tenants/${TENANT}"
+fi
+export CREDENTIAL_TYPE="${CREDENTIAL_TYPE:-${CREDENTIAL_TYPE_DEFAULT}}"
+
+
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TID}") || (-z "${TAID}") ]]; then
+if [[ (-z "${TENANT}") || (-z "${CREDENTIAL_NAME}") || (-z "${CREDENTIAL_TYPE}") ]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
 
-CRYPTO_FILE_PATH="tenants/${TID}/accounts/${TAID}"
-
-# Login credentials
-OPTIONS="-v"
-if [[ -n "${AWS_USERNAME}" ]]; then OPTIONS="${OPTIONS} -i ${AWS_USERNAME}"; fi
-if [[ -n "${AWS_PASSWORD}" ]]; then OPTIONS="${OPTIONS} -s ${AWS_PASSWORD}"; fi
-${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -n "root+aws" -t "Login" ${OPTIONS}
-RESULT=$?
-if [[ "${RESULT}" -ne 0 ]]; then exit; fi
-
-# API credentials
-OPTIONS="-v"
-if [[ -n "${ACCESS_KEY}" ]]; then OPTIONS="${OPTIONS} -i ${ACCESS_KEY}"; fi
-if [[ -n "${SECRET_KEY}" ]]; then OPTIONS="${OPTIONS} -s ${SECRET_KEY}"; fi
-${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -n "gosource-root" -t "API" ${OPTIONS}
+# Manage the credentials
+${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -v
 RESULT=$?
