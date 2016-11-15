@@ -5,27 +5,28 @@ BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && cd .. && pwd )
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
-  echo -e "\nAdd a new tenant"
-  echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -t TID -o DOMAIN -r AWS_REGION -s AWS_SES_REGION -u"
-  echo -e "\nwhere\n"
-  echo -e "(o) -d DESCRIPTION is the tenant description"
-  echo -e "    -h shows this text"
-  echo -e "(o) -l TITLE is the tenant title"
-  echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the tenant id"
-  echo -e "(o) -o DOMAIN is the default DNS domain to be used for tenant products and accounts"
-  echo -e "(o) -r AWS_REGION is the default AWS region for the tenant"
-  echo -e "(o) -s AWS_SES_REGION is the default AWS region for use of the SES service"
-  echo -e "(m) -t TID is the tenant id"
-  echo -e "(o) -u if details should be updated"
-  echo -e "\nDEFAULTS:\n"
-  echo -e "\nNOTES:\n"
-  echo -e "1) A sub-directory is created for the tenant"
-  echo -e "2) The tenant information is saved in the tenant profile"
-  echo -e "3) To update the details, the update option must be explicitly set"
-  echo -e "4) The domain will default on tenant creation to {TID}.{integrator domain}"
-  echo -e "5) The region will default to tenant creation to the {integrator region}" 
-  echo -e ""
-  exit
+    echo -e "\nAdd a new tenant"
+    echo -e "\nUsage: $(basename $0) -l TITLE -n TENANT -d DESCRIPTION -t TID -o DOMAIN -r AWS_REGION -s AWS_SES_REGION -u"
+    echo -e "\nwhere\n"
+    echo -e "(o) -d DESCRIPTION is the tenant description"
+    echo -e "    -h shows this text"
+    echo -e "(o) -l TITLE is the tenant title"
+    echo -e "(m) -n TENANT is the human readable form (one word, lowercase and no spaces) of the tenant id"
+    echo -e "(o) -o DOMAIN is the default DNS domain to be used for tenant products and accounts"
+    echo -e "(o) -r AWS_REGION is the default AWS region for the tenant"
+    echo -e "(o) -s AWS_SES_REGION is the default AWS region for use of the SES service"
+    echo -e "(o) -t TID is the tenant id"
+    echo -e "(o) -u if details should be updated"
+    echo -e "\nDEFAULTS (creation only):\n"
+    echo -e "TID=TENANT"
+    echo -e "\nNOTES:\n"
+    echo -e "1. A sub-directory is created for the tenant"
+    echo -e "2. The tenant information is saved in the tenant profile"
+    echo -e "3. The integrator profile forms the basis for the tenant profile" 
+    echo -e "4. To update the details, the update option must be explicitly set"
+    echo -e "5. The domain will default on tenant creation to {TENANT}.{integrator domain}"
+    echo -e ""
+    exit
 }
 
 # Parse options
@@ -41,7 +42,7 @@ while getopts ":d:hl:n:o:r:s:t:u" opt; do
       TITLE=$OPTARG
        ;;
     n)
-      NAME=$OPTARG
+      TENANT=$OPTARG
        ;;
     o)
       DOMAIN=$OPTARG
@@ -70,7 +71,7 @@ while getopts ":d:hl:n:o:r:s:t:u" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TID}") ]]; then
+if [[ (-z "${TENANT}") ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
@@ -85,7 +86,7 @@ if [[ "${LOCATION}" != "integrator" ]]; then
 fi
 
 # Create the directory for the tenant
-TENANT_DIR="${ROOT_DIR}/tenants/${TID}"
+TENANT_DIR="${ROOT_DIR}/tenants/${TENANT}"
 mkdir -p ${TENANT_DIR}
 
 # Check whether the tenant profile is already in place
@@ -99,12 +100,14 @@ if [[ -f ${TENANT_PROFILE} ]]; then
 else
     jq 'del(.Integrator)' ${INTEGRATOR_PROFILE} > ${TENANT_PROFILE}
     INTEGRATOR_DOMAIN=$(jq -r '.Integrator.Domain.Stem | select(.!=null)' ${INTEGRATOR_PROFILE})
-    DOMAIN=${DOMAIN:-${TID}.${INTEGRATOR_DOMAIN}}
+    DOMAIN=${DOMAIN:-${TENANT}.${INTEGRATOR_DOMAIN}}
+    TID="${TID:-${TENANT}}"
 fi
 
 # Generate the filter
-FILTER=". | .Tenant.Id=\$TID"
-if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Tenant.Name=\$NAME"; fi
+FILTER="."
+if [[ -n "${TID}" ]]; then FILTER="${FILTER} | .Tenant.Id=\$TID"; fi
+if [[ -n "${TENANT}" ]]; then FILTER="${FILTER} | .Tenant.Name=\$TENANT"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Tenant.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Tenant.Description=\$DESCRIPTION"; fi
 if [[ -n "${VALIDATION_DOMAIN}" ]]; then FILTER="${FILTER} | .Tenant.Domain.Validation=\$VALIDATION_DOMAIN"; fi
@@ -120,7 +123,7 @@ if [[ -n "${IP_ADDRESS_BLOCKS}" ]]; then FILTER="${FILTER} | .Segment.IPAddressB
 # Generate the tenant profile
 cat ${TENANT_PROFILE} | jq --indent 4 \
 --arg TID "${TID}" \
---arg NAME "${NAME}" \
+--arg TENANT "${TENANT}" \
 --arg TITLE "${TITLE}" \
 --arg DESCRIPTION "${DESCRIPTION}" \
 --arg AWS_REGION "${AWS_REGION}" \

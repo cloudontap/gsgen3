@@ -6,7 +6,7 @@ trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGT
     
 function usage() {
   echo -e "\nAdd a new account for a tenant"
-  echo -e "\nUsage: $(basename $0) -l TITLE -n NAME -d DESCRIPTION -a TAID -t TID -o DOMAIN -r AWS_REGION -s AWS_SES_REGION -c AWS_ID -f -u"
+  echo -e "\nUsage: $(basename $0) -l TITLE -n TACCOUNT -d DESCRIPTION -a TAID -t TENANT -o DOMAIN -r AWS_REGION -s AWS_SES_REGION -c AWS_ID -f -u"
   echo -e "\nwhere\n"
   echo -e "(m) -a TAID is the tenant account id"
   echo -e "(o) -c AWS_ID is the AWS account id"
@@ -14,17 +14,18 @@ function usage() {
   echo -e "(o) -f if an existing shelf account should be used as the basis for the new account"
   echo -e "    -h shows this text"
   echo -e "(o) -l TITLE is the account title"
-  echo -e "(o) -n NAME is the human readable form (one word, lowercase and no spaces) of the account id"
+  echo -e "(m) -n TACCOUNT is the human readable form (one word, lowercase and no spaces) of the account id"
   echo -e "(o) -o DOMAIN is the default DNS domain to be used for account products"
   echo -e "(o) -r AWS_REGION is the AWS region identifier for the region in which the account will be created"
   echo -e "(o) -s AWS_SES_REGION is the default AWS region for use of the SES service"
-  echo -e "(m) -t TID is the tenant id"
+  echo -e "(m) -t TENANT is the tenant name"
   echo -e "(o) -u if details should be updated"
-  echo -e "\nDEFAULTS:\n"
+    echo -e "\nDEFAULTS (creation only):\n"
+    echo -e "TAID=TACCOUNT"
   echo -e "\nNOTES:\n"
-  echo -e "1) A sub-directory is created for the account under the tenant"
-  echo -e "2) The account information is saved in the account profile"
-  echo -e "3) To update the details, the update option must be explicitly set"
+  echo -e "1. A sub-directory is created for the account under the tenant"
+  echo -e "2. The account information is saved in the account profile"
+  echo -e "3. To update the details, the update option must be explicitly set"
   echo -e ""
   exit
 }
@@ -51,7 +52,7 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
       TITLE="$OPTARG"
        ;;
     n)
-      NAME=$OPTARG
+      TACCOUNT=$OPTARG
        ;;
     o)
       DOMAIN="$OPTARG"
@@ -63,7 +64,7 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
       AWS_SES_REGION=$OPTARG
        ;;
     t)
-      TID=$OPTARG
+      TENANT=$OPTARG
       ;;
     u)
       UPDATE_ACCOUNT="true"
@@ -80,8 +81,8 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TID}") ||
-      (-z "${TAID}") ]]; then
+if [[ (-z "${TENANT}") ||
+      (-z "${TACCOUNT}") ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
@@ -96,7 +97,7 @@ if [[ "${LOCATION}" != "integrator" ]]; then
 fi
 
 # Ensure the tenant already exists
-TENANT_DIR="${ROOT_DIR}/tenants/${TID}"
+TENANT_DIR="${ROOT_DIR}/tenants/${TENANT}"
 if [[ ! -d "${TENANT_DIR}" ]]; then
     echo -e "\nThe tenant needs to be added before the account"
     usage
@@ -105,7 +106,7 @@ fi
 # Create the directory for the account, potentially using a shelf account
 ACCOUNTS_DIR="${TENANT_DIR}/accounts"
 mkdir -p "${ACCOUNTS_DIR}"
-ACCOUNT_DIR="${ACCOUNTS_DIR}/${TAID}"
+ACCOUNT_DIR="${ACCOUNTS_DIR}/${TACCOUNT}"
 if [[ ! -d "${ACCOUNT_DIR}" ]]; then
     if [[ "${USE_SHELF_ACCOUNT}" == "true" ]]; then
         # Find the highest numbered shelf account available
@@ -134,11 +135,14 @@ if [[ -f ${ACCOUNT_PROFILE} ]]; then
     fi
 else
     echo "{\"Account\":{}}" > ${ACCOUNT_PROFILE}
+    TAID="${TAID:-${TACCOUNT}}"
 fi
 
 # Generate the filter
-FILTER=". | .Account.Id=\$TAID"
-if [[ -n "${NAME}" ]]; then FILTER="${FILTER} | .Account.Name=\$NAME"; fi
+CERTIFICATE_ID="${TACCOUNT}"
+FILTER="."
+if [[ -n "${TAID}" ]]; then FILTER="${FILTER} | .Tenant.Id=\$TAID"; fi
+if [[ -n "${TACCOUNT}" ]]; then FILTER="${FILTER} | .Account.Name=\$TACCOUNT"; fi
 if [[ -n "${TITLE}" ]]; then FILTER="${FILTER} | .Account.Title=\$TITLE"; fi
 if [[ -n "${DESCRIPTION}" ]]; then FILTER="${FILTER} | .Account.Description=\$DESCRIPTION"; fi
 if [[ -n "${AWS_ID}" ]]; then FILTER="${FILTER} | .Account.AWSId=\$AWS_ID"; fi
@@ -146,17 +150,18 @@ if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Account.Region=\$AWS_REGI
 if [[ -n "${AWS_REGION}" ]]; then FILTER="${FILTER} | .Product.Region=\$AWS_REGION"; fi
 if [[ -n "${AWS_SES_REGION}" ]]; then FILTER="${FILTER} | .Product.SES.Region=\$AWS_SES_REGION"; fi
 if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Stem=\$DOMAIN"; fi
-if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$TAID"; fi
+if [[ -n "${DOMAIN}" ]]; then FILTER="${FILTER} | .Product.Domain.Certificate.Id=\$CERTIFICATE_ID"; fi
 
 # Generate the account profile
 cat ${ACCOUNT_PROFILE} | jq --indent 4 \
 --arg TAID "${TAID}" \
---arg NAME "${NAME}" \
+--arg TACCOUNT "${TACCOUNT}" \
 --arg TITLE "${TITLE}" \
 --arg DESCRIPTION "${DESCRIPTION}" \
 --arg AWS_ID "${AWS_ID}" \
 --arg AWS_REGION "${AWS_REGION}" \
 --arg DOMAIN "${DOMAIN}" \
+--arg CERTIFICATE_ID "${CERTIFICATE_ID}" \
 "${FILTER}" > ${ACCOUNT_DIR}/temp_account.json
 RESULT=$?
 
