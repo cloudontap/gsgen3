@@ -5,41 +5,34 @@ BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && cd .. && pwd )
 trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
     
 function usage() {
-  echo -e "\nPopulate the account tree for an account"
-  echo -e "\nUsage: $(basename $0) -t TID -a TAID -c INIT_CONFIG_DIR -i INIT_INFRASTRUCTURE_DIR -u"
-  echo -e "\nwhere\n"
-  echo -e "(m) -a TAID is the tenant account id"
-  echo -e "(m) -c INIT_CONFIG_DIR is the directory to hold the the config repo"
-  echo -e "    -h shows this text"
-  echo -e "(m) -i INIT_INFRASTRUCTURE_DIR is the directory to hold the infrastructure repo"
-  echo -e "(m) -t TID is the tenant id"
-  echo -e "(o) -u if details should be updated"
-  echo -e "\nDEFAULTS:\n"
-  echo -e "\nNOTES:\n"
-  echo -e "1) The directory tree expected by gsgen3 is created under the "
-  echo -e "   provided directories, which are created if they don't exist"
-  echo -e "2) To update the details, the update option must be explicitly set"
-  echo -e ""
-  exit
+    echo -e "\nPopulate the account tree for an account"
+    echo -e "\nUsage: $(basename $0) -t TENANT -a ACCOUNT -u"
+    echo -e "\nwhere\n"
+    echo -e "(m) -a ACCOUNT is the tenant account name"
+    echo -e "    -h shows this text"
+    echo -e "(m) -t TENANT is the tenant name"
+    echo -e "(o) -u if details should be updated"
+    echo -e "\nDEFAULTS:\n"
+    echo -e "\nNOTES:\n"
+    echo -e "1. The script must be run from the root of the integrator tree"
+    echo -e "2. The account tree is expected to be present at the same level"
+    echo -e "   as the integrator tree"
+    echo -e "2. To update the details, the update option must be explicitly set"
+    echo -e ""
+    exit
 }
 
 # Parse options
-while getopts ":a:c:hi:t:u" opt; do
+while getopts ":a:ht:u" opt; do
   case $opt in
     a)
-      TAID=$OPTARG
-      ;;
-    c)
-      INIT_CONFIG_DIR=$OPTARG
+      ACCOUNT=$OPTARG
       ;;
     h)
       usage
       ;;
-    i)
-      INIT_INFRASTRUCTURE_DIR=$OPTARG
-      ;;
     t)
-      TID=$OPTARG
+      TENANT=$OPTARG
       ;;
     u)
       UPDATE_TREE="true"
@@ -56,33 +49,38 @@ while getopts ":a:c:hi:t:u" opt; do
 done
 
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TID}") ||
-      (-z "${TAID}") ||
-      (-z "${INIT_CONFIG_DIR}") ||
-      (-z "${INIT_INFRASTRUCTURE_DIR}") ]]; then
+if [[ (-z "${TENANT}") ||
+      (-z "${ACCOUNT}") ]]; then
   echo -e "\nInsufficient arguments"
   usage
 fi
 
-# Set up the context
-. ${BIN_DIR}/setContext.sh
-
 # Ensure we are in the integrator tree
-if [[ "${LOCATION}" != "integrator" ]]; then
-    echo -e "\nWe don't appear to be in the integrator tree. Are we in the right place?"
+INTEGRATOR_PROFILE=integrator.json
+if [[ ! -f "${INTEGRATOR_PROFILE}" ]]; then
+    echo -e "\nWe don't appear to be in the root of the integrator tree. Are we in the right place?"
     usage
 fi
 
 # Ensure the tenant/account already exists
-TENANT_DIR="${ROOT_DIR}/tenants/${TID}"
-ACCOUNT_DIR="${TENANT_DIR}/accounts/${TAID}"
+TENANT_DIR="$(pwd)/tenants/${TENANT}"
+TENANT_ACCOUNT_DIR="${TENANT_DIR}/accounts/${ACCOUNT}"
+if [[ ! -d "${TENANT_ACCOUNT_DIR}" ]]; then
+    echo -e "\nThe account doesn't appear to exist in the integrator tree. Nothing to do."
+    usage
+fi
+
+# Ensure the account tree exists
+ACCOUNT_DIR="$(cd ../${ACCOUNT} && pwd)"
 if [[ ! -d "${ACCOUNT_DIR}" ]]; then
-    echo -e "\nThe tenant/account doesn't appear to exist. Nothing to do."
+    echo -e "\nThe account tree doesn't appear to exist at the same level as the integrator tree. Nothing to do."
     usage
 fi
 
 # Check whether the tree is already in place
-if [[ (-e "${INIT_CONFIG_DIR}/account.json") ]]; then
+CONFIG_DIR="${ACCOUNT_DIR}/config/${ACCOUNT}"
+INFRASTRUCTURE_DIR="${ACCOUNT_DIR}/infrastructure/${ACCOUNT}"
+if [[ (-e "${CONFIG_DIR}/account.json") ]]; then
     if [[ ("${UPDATE_TREE}" != "true") ]]; then
         echo -e "\nAccount tree already exists. Maybe try using the update option?"
         usage
@@ -90,19 +88,19 @@ if [[ (-e "${INIT_CONFIG_DIR}/account.json") ]]; then
 fi
 
 # Populate the config tree
-mkdir -p ${INIT_CONFIG_DIR}
-cd ${INIT_CONFIG_DIR}
+mkdir -p ${CONFIG_DIR}
+cd ${CONFIG_DIR}
 
 # Copy across key files
 cp -p ${TENANT_DIR}/tenant.json .
-cp -p ${ACCOUNT_DIR}/account.json .
+cp -p ${TENANT_ACCOUNT_DIR}/account.json .
 
 # Extract account information
 AWS_ID=$(jq -r '.[0] * .[1] | .Account.AWSId | select(.!=null)' -s tenant.json account.json)
 AWS_REGION=$(jq -r '.[0] * .[1] | .Account.Region | select(.!=null)' -s tenant.json account.json)
 
 # Provide the docker registry endpoint by default
-APPSETTINGS_DIR=${INIT_CONFIG_DIR}/appsettings
+APPSETTINGS_DIR=${CONFIG_DIR}/appsettings
 mkdir -p ${APPSETTINGS_DIR}
 cd ${APPSETTINGS_DIR}
 
@@ -127,11 +125,11 @@ else
 fi
 
 # Populate the infrastructure tree
-mkdir -p ${INIT_INFRASTRUCTURE_DIR}
-cd ${INIT_INFRASTRUCTURE_DIR}
+mkdir -p ${INFRASTRUCTURE_DIR}
+cd ${INFRASTRUCTURE_DIR}
 
 # Generate default credentials 
-CREDENTIALS_DIR=${INIT_INFRASTRUCTURE_DIR}/credentials
+CREDENTIALS_DIR=${INFRASTRUCTURE_DIR}/credentials
 mkdir -p ${CREDENTIALS_DIR}
 cd ${CREDENTIALS_DIR}
 

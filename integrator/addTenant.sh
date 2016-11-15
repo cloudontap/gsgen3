@@ -20,77 +20,75 @@ function usage() {
     echo -e "\nDEFAULTS (creation only):\n"
     echo -e "TID=TENANT"
     echo -e "\nNOTES:\n"
-    echo -e "1. A sub-directory is created for the tenant"
-    echo -e "2. The tenant information is saved in the tenant profile"
-    echo -e "3. The integrator profile forms the basis for the tenant profile" 
-    echo -e "4. To update the details, the update option must be explicitly set"
-    echo -e "5. The domain will default on tenant creation to {TENANT}.{integrator domain}"
+    echo -e "1. The script must be run from the root of the integrator tree"
+    echo -e "2. A sub-directory is created for the tenant"
+    echo -e "3. The tenant information is saved in the tenant profile"
+    echo -e "4. The integrator profile forms the basis for the tenant profile" 
+    echo -e "5. To update the details, the update option must be explicitly set"
+    echo -e "6. The domain will default on tenant creation to {TENANT}.{integrator domain}"
     echo -e ""
     exit
 }
 
 # Parse options
 while getopts ":d:hl:n:o:r:s:t:u" opt; do
-  case $opt in
-    d)
-      DESCRIPTION=$OPTARG
-      ;;
-    h)
-      usage
-      ;;
-    l)
-      TITLE=$OPTARG
-       ;;
-    n)
-      TENANT=$OPTARG
-       ;;
-    o)
-      DOMAIN=$OPTARG
-       ;;
-    r)
-      AWS_REGION=$OPTARG
-       ;;
-    s)
-      AWS_SES_REGION=$OPTARG
-       ;;
-    t)
-      TID=$OPTARG
-      ;;
-    u)
-      UPDATE_TENANT="true"
-       ;;
-    \?)
-      echo -e "\nInvalid option: -$OPTARG" 
-      usage
-      ;;
-    :)
-      echo -e "\nOption -$OPTARG requires an argument" 
-      usage
-      ;;
-   esac
+    case $opt in
+        d)
+            DESCRIPTION=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        l)
+            TITLE=$OPTARG
+            ;;
+        n)
+            TENANT=$OPTARG
+            ;;
+        o)
+            DOMAIN=$OPTARG
+            ;;
+        r)
+            AWS_REGION=$OPTARG
+            ;;
+        s)
+            AWS_SES_REGION=$OPTARG
+            ;;
+        t)
+            TID=$OPTARG
+            ;;
+        u)
+            UPDATE_TENANT="true"
+            ;;
+        \?)
+            echo -e "\nInvalid option: -$OPTARG" 
+            usage
+            ;;
+        :)
+            echo -e "\nOption -$OPTARG requires an argument" 
+            usage
+            ;;
+    esac
 done
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TENANT}") ]]; then
-  echo -e "\nInsufficient arguments"
-  usage
+    echo -e "\nInsufficient arguments"
+    usage
 fi
 
-# Set up the context
-. ${BIN_DIR}/setContext.sh
-
 # Ensure we are in the integrator tree
-if [[ "${LOCATION}" != "integrator" ]]; then
-    echo -e "\nWe don't appear to be in the integrator tree. Are we in the right place?"
+INTEGRATOR_PROFILE=integrator.json
+if [[ ! -f "${INTEGRATOR_PROFILE}" ]]; then
+    echo -e "\nWe don't appear to be in the root of the integrator tree. Are we in the right place?"
     usage
 fi
 
 # Create the directory for the tenant
-TENANT_DIR="${ROOT_DIR}/tenants/${TENANT}"
+TENANT_DIR="$(pwd)/tenants/${TENANT}"
 mkdir -p ${TENANT_DIR}
 
 # Check whether the tenant profile is already in place
-INTEGRATOR_PROFILE=integrator.json
 TENANT_PROFILE=${TENANT_DIR}/tenant.json
 if [[ -f ${TENANT_PROFILE} ]]; then
     if [[ "${UPDATE_TENANT}" != "true" ]]; then
