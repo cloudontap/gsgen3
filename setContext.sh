@@ -137,16 +137,22 @@ fi
 BLUEPRINT_ACCOUNT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Account.Name | select(.!=null)')
 BLUEPRINT_PRODUCT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Product.Name | select(.!=null)')
 BLUEPRINT_SEGMENT=$(cat ${COMPOSITE_BLUEPRINT} | jq -r '.Segment.Name | select(.!=null)')
-if [[ (-n "${ACCOUNT}") && (-n "${BLUEPRINT_ACCOUNT}") && ("${ACCOUNT}" != "${BLUEPRINT_ACCOUNT}") ]]; then
-    echo -e "\nDirectory structure doesn't match blueprint - account name mismatch"
+if [[ (-n "${ACCOUNT}") &&
+        ("${BLUEPRINT_ACCOUNT}" != "Account") &&
+        ("${ACCOUNT}" != "${BLUEPRINT_ACCOUNT}") ]]; then
+    echo -e "\nBlueprint account of ${BLUEPRINT_ACCOUNT} doesn't match expected value of ${ACCOUNT}"
     usage
 fi
-if [[ (-n "${PRODUCT}") && (-n "${BLUEPRINT_PRODUCT}") && ("${PRODUCT}" != "${BLUEPRINT_PRODUCT}") ]]; then
-    echo -e "\nDirectory structure doesn't match blueprint - product name mismatch"
+if [[ (-n "${PRODUCT}") &&
+        ("${BLUEPRINT_PRODUCT}" != "Product") &&
+        ("${PRODUCT}" != "${BLUEPRINT_PRODUCT}") ]]; then
+    echo -e "\nBlueprint product of ${BLUEPRINT_PRODUCT} doesn't match expected value of ${PRODUCT}"
     usage
 fi
-if [[ (-n "${SEGMENT}") && (-n "${BLUEPRINT_SEGMENT}") && ("${SEGMENT}" != "${BLUEPRINT_SEGMENT}") ]]; then
-    echo -e "\nDirectory structure doesn't match blueprint - segment name mismatch"
+if [[ (-n "${SEGMENT}") &&
+        ("${BLUEPRINT_SEGMENT}" != "Segment") &&
+        ("${SEGMENT}" != "${BLUEPRINT_SEGMENT}") ]]; then
+    echo -e "\nBlueprint segment of ${BLUEPRINT_SEGMENT} doesn't match expected value of ${SEGMENT}"
     usage
 fi
 
