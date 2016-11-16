@@ -74,6 +74,7 @@
         [#assign segmentDomainQualifier = "-" + segmentName + "-" + productName]
         [#break]
 [/#switch]
+[#assign segmentDomainCertificateId = segmentDomainCertificateId?replace("-","X")]
 
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]

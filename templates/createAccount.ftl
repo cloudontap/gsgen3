@@ -44,6 +44,7 @@
         [#assign accountDomainQualifier = "-" + accountName]
         [#break]
 [/#switch]
+[#assign accountDomainCertificateId = accountDomainCertificateId?replace("-","X")]
 
 [#assign buckets = ["credentials", "code"]]
 
@@ -100,6 +101,9 @@
             },
             "domainXaccountXqualifier" : {
                 "Value" : "${accountDomainQualifier}"
+            },
+            "domainXaccountXcertificate" : {
+                "Value" : "${accountDomainCertificateId}"
             },
             [#list buckets as bucket]
                 "s3XaccountX${bucket}" : {

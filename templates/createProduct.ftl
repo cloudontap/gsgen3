@@ -47,6 +47,7 @@
         [#assign productDomainQualifier = "-" + productName]
         [#break]
 [/#switch]
+[#assign productDomainCertificateId = productDomainCertificateId?replace("-","X")]
 
 [#-- Get stack output --]
 [#function getKey key]
@@ -223,6 +224,9 @@
                 ,"domainXproductXqualifier" : {
                     "Value" : "${productDomainQualifier}"
                 }
+                "domainXproductXcertificate" : {
+                    "Value" : "${productDomainCertificateId}"
+                },
                 [#if sharedComponentsPresent]
                     [#assign sharedCount = 0]
                     [#list sharedComponents as component] 
