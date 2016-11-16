@@ -110,7 +110,6 @@ if [[ -d ${ACCOUNT_CREDENTIALS_DIR}/alm/docker ]]; then
         usage
     fi
 else
-    echo -e "\nDocker directory not found"
-    usage    
+    echo -e "\nDocker directory not found - ignoring docker credentials"
 fi
 
