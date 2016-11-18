@@ -9,11 +9,16 @@ def walk($parentKey):
             else
                 .
             end |
-                if (.Name|not) and .Id then
-                    .Name = .Id
-                else
-                    .
-                end
+            if (.Name|not) and .Id then
+                .Name = .Id
+            else
+                .
+            end |
+            if (.Id|not) and .Name then
+                .Id = .Name
+            else
+                .
+            end
   elif type == "array" then map( walk(null) )
   else
     .
