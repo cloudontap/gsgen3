@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Based on current directory location and existing environment,
+# define additional environment variables to facilitate automation
+#
+# This script is designed to be sourced into other scripts
+
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi                           
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 

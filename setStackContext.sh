@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Set up the necessary environment for Cloud Formation stack management
+#
+# This script is designed to be sourced into other scripts
+
 if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
