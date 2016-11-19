@@ -260,7 +260,7 @@ else
     echo "[]" > ${COMPOSITE_STACK_OUTPUTS}
 fi
 
-# Set AWS credentials if available (hook from Jenkins framework)
+# Set default AWS credentials if available (hook from Jenkins framework)
 CHECK_AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${ACCOUNT_TEMP_AWS_ACCESS_KEY_ID}}"
 CHECK_AWS_ACCESS_KEY_ID="${CHECK_AWS_ACCESS_KEY_ID:-${!ACCOUNT_AWS_ACCESS_KEY_ID_VAR}}"
 if [[ -n "${CHECK_AWS_ACCESS_KEY_ID}" ]]; then export AWS_ACCESS_KEY_ID="${CHECK_AWS_ACCESS_KEY_ID}"; fi
@@ -270,7 +270,6 @@ CHECK_AWS_SECRET_ACCESS_KEY="${CHECK_AWS_SECRET_ACCESS_KEY:-${!ACCOUNT_AWS_SECRE
 if [[ -n "${CHECK_AWS_SECRET_ACCESS_KEY}" ]]; then export AWS_SECRET_ACCESS_KEY="${CHECK_AWS_SECRET_ACCESS_KEY}"; fi
 
 CHECK_AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN:-${ACCOUNT_TEMP_AWS_SESSION_TOKEN}}"
-CHECK_AWS_SESSION_TOKEN="${CHECK_AWS_SESSION_TOKEN:-${!ACCOUNT_AWS_SESSION_TOKEN_VAR}}"
 if [[ -n "${CHECK_AWS_SESSION_TOKEN}" ]]; then export AWS_SESSION_TOKEN="${CHECK_AWS_SESSION_TOKEN}"; fi
 
 # Set the profile for IAM access if AWS credentials not in the environment
