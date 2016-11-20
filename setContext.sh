@@ -222,7 +222,7 @@ fi
 # Build the composite appsettings
 export COMPOSITE_APPSETTINGS="${CONFIG_DIR}/composite_appsettings.json"
 if [[ -n "${APPSETTINGS_LIST}" ]]; then
-    ${GENERATION_DIR}/manageJSON.sh -o ${COMPOSITE_APPSETTINGS} -c ${APPSETTINGS_LIST}
+    ${GENERATION_DIR}/manageJSON.sh -c -o ${COMPOSITE_APPSETTINGS} -c ${APPSETTINGS_LIST}
 else
     echo "{}" > ${COMPOSITE_APPSETTINGS}
 fi    
