@@ -57,10 +57,10 @@ AID="${TID}${AINDEX}"
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ROOT_DIR="$(../..;pwd)"
-ROOT="$(basename ${ROOT_DIR})"
+BASE_DIR="$(../..;pwd)"
+ROOT="$(basename ${BASE_DIR})"
 
-CREDS_DIR="${ROOT_DIR}/infrastructure/credentials"
+CREDS_DIR="${BASE_DIR}/infrastructure/credentials"
 PRODUCT_DIR="${CREDS_DIR}/${AID}"
 ALM_DIR="${PRODUCT_DIR}/alm"
 DOCKER_DIR="${ALM_DIR}/docker"
