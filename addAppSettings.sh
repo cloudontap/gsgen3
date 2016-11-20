@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nAdd the application settings for a segment"
@@ -45,7 +44,7 @@ while getopts ":hs:u" opt; do
 done
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Ensure we are in the segment directory
 if [[ ! ("segment" =~ "${LOCATION}") ]]; then
@@ -75,7 +74,7 @@ else
     fi
     
     # Check if a corresponding solution pattern exists
-    PATTERN_DIR="${BIN_DIR}/patterns/solutions/${SOLUTION_NAME}"
+    PATTERN_DIR="${GENERATION_PATTERNS_DIR}/solutions/${SOLUTION_NAME}"
     if [[ ! -d ${PATTERN_DIR} ]]; then
         echo -e "\nNo pattern found matching the solution name \"${SOLUTION_NAME}\". Nothing to do"
         RESULT=0

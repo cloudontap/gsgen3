@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nSynchronise the contents of the code and credentials buckets to the local values" 
@@ -49,7 +48,7 @@ while getopts ":hqxy" opt; do
 done
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 if [[ ! ("root" =~ ${LOCATION}) ]]; then
     echo -e "\nNeed to be in the root directory. Nothing to do."
@@ -78,8 +77,8 @@ if [[ "${CHECK}" == "true" ]]; then
     fi
 fi
 
-if [[ -d ${INFRASTRUCTURE_DIR}/startup ]]; then
-    cd ${INFRASTRUCTURE_DIR}/startup
+if [[ -d ${GENERATION_STARTUP_DIR} ]]; then
+    cd ${GENERATION_STARTUP_DIR}
     aws --region ${ACCOUNT_REGION} s3 sync ${DRYRUN} ${DELETE} --exclude=".git*" bootstrap/ s3://${CODE_BUCKET}/bootstrap/
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then

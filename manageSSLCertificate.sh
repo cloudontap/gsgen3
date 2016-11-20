@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nUpdate SSL certificate details in AWS" 
@@ -68,7 +67,7 @@ if [[ (-z "${CERTIFICATE_ID}") ||
 fi
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Copy files locally to keep aws call simple
 LOCAL_CERTIFICATE_PUBLIC="temp_$(basename ${CERTIFICATE_PUBLIC})"

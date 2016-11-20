@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
@@ -52,13 +51,13 @@ done
 # Perform the operation required
 case $CRYPTO_OPERATION in 
     encrypt)
-        ${BIN_DIR}/manageCrypto.sh -e
+        ${GENERATION_DIR}/manageCrypto.sh -e
         ;;
     decrypt)
-        ${BIN_DIR}/manageCrypto.sh -b -d -v
+        ${GENERATION_DIR}/manageCrypto.sh -b -d -v
         ;;
     *)
-        ${BIN_DIR}/manageCrypto.sh -n
+        ${GENERATION_DIR}/manageCrypto.sh -n
         ;;
 esac
 RESULT=$?

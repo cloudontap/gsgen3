@@ -1,7 +1,6 @@
 #!/bin/bash
                                                                                         
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && cd .. && pwd )
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 CREDENTIAL_NAME_DEFAULT="root+aws"
@@ -90,5 +89,5 @@ if [[ ! -f "${INTEGRATOR_PROFILE}" ]]; then
 fi
 
 # Manage the credentials
-${BIN_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -v
+${GENERATION_DIR}/manageCredentialCrypto.sh -f "${CRYPTO_FILE_PATH}" -v
 RESULT=$?

@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 DELAY_DEFAULT=30
 function usage() {
@@ -72,7 +71,7 @@ while getopts ":d:himr:s:t:x" opt; do
 done
 
 # Set up the context
-. ${BIN_DIR}/setStackContext.sh
+. ${GENERATION_DIR}/setStackContext.sh
 
 pushd ${CF_DIR} > /dev/null 2>&1
 

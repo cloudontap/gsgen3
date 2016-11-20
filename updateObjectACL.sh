@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 ACL_DEFAULT="private"
 PREFIX_DEFAULT="/"
@@ -67,7 +66,7 @@ if [[ "${BUCKET}"  == "" ]]; then
 fi
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Get the list of ECS clusters  
 for KEY in $(aws --region ${REGION} s3 ls s3://${BUCKET}${PREFIX} --recursive  | tr -s " " | tr -d "\r" | cut -d " " -f4); do

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 JSON_FORMAT_DEFAULT="--indent 4"
@@ -93,11 +92,11 @@ if [[ -z "${JSON_FILTER}" ]]; then
     done
 fi
 if [[ "${JSON_ADD_DEFAULTS}" == "true" ]]; then
-    jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" | jq -f ${BIN_DIR}/addDefaults.jq > ${JSON_OUTPUT}
+    jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" | jq -f ${GENERATION_DIR}/addDefaults.jq > ${JSON_OUTPUT}
 else
     jq ${JSON_FORMAT} -s "${JSON_FILTER}" "${JSON_ARRAY_SHORT[@]}" > ${JSON_OUTPUT}
 fi
 RESULT=$?
 if [[ "${RESULT}" -eq 0 ]]; then dos2unix "${JSON_OUTPUT}" 2> /dev/null; fi
-if [[ ! -n "${GSGEN_DEBUG}" ]]; then rm -f "${JSON_ARRAY_SHORT[@]}"; fi
+if [[ ! -n "${GENERATION_DEBUG}" ]]; then rm -f "${JSON_ARRAY_SHORT[@]}"; fi
 #

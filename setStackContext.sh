@@ -4,8 +4,7 @@
 #
 # This script is designed to be sourced into other scripts
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TYPE}") || \
@@ -15,7 +14,7 @@ if [[ (-z "${TYPE}") || \
 fi
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 case $TYPE in
     account|product)

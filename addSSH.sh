@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nAdd SSH certificate to product/segment"
@@ -34,7 +33,7 @@ while getopts ":hn:" opt; do
 done
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Process the relevant directory
 INFRASTRUCTURE_DIR="${ROOT_DIR}/infrastructure/${PRODUCT}"
@@ -63,8 +62,8 @@ if [[ -z "${KEYID}" ]]; then
 fi
 
 # Create an SSH certificate at the product level
-. ${BIN_DIR}/createSSHCertificate.sh ${CREDENTIALS_DIR}
+. ${GENERATION_DIR}/createSSHCertificate.sh ${CREDENTIALS_DIR}
 
 # Check that the SSH certificate has been defined in AWS
-${BIN_DIR}/manageSSHCertificate.sh -i ${SSH_ID} -p ${CREDENTIALS_DIR}/aws-ssh-crt.pem -r ${REGION}
+${GENERATION_DIR}/manageSSHCertificate.sh -i ${SSH_ID} -p ${CREDENTIALS_DIR}/aws-ssh-crt.pem -r ${REGION}
 RESULT=$?

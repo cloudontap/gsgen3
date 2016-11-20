@@ -5,20 +5,19 @@
 #
 # This script is designed to be sourced into other scripts
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi                           
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 
 # If the context has already been determined, there is nothing to do
-if [[ -n "${GSGEN_CONTEXT_DEFINED}" ]]; then return 0; fi
-export GSGEN_CONTEXT_DEFINED="true"
-GSGEN_CONTEXT_DEFINED_LOCAL="true"
+if [[ -n "${GENERATION_CONTEXT_DEFINED}" ]]; then return 0; fi
+export GENERATION_CONTEXT_DEFINED="true"
+GENERATION_CONTEXT_DEFINED_LOCAL="true"
 
 export CURRENT_DIR="$(pwd)"
 
 # Generate the list of files constituting the blueprint
 pushd ${CURRENT_DIR} >/dev/null
 BLUEPRINT_LIST=
-CONTAINERS_LIST=("${BIN_DIR}/templates/containers/switch_start.ftl")
+CONTAINERS_LIST=("${GENERATION_DIR}/templates/containers/switch_start.ftl")
 
 if [[ (-f "segment.json") || (-f "container.json") ]]; then
     # segment directory
@@ -119,7 +118,7 @@ fi
 # Build the composite solution ( aka blueprint)
 export COMPOSITE_BLUEPRINT="${CONFIG_DIR}/composite_blueprint.json"
 if [[ -n "${BLUEPRINT_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -d -o ${COMPOSITE_BLUEPRINT} "${BIN_DIR}/data/masterData.json" ${BLUEPRINT_LIST}
+    ${GENERATION_DIR}/manageJSON.sh -d -o ${COMPOSITE_BLUEPRINT} "${GENERATION_DIR}/data/masterData.json" ${BLUEPRINT_LIST}
 else
     echo "{}" > ${COMPOSITE_BLUEPRINT}
 fi
@@ -163,10 +162,10 @@ fi
 
 # Build the composite containers list
 export COMPOSITE_CONTAINERS="${CONFIG_DIR}/composite_containers.json"
-for CONTAINER in $(find ${BIN_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
+for CONTAINER in $(find ${GENERATION_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
     CONTAINERS_LIST+=("${CONTAINER}")
 done
-CONTAINERS_LIST+=("${BIN_DIR}/templates/containers/switch_end.ftl")
+CONTAINERS_LIST+=("${GENERATION_DIR}/templates/containers/switch_end.ftl")
 cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
 
 # Product specific context if the product is known
@@ -223,7 +222,7 @@ fi
 # Build the composite appsettings
 export COMPOSITE_APPSETTINGS="${CONFIG_DIR}/composite_appsettings.json"
 if [[ -n "${APPSETTINGS_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_APPSETTINGS} -c ${APPSETTINGS_LIST}
+    ${GENERATION_DIR}/manageJSON.sh -o ${COMPOSITE_APPSETTINGS} -c ${APPSETTINGS_LIST}
 else
     echo "{}" > ${COMPOSITE_APPSETTINGS}
 fi    
@@ -236,7 +235,7 @@ fi
 # Build the composite credentials
 export COMPOSITE_CREDENTIALS="${INFRASTRUCTURE_DIR}/composite_credentials.json"
 if [[ -n "${CREDENTIALS_LIST}" ]]; then
-    ${BIN_DIR}/manageJSON.sh -o ${COMPOSITE_CREDENTIALS} ${CREDENTIALS_LIST}
+    ${GENERATION_DIR}/manageJSON.sh -o ${COMPOSITE_CREDENTIALS} ${CREDENTIALS_LIST}
 else
     echo "{}" > ${COMPOSITE_CREDENTIALS}
 fi    
@@ -255,7 +254,7 @@ fi
 
 export COMPOSITE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/composite_stack_outputs.json"
 if [[ "${#STACK_LIST[@]}" -gt 0 ]]; then
-    ${BIN_DIR}/manageJSON.sh -f "[.[].Stacks[].Outputs[]]" -o ${COMPOSITE_STACK_OUTPUTS} "${STACK_LIST[@]}"
+    ${GENERATION_DIR}/manageJSON.sh -f "[.[].Stacks[].Outputs[]]" -o ${COMPOSITE_STACK_OUTPUTS} "${STACK_LIST[@]}"
 else
     echo "[]" > ${COMPOSITE_STACK_OUTPUTS}
 fi

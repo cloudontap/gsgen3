@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 BASE64_REGEX="^[A-Za-z0-9+/=\n]\+$"
@@ -105,7 +104,7 @@ for ATTRIBUTE in ID SECRET EMAIL; do
     VAR_PATH="PATH_${ATTRIBUTE}"
     VAR_ENCRYPT="ENCRYPT_${ATTRIBUTE}"
     if [[ -n "${!VAR_NAME}" ]]; then
-        ${BIN_DIR}/manageCrypto.sh ${!VAR_ENCRYPT} -t "${!VAR_NAME}" -p "${!VAR_PATH}" -u -q
+        ${GENERATION_DIR}/manageCrypto.sh ${!VAR_ENCRYPT} -t "${!VAR_NAME}" -p "${!VAR_PATH}" -u -q
         RESULT=$?
         if [[ "${RESULT}" -ne 0 ]]; then
             echo -e "\nFailed to update credential ${ATTRIBUTE}"
@@ -119,12 +118,12 @@ echo -e "\n${PATH_BASE}"
 for ATTRIBUTE in ID SECRET EMAIL; do
     VAR_PATH="PATH_${ATTRIBUTE}"
     VAR_ATTRIBUTE="ATTRIBUTE_${ATTRIBUTE}"
-    RAW_VALUE=$(${BIN_DIR}/manageCrypto.sh -n -p "${!VAR_PATH}")
+    RAW_VALUE=$(${GENERATION_DIR}/manageCrypto.sh -n -p "${!VAR_PATH}")
     RESULT=$?
     if [[ "${RESULT}" -eq 0 ]]; then
         ENCRYPTED=$(echo "${RAW_VALUE}" | grep -q "${BASE64_REGEX}")
         if [[ ($? -eq 0) && (-n "${CRYPTO_VISIBLE}" ) ]]; then
-            VALUE=$(${BIN_DIR}/manageCrypto.sh -d -b -v -p "${!VAR_PATH}" 2> /dev/null)
+            VALUE=$(${GENERATION_DIR}/manageCrypto.sh -d -b -v -p "${!VAR_PATH}" 2> /dev/null)
             RESULT=$?
             if [[ "${RESULT}" -eq 0 ]]; then
                 echo -e "${!VAR_ATTRIBUTE}=${VALUE}"

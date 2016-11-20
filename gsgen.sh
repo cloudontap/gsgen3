@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap 'exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
@@ -75,6 +74,6 @@ if [[ "${#RAW_VARIABLES[@]}" -gt 0 ]]; then
   RAW_VARIABLES=("-r" "${RAW_VARIABLES[@]}")
 fi
 
-java -jar "${BIN_DIR}/gsgen-1.2.jar" -i $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT "${VARIABLES[@]}" "${RAW_VARIABLES[@]}"
+java -jar "${GENERATION_DIR}/gsgen-1.2.jar" -i $TEMPLATE -d $TEMPLATEDIR -o $OUTPUT "${VARIABLES[@]}" "${RAW_VARIABLES[@]}"
 RESULT=$?
 

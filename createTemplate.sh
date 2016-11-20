@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 REQUEST_DEFAULT="unassigned"
 function usage() {
@@ -95,7 +94,7 @@ if [[ (-z "${CONFIGURATION_REFERENCE}") &&
 fi
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Ensure we are in the right place
 case $TYPE in
@@ -114,7 +113,7 @@ case $TYPE in
 esac
 
 # Set up the type specific template information
-TEMPLATE_DIR="${BIN_DIR}/templates"
+TEMPLATE_DIR="${GENERATION_DIR}/templates"
 TEMPLATE="create${TYPE^}.ftl"
 
 # Determine the template name
@@ -212,7 +211,7 @@ ARGS+=("-v" "appsettings=${COMPOSITE_APPSETTINGS}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
 ARGS+=("-v" "request=${REQUEST}")
 
-${BIN_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
+${GENERATION_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
 RESULT=$?
 if [[ "${RESULT}" -eq 0 ]]; then
     # Tidy up the result

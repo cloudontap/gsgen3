@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ -n "${GSGEN_DEBUG}" ]]; then set ${GSGEN_DEBUG}; fi
-BIN_DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
-trap '. ${BIN_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
+if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
+trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
 function usage() {
     echo -e "\nAdd a solution pattern to a product"
@@ -48,14 +47,14 @@ if [[ (-z "${SOLUTION_NAME}") ]]; then
 fi
 
 # Ensure solution exists
-PATTERN_DIR="${BIN_DIR}/patterns/solutions/${SOLUTION_NAME}"
+PATTERN_DIR="${GENERATION_PATTERNS_DIR}/solutions/${SOLUTION_NAME}"
 if [[ ! -d "${PATTERN_DIR}" ]]; then
     echo -e "\nSolution pattern is not known"
     usage
 fi
 
 # Set up the context
-. ${BIN_DIR}/setContext.sh
+. ${GENERATION_DIR}/setContext.sh
 
 # Ensure we are in the product or segment directory
 if [[ ("product" =~ "${LOCATION}") ]]; then
