@@ -179,17 +179,18 @@ if [[ -n "${PRODUCT}" ]]; then
     
     # slice level appsettings
     if [[ (-n "${SLICE}") ]]; then
-    
+        
+        EFFECTIVE_SLICE="$SLICE"   
         if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref" ]]; then
-            SLICE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
+            EFFECTIVE_SLICE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
         fi
         
-        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/appsettings.json" ]]; then
-            APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/appsettings.json ${APPSETTINGS_LIST}"
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json" ]]; then
+            APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json ${APPSETTINGS_LIST}"
         fi
 
-        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/build.ref" ]]; then
-            export BUILD_REFERENCE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/build.ref")
+        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref" ]]; then
+            export BUILD_REFERENCE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref")
         fi
     fi
     
