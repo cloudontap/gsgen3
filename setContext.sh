@@ -61,7 +61,7 @@ if [[ -f "account.json" ]]; then
     # An account directory may also have no product information e.g.
     # in the case of production environments in dedicated accounts.
     export LOCATION="${LOCATION:-account}"
-    export BASE_DIR="$(cd ../..;pwd)"
+    export GENERATION_BASE_DIR="$(cd ../..;pwd)"
 fi
 
 if [[ -f "product.json" ]]; then
@@ -75,32 +75,32 @@ if [[ -f "product.json" ]]; then
     export PRODUCT="$(basename $(pwd))"
 
     BLUEPRINT_LIST="${PRODUCT_DIR}/product.json ${BLUEPRINT_LIST}"
-    export BASE_DIR="$(cd ../..;pwd)"
+    export GENERATION_BASE_DIR="$(cd ../..;pwd)"
 fi
 
 if [[ -f "integrator.json" ]]; then
     export LOCATION="${LOCATION:-integrator}"
-    export BASE_DIR="$(pwd)"
+    export GENERATION_BASE_DIR="$(pwd)"
     export IID="$(basename $(pwd))"
 fi
 
 if [[ (-d config) && (-d infrastructure) ]]; then
     export LOCATION="${LOCATION:-root}"
-    export BASE_DIR="$(pwd)"
+    export GENERATION_BASE_DIR="$(pwd)"
 fi
 
-if [[ -z "${BASE_DIR}" ]]; then
+if [[ -z "${GENERATION_BASE_DIR}" ]]; then
     echo -e "\nCan't locate the root of the directory tree. Are we in the right place?"
     usage
 fi
 
 # root directory
-cd "${BASE_DIR}"
+cd "${GENERATION_BASE_DIR}"
 export ACCOUNT="$(basename $(pwd))"
 popd >/dev/null
 
-export CONFIG_DIR="${BASE_DIR}/config"
-export INFRASTRUCTURE_DIR="${BASE_DIR}/infrastructure"
+export CONFIG_DIR="${GENERATION_BASE_DIR}/config"
+export INFRASTRUCTURE_DIR="${GENERATION_BASE_DIR}/infrastructure"
 export TENANT_DIR="${CONFIG_DIR}/${ACCOUNT}"
 export ACCOUNT_DIR="${CONFIG_DIR}/${ACCOUNT}"
 export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${ACCOUNT}/credentials"

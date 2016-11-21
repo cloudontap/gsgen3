@@ -36,7 +36,7 @@ done
 . ${GENERATION_DIR}/setContext.sh
 
 # Process the relevant directory
-INFRASTRUCTURE_DIR="${BASE_DIR}/infrastructure/${PRODUCT}"
+INFRASTRUCTURE_DIR="${GENERATION_BASE_DIR}/infrastructure/${PRODUCT}"
 CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/credentials"
 if [[ "product" =~ ${LOCATION} ]]; then
     SSH_ID="${PRODUCT}"

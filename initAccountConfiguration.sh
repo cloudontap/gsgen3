@@ -113,10 +113,10 @@ AID="${TID}${OAINDEX}"
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-BASE_DIR="$(../..;pwd)"
-ROOT="$(basename ${BASE_DIR})"
+GENERATION_BASE_DIR="$(../..;pwd)"
+ROOT="$(basename ${GENERATION_BASE_DIR})"
 
-SOLUTIONS_DIR="${BASE_DIR}/config/solutions"
+SOLUTIONS_DIR="${GENERATION_BASE_DIR}/config/solutions"
 PRODUCT_DIR="${SOLUTIONS_DIR}/${AID}"
 ALM_DIR="${PRODUCT_DIR}/alm"
 
