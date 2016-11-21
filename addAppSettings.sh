@@ -93,5 +93,8 @@ fi
 mkdir -p ${SEGMENT_APPSETTINGS_DIR}
 cp -rp ${COPY_DIR}/* ${SEGMENT_APPSETTINGS_DIR}
 
+# Remove any build references that may have been copied from another segment
+find ${SEGMENT_APPSETTINGS_DIR} -name "build.ref" -delete
+
 # All good
 RESULT=0
