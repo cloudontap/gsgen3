@@ -181,6 +181,11 @@ case $TYPE in
     application)
         CF_DIR="${INFRASTRUCTURE_DIR}/${PRODUCT}/aws/${SEGMENT}/cf"
         TYPE_PREFIX="app-"
+        
+        if [[ "${IS_APPLICATION_SLICE}" != "true" ]]; then
+            echo -e "\n\"$SLICE\" is not defined as an application slice in the blueprint"
+            usage
+        fi
         ;;
 
     *)

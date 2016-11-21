@@ -79,10 +79,10 @@ if [[ "${LOCATION}" != "root" ]]; then
 fi
 
 # Create the directories for the product
-PRODUCT_DIR="${GENERATION_BASE_DIR}/config/${PRODUCT}"
+PRODUCT_DIR="${GENERATION_DATA_DIR}/config/${PRODUCT}"
 SOLUTIONS_DIR="${PRODUCT_DIR}/solutions"
 APPSETTINGS_DIR="${PRODUCT_DIR}/appsettings"
-INFRASTRUCTURE_DIR="${GENERATION_BASE_DIR}/infrastructure/${PRODUCT}"
+INFRASTRUCTURE_DIR="${GENERATION_DATA_DIR}/infrastructure/${PRODUCT}"
 CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/credentials"
 
 if [[ ! -d ${APPSETTINGS_DIR} ]]; then

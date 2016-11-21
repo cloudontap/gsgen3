@@ -109,7 +109,7 @@ if [[ ! -d "${ACCOUNT_DIR}" ]]; then
     if [[ "${USE_SHELF_ACCOUNT}" == "true" ]]; then
         # Find the highest numbered shelf account available
         for I in $(seq 1 9); do
-            SHELF_ACCOUNT="${GENERATION_BASE_DIR}/tenants/shelf/accounts/shelf0${I}"
+            SHELF_ACCOUNT="${GENERATION_DATA_DIR}/tenants/shelf/accounts/shelf0${I}"
             if [[ -d "${SHELF_ACCOUNT}" ]]; then
                 LAST_SHELF_ACCOUNT="${SHELF_ACCOUNT}"
             fi

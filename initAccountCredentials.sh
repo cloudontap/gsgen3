@@ -57,10 +57,10 @@ AID="${TID}${AINDEX}"
 
 BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-GENERATION_BASE_DIR="$(../..;pwd)"
-ROOT="$(basename ${GENERATION_BASE_DIR})"
+GENERATION_DATA_DIR="$(../..;pwd)"
+ROOT="$(basename ${GENERATION_DATA_DIR})"
 
-CREDS_DIR="${GENERATION_BASE_DIR}/infrastructure/credentials"
+CREDS_DIR="${GENERATION_DATA_DIR}/infrastructure/credentials"
 PRODUCT_DIR="${CREDS_DIR}/${AID}"
 ALM_DIR="${PRODUCT_DIR}/alm"
 DOCKER_DIR="${ALM_DIR}/docker"

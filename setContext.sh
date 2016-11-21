@@ -61,7 +61,7 @@ if [[ -f "account.json" ]]; then
     # An account directory may also have no product information e.g.
     # in the case of production environments in dedicated accounts.
     export LOCATION="${LOCATION:-account}"
-    export GENERATION_BASE_DIR="$(cd ../..;pwd)"
+    export GENERATION_DATA_DIR="$(cd ../..;pwd)"
 fi
 
 if [[ -f "product.json" ]]; then
@@ -75,32 +75,32 @@ if [[ -f "product.json" ]]; then
     export PRODUCT="$(basename $(pwd))"
 
     BLUEPRINT_LIST="${PRODUCT_DIR}/product.json ${BLUEPRINT_LIST}"
-    export GENERATION_BASE_DIR="$(cd ../..;pwd)"
+    export GENERATION_DATA_DIR="$(cd ../..;pwd)"
 fi
 
 if [[ -f "integrator.json" ]]; then
     export LOCATION="${LOCATION:-integrator}"
-    export GENERATION_BASE_DIR="$(pwd)"
+    export GENERATION_DATA_DIR="$(pwd)"
     export IID="$(basename $(pwd))"
 fi
 
 if [[ (-d config) && (-d infrastructure) ]]; then
     export LOCATION="${LOCATION:-root}"
-    export GENERATION_BASE_DIR="$(pwd)"
+    export GENERATION_DATA_DIR="$(pwd)"
 fi
 
-if [[ -z "${GENERATION_BASE_DIR}" ]]; then
+if [[ -z "${GENERATION_DATA_DIR}" ]]; then
     echo -e "\nCan't locate the root of the directory tree. Are we in the right place?"
     usage
 fi
 
 # root directory
-cd "${GENERATION_BASE_DIR}"
+cd "${GENERATION_DATA_DIR}"
 export ACCOUNT="$(basename $(pwd))"
 popd >/dev/null
 
-export CONFIG_DIR="${GENERATION_BASE_DIR}/config"
-export INFRASTRUCTURE_DIR="${GENERATION_BASE_DIR}/infrastructure"
+export CONFIG_DIR="${GENERATION_DATA_DIR}/config"
+export INFRASTRUCTURE_DIR="${GENERATION_DATA_DIR}/infrastructure"
 export TENANT_DIR="${CONFIG_DIR}/${ACCOUNT}"
 export ACCOUNT_DIR="${CONFIG_DIR}/${ACCOUNT}"
 export ACCOUNT_CREDENTIALS_DIR="${INFRASTRUCTURE_DIR}/${ACCOUNT}/credentials"
@@ -180,17 +180,25 @@ if [[ -n "${PRODUCT}" ]]; then
     # slice level appsettings
     if [[ (-n "${SLICE}") ]]; then
         
-        EFFECTIVE_SLICE="$SLICE"   
-        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref" ]]; then
-            EFFECTIVE_SLICE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
-        fi
+        # Confirm it is an application slice"
+        APPLICATION_SLICE_LIST=$(echo $(cat ${COMPOSITE_BLUEPRINT} | jq -r -f ${GENERATION_DIR}/listApplicationSlices.jq | dos2unix))
+        if [[ -n "$(echo ${APPLICATION_SLICE_LIST} | grep -i ${SLICE})" ]]; then
+            IS_APPLICATION_SLICE="true"
         
-        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json" ]]; then
-            APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json ${APPSETTINGS_LIST}"
-        fi
-
-        if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref" ]]; then
-            export BUILD_REFERENCE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref")
+            EFFECTIVE_SLICE="$SLICE"   
+            if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref" ]]; then
+                EFFECTIVE_SLICE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${SLICE}/slice.ref")
+            fi
+            
+            if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json" ]]; then
+                APPSETTINGS_LIST="${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/appsettings.json ${APPSETTINGS_LIST}"
+            fi
+    
+            if [[ -f "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref" ]]; then
+                export BUILD_REFERENCE=$(cat "${APPSETTINGS_DIR}/${SEGMENT}/${EFFECTIVE_SLICE}/build.ref")
+            fi
+        else
+            IS_APPLICATION_SLICE="false"
         fi
     fi
     
