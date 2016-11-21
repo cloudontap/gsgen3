@@ -40,8 +40,8 @@
 [#assign accountId = accountObject.Id]
 [#assign productId = productObject.Id]
 [#assign productName = productObject.Name]
-[#assign segmentId = segmentObject.Id!environmentObjectId]
-[#assign segmentName = segmentObject.Name!environmentObject.Name]
+[#assign segmentId = segmentObject.Id]
+[#assign segmentName = segmentObject.Name]
 [#assign environmentName = environmentObject.Name]
 
 [#-- Domains --]
