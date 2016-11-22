@@ -12,12 +12,10 @@ if [[ -n "${GENERATION_CONTEXT_DEFINED}" ]]; then return 0; fi
 export GENERATION_CONTEXT_DEFINED="true"
 GENERATION_CONTEXT_DEFINED_LOCAL="true"
 
-export CURRENT_DIR="$(pwd)"
-
 # Generate the list of files constituting the blueprint
-pushd ${CURRENT_DIR} >/dev/null
+pushd "$(pwd)" >/dev/null
 BLUEPRINT_LIST=
-CONTAINERS_LIST=("${GENERATION_DIR}/templates/containers/switch_start.ftl")
+CONTAINERS_ARRAY=("${GENERATION_DIR}/templates/containers/switch_start.ftl")
 
 if [[ (-f "segment.json") || (-f "container.json") ]]; then
     # segment directory
@@ -36,19 +34,21 @@ if [[ (-f "segment.json") || (-f "container.json") ]]; then
     fi
     
     for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
-        CONTAINERS_LIST+=("${SEGMENT_DIR}/${CONTAINER}")
+        CONTAINERS_ARRAY+=("${SEGMENT_DIR}/${CONTAINER}")
     done
     
     cd ..    
 
-    # solutions directory
+    # solutions directory - only add files if present in segment directory
     export SOLUTIONS_DIR="$(pwd)"
-    if [[ -f "solution.json" ]]; then
+    if [[ (-f "solution.json") && (!("${BLUEPRINT_LIST}" =~ solution.json)) ]]; then
         BLUEPRINT_LIST="${SOLUTIONS_DIR}/solution.json ${BLUEPRINT_LIST}"
     fi
     
     for CONTAINER in $(ls container_*.ftl 2> /dev/null); do
-        CONTAINERS_LIST+=("${SOLUTIONS_DIR}/${CONTAINER}")
+        if [[ !("${CONTAINERS_ARRAY[*]}" =~ $(basename ${CONTAINER})) ]]; then 
+            CONTAINERS_ARRAY+=("${SOLUTIONS_DIR}/${CONTAINER}")
+        fi
     done
 
     cd ..
@@ -81,7 +81,7 @@ fi
 if [[ -f "integrator.json" ]]; then
     export LOCATION="${LOCATION:-integrator}"
     export GENERATION_DATA_DIR="$(pwd)"
-    export IID="$(basename $(pwd))"
+    export INTEGRATOR="$(basename $(pwd))"
 fi
 
 if [[ (-d config) && (-d infrastructure) ]]; then
@@ -164,10 +164,12 @@ fi
 # Build the composite containers list
 export COMPOSITE_CONTAINERS="${CONFIG_DIR}/composite_containers.json"
 for CONTAINER in $(find ${GENERATION_DIR}/templates/containers/container_*.ftl -maxdepth 1 2> /dev/null); do
-    CONTAINERS_LIST+=("${CONTAINER}")
+    if [[ !("${CONTAINERS_ARRAY[*]}" =~ $(basename ${CONTAINER})) ]]; then 
+        CONTAINERS_ARRAY+=("${CONTAINER}")
+    fi
 done
-CONTAINERS_LIST+=("${GENERATION_DIR}/templates/containers/switch_end.ftl")
-cat "${CONTAINERS_LIST[@]}" > ${COMPOSITE_CONTAINERS}
+CONTAINERS_ARRAY+=("${GENERATION_DIR}/templates/containers/switch_end.ftl")
+cat "${CONTAINERS_ARRAY[@]}" > ${COMPOSITE_CONTAINERS}
 
 # Product specific context if the product is known
 APPSETTINGS_LIST=
