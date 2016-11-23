@@ -97,7 +97,7 @@ if [[ "${STACK_INITIATE}" = "true" ]]; then
 fi
 
 RESULT=1
-if [[ "${WAIT}" = "true" ]]; then
+if [[ "${STACK_MONITOR}" = "true" ]]; then
     while true; do
         aws --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK
         grep "StackStatus" $STACK > STATUS.txt
