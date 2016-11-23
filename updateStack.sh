@@ -81,12 +81,12 @@ if [[ "${STACK_INITIATE}" = "true" ]]; then
     cat $TEMPLATE | jq -c '.' > stripped_${TEMPLATE}
 
     # Determine required operation
-    STACK_OPERATION="UPDATE"
+    STACK_OPERATION="CREATE"
     STACK_CLI_COMMAND="create-stack"
     aws --region ${REGION} cloudformation describe-stacks --stack-name $STACKNAME > $STACK 2>/dev/null
     RESULT=$?
     if [[ "$RESULT" -eq 0 ]]; then
-        STACK_OPERATION="CREATE"
+        STACK_OPERATION="UPDATE"
         STACK_CLI_COMMAND="update-stack"
     fi
     
