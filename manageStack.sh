@@ -7,7 +7,7 @@ STACK_OPERATION_DEFAULT="update"
 STACK_WAIT_DEFAULT=30
 function usage() {
     echo -e "\nManage a CloudFormation stack"
-    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -i -m -w STACK_DELAY -r REGION -d\n"
+    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -i -m -w STACK_WAIT -r REGION -d\n"
     echo -e "\nwhere\n"
     echo -e "(o) -d to delete the stack"
     echo -e "    -h shows this text"
@@ -67,7 +67,7 @@ done
 
 # Apply defaults
 STACK_OPERATION=${STACK_OPERATION:-${STACK_OPERATION_DEFAULT}}
-STACK_DELAY=${STACK_DELAY:-${STACK_DELAY_DEFAULT}}
+STACK_WAIT=${STACK_WAIT:-${STACK_WAIT_DEFAULT}}
 STACK_INITIATE=${STACK_INITIATE:-true}
 STACK_MONITOR=${STACK_MONITOR:-true}
 
@@ -135,7 +135,7 @@ if [[ "${STACK_MONITOR}" = "true" ]]; then
         grep "${STACK_OPERATION^^}_IN_PROGRESS" STATUS.txt  >/dev/null 2>&1
         RESULT=$?
         if [[ "$RESULT" -ne 0 ]]; then break;fi
-        sleep $STACK_DELAY
+        sleep ${STACK_WAIT}
     done
 fi
 
