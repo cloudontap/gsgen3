@@ -7,7 +7,7 @@ STACK_OPERATION_DEFAULT="update"
 STACK_WAIT_DEFAULT=30
 function usage() {
     echo -e "\nManage a CloudFormation stack"
-    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -u -m -d DELAY -r REGION\n"
+    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -i -m -w STACK_DELAY -r REGION -d\n"
     echo -e "\nwhere\n"
     echo -e "(o) -d to delete the stack"
     echo -e "    -h shows this text"
@@ -25,7 +25,7 @@ function usage() {
     echo -e "2. REGION is only relevant for the \"product\" type, where multiple product stacks are necessary"
     echo -e "   if the product uses resources in multiple regions"  
     echo -e "3. \"segment\" is now used in preference to \"container\" to avoid confusion with docker"
-    echo -e "4. If stack doesn't exist in AWS, create it otherwise update it"
+    echo -e "4. If stack doesn't exist in AWS, the update operation will create the stack"
     echo -e ""
     exit
 }
