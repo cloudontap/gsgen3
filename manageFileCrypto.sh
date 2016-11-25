@@ -38,11 +38,11 @@ while getopts ":def:hu" opt; do
             export CRYPTO_UPDATE="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

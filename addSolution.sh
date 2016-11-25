@@ -24,17 +24,17 @@ while getopts "hs:u" opt; do
             usage
             ;;
         s)
-            SOLUTION_NAME=$OPTARG
+            SOLUTION_NAME="${OPTARG}"
             ;;
         u)
             UPDATE_SOLUTION="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

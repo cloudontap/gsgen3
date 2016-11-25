@@ -35,20 +35,20 @@ while getopts ":cdf:ho:" opt; do
       JSON_ADD_DEFAULTS="true"
       ;;
     f)
-      JSON_FILTER=$OPTARG
+      JSON_FILTER="${OPTARG}"
       ;;
     h)
       usage
       ;;
     o)
-      JSON_OUTPUT=$OPTARG
+      JSON_OUTPUT="${OPTARG}"
       ;;
     \?)
-      echo -e "\nInvalid option: -$OPTARG" 
+      echo -e "\nInvalid option: - ${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption -$OPTARG requires an argument" 
+      echo -e "\nOption - ${OPTARG} requires an argument"
       usage
       ;;
    esac

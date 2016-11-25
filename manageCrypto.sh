@@ -60,7 +60,7 @@ function usage() {
 while getopts ":a:bdef:hk:np:qt:uv" opt; do
     case $opt in
         a)
-            ALIAS=$OPTARG
+            ALIAS="${OPTARG}"
             ;;
         b)
             CRYPTO_DECODE="true"
@@ -72,25 +72,25 @@ while getopts ":a:bdef:hk:np:qt:uv" opt; do
             CRYPTO_OPERATION="encrypt"
             ;;
         f)
-            CRYPTO_FILE=$OPTARG
+            CRYPTO_FILE="${OPTARG}"
             ;;
         h)
             usage
             ;;
         k)
-            KEYID=$OPTARG
+            KEYID="${OPTARG}"
             ;;
         n)
             CRYPTO_OPERATION="noop"
             ;;
         p)
-            JSON_PATH=$OPTARG
+            JSON_PATH="${OPTARG}"
             ;;
         q)
             CRYPTO_QUIET="true"
             ;;
         t)
-            CRYPTO_TEXT=$OPTARG
+            CRYPTO_TEXT="${OPTARG}"
             ;;
         u)
             CRYPTO_UPDATE="true"
@@ -99,11 +99,11 @@ while getopts ":a:bdef:hk:np:qt:uv" opt; do
             CRYPTO_VISIBLE="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

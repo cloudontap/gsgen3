@@ -27,17 +27,17 @@ while getopts ":hs:u" opt; do
             usage
             ;;
         s)
-            COPY_SEGMENT="$OPTARG"
+            COPY_SEGMENT="${OPTARG}"
             ;;
         u)
             UPDATE_APPSETTINGS="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

@@ -36,29 +36,29 @@ function usage() {
 while getopts ":c:hq:r:s:t:" opt; do
     case $opt in
         c)
-            CONFIGURATION_REFERENCE=$OPTARG
+            CONFIGURATION_REFERENCE="${OPTARG}"
             ;;
         h)
             usage
             ;;
         q)
-            REQUEST=$OPTARG
+            REQUEST="${OPTARG}"
             ;;
         r)
-            REGION=$OPTARG
+            REGION="${OPTARG}"
             ;;
         s)
-            SLICE=$OPTARG
+            SLICE="${OPTARG}"
             ;;
         t)
-            TYPE=$OPTARG
+            TYPE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

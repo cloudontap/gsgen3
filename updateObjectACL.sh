@@ -29,10 +29,10 @@ function usage() {
 while getopts ":a:b:dhp:" opt; do
     case $opt in
         a)
-            ACL=$OPTARG
+            ACL="${OPTARG}"
             ;;
         b)
-            BUCKET=$OPTARG
+            BUCKET="${OPTARG}"
             ;;
         d)
             DISPLAY_ACLS="true"
@@ -41,14 +41,14 @@ while getopts ":a:b:dhp:" opt; do
             usage
             ;;
         p)
-            PREFIX=$OPTARG
+            PREFIX="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

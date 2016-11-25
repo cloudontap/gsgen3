@@ -46,20 +46,20 @@ while getopts ":dhimr:s:t:w:" opt; do
             STACK_INITIATE=false
             ;;
         r)
-            REGION=$OPTARG
+            REGION="${OPTARG}"
             ;;
         s)
-            SLICE=$OPTARG
+            SLICE="${OPTARG}"
             ;;
         t)
-            TYPE=$OPTARG
+            TYPE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

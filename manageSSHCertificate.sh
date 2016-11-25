@@ -25,23 +25,23 @@ while getopts ":hi:p:qr:" opt; do
             usage
             ;;
         i)
-            CERTIFICATE_ID=$OPTARG
+            CERTIFICATE_ID="${OPTARG}"
             ;;
         p)
-            CERTIFICATE_PUBLIC=$OPTARG
+            CERTIFICATE_PUBLIC="${OPTARG}"
             ;;
         q)
             QUIET="true"
             ;;
         r)
-            REGION=$OPTARG
+            REGION="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

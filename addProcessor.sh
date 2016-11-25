@@ -30,20 +30,20 @@ while getopts ":hi:p:t:" opt; do
             usage
             ;;
         i)
-            PROCESSOR_INSTANCE=$OPTARG
+            PROCESSOR_INSTANCE="${OPTARG}"
             ;;
         p)
-            PROCESSOR_PROFILE=$OPTARG
+            PROCESSOR_PROFILE="${OPTARG}"
             ;;
         t)
-            COMPONENT_TYPE=$OPTARG
+            COMPONENT_TYPE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

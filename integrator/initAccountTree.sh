@@ -25,23 +25,23 @@ function usage() {
 while getopts ":a:ht:u" opt; do
   case $opt in
     a)
-      ACCOUNT=$OPTARG
+      ACCOUNT="${OPTARG}"
       ;;
     h)
       usage
       ;;
     t)
-      TENANT=$OPTARG
+      TENANT="${OPTARG}"
       ;;
     u)
       UPDATE_TREE="true"
        ;;
     \?)
-      echo -e "\nInvalid option: -$OPTARG" 
+      echo -e "\nInvalid option: - ${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption -$OPTARG requires an argument" 
+      echo -e "\nOption - ${OPTARG} requires an argument"
       usage
       ;;
    esac

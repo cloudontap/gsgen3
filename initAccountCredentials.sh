@@ -30,17 +30,17 @@ while getopts ":hi:o:" opt; do
       usage
       ;;
     i)
-      AINDEX=$OPTARG
+      AINDEX="${OPTARG}"
       ;;
     o)
-      TID=$OPTARG
+      TID="${OPTARG}"
       ;;
     \?)
-      echo -e "\nInvalid option: -$OPTARG" 
+      echo -e "\nInvalid option: - ${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption -$OPTARG requires an argument" 
+      echo -e "\nOption - ${OPTARG} requires an argument"
       usage
       ;;
    esac

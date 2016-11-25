@@ -36,38 +36,38 @@ WAIT=true
 while getopts ":a:cd:hi:mr:s:t:" opt; do
     case $opt in
         a)
-            AGE=$OPTARG
+            AGE="${OPTARG}"
             ;;
         c)
             WAIT=false
             ;;
         d)
-            DELAY=$OPTARG
+            DELAY="${OPTARG}"
             ;;
         h)
             usage
             ;;
         i)
-            COMPONENT=$OPTARG
+            COMPONENT="${OPTARG}"
             ;;
         m)
             CREATE=false
             ;;
         r)
-            RETAIN=$OPTARG
+            RETAIN="${OPTARG}"
             ;;
         s)
-            SUFFIX=$OPTARG
+            SUFFIX="${OPTARG}"
             ;;
         t)
-            TIER=$OPTARG
+            TIER="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

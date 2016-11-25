@@ -32,26 +32,26 @@ function usage() {
 while getopts ":d:hp:s:t:" opt; do
     case $opt in
         d)
-            STORAGE_DEVICE=$OPTARG
+            STORAGE_DEVICE="${OPTARG}"
             ;;
         h)
             usage
             ;;
         p)
-            STORAGE_PROFILE=$OPTARG
+            STORAGE_PROFILE="${OPTARG}"
             ;;
         s)
-            STORAGE_SIZE=$OPTARG
+            STORAGE_SIZE="${OPTARG}"
             ;;
         t)
-            COMPONENT_TYPE=$OPTARG
+            COMPONENT_TYPE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

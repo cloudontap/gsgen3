@@ -57,44 +57,44 @@ SESREGION="${SESREGION_DEFAULT}"
 while getopts ":d:e:hi:m:n:o:r:s:t:y:" opt; do
   case $opt in
     d)
-      DESCRIPTION=$OPTARG
+      DESCRIPTION="${OPTARG}"
       ;;
     e)
-      SESREGION=$OPTARG
+      SESREGION="${OPTARG}"
       ;;
     h)
       usage
       ;;
     i)
-      OAINDEX=$OPTARG
+      OAINDEX="${OPTARG}"
       ;;
     m)
-      OANAME=$OPTARG
+      OANAME="${OPTARG}"
        ;;
     n)
-      NAME=$OPTARG
+      NAME="${OPTARG}"
        ;;
     o)
-      TID=$OPTARG
+      TID="${OPTARG}"
       ;;
     r)
-      REGION=$OPTARG
+      REGION="${OPTARG}"
       ;;
     s)
-      ALMSIZE=$OPTARG
+      ALMSIZE="${OPTARG}"
       ;;
     t)
-      TITLE=$OPTARG
+      TITLE="${OPTARG}"
        ;;
     y)
-      ALMTYPE=$OPTARG
+      ALMTYPE="${OPTARG}"
       ;;
     \?)
-      echo -e "\nInvalid option: -$OPTARG" 
+      echo -e "\nInvalid option: - ${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption -$OPTARG requires an argument" 
+      echo -e "\nOption - ${OPTARG} requires an argument"
       usage
       ;;
    esac

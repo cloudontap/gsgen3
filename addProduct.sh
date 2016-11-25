@@ -29,35 +29,35 @@ function usage() {
 while getopts ":d:hl:n:o:p:r:u" opt; do
     case $opt in
         d)
-            DESCRIPTION="$OPTARG"
+            DESCRIPTION="${OPTARG}"
             ;;
         h)
             usage
             ;;
         l)
-            TITLE="$OPTARG"
+            TITLE="${OPTARG}"
             ;;
         n)
-            PRODUCT=$OPTARG
+            PRODUCT="${OPTARG}"
             ;;
         o)
-            DOMAIN="$OPTARG"
+            DOMAIN="${OPTARG}"
             ;;
         p)
-            PID=$OPTARG
+            PID="${OPTARG}"
             ;;
         r)
-            AWS_REGION=$OPTARG
+            AWS_REGION="${OPTARG}"
             ;;
         u)
             UPDATE_PRODUCT="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG}" requires an argument"
             usage
             ;;
     esac

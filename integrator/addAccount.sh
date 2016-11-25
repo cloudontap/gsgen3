@@ -34,13 +34,13 @@ function usage() {
 while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
     case $opt in
         a)
-            AID=$OPTARG
+            AID="${OPTARG}"
             ;;
         c)
-            AWS_ID=$OPTARG
+            AWS_ID="${OPTARG}"
             ;;
         d)
-            DESCRIPTION="$OPTARG"
+            DESCRIPTION="${OPTARG}"
             ;;
         f)
             USE_SHELF_ACCOUNT="true"
@@ -49,32 +49,32 @@ while getopts ":a:c:d:fhl:n:o:r:s:t:u" opt; do
             usage
             ;;
         l)
-            TITLE="$OPTARG"
+            TITLE="${OPTARG}"
             ;;
         n)
-            ACCOUNT=$OPTARG
+            ACCOUNT="${OPTARG}"
             ;;
         o)
-            DOMAIN="$OPTARG"
+            DOMAIN="${OPTARG}"
             ;;
         r)
-            AWS_REGION=$OPTARG
+            AWS_REGION="${OPTARG}"
             ;;
         s)
-            AWS_SES_REGION=$OPTARG
+            AWS_SES_REGION="${OPTARG}"
             ;;
         t)
-            TENANT=$OPTARG
+            TENANT="${OPTARG}"
             ;;
         u)
             UPDATE_ACCOUNT="true"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

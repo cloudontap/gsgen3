@@ -35,36 +35,36 @@ ENV_NAME=
 while getopts ":d:e:hi:t:v:w:" opt; do
     case $opt in
         d)
-            DELAY=$OPTARG
+            DELAY="${OPTARG}"
             ;;
         e)
             # Separate environment variable definitions
             if [[ -n "${ENV_NAME}" ]]; then 
               ENV_STRUCTURE="${ENV_STRUCTURE},"
             fi
-            ENV_NAME=$OPTARG
+            ENV_NAME="${OPTARG}"
             ;;
         h)
             usage
             ;;
         i)
-            COMPONENT=$OPTARG
+            COMPONENT="${OPTARG}"
             ;;
         t)
-            TIER=$OPTARG
+            TIER="${OPTARG}"
             ;;
         v)
             ENV_STRUCTURE="${ENV_STRUCTURE}{\"name\":\"${ENV_NAME}\", \"value\":\"${OPTARG}\"}"
             ;;
         w)
-            TASK=$OPTARG
+            TASK="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

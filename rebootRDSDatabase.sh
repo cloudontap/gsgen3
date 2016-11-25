@@ -31,7 +31,7 @@ WAIT=true
 while getopts ":d:fhi:rt:" opt; do
     case $opt in
         d)
-            DELAY=$OPTARG
+            DELAY="${OPTARG}"
             ;;
         f)
             FORCE_FAILOVER=true
@@ -40,20 +40,20 @@ while getopts ":d:fhi:rt:" opt; do
             usage
             ;;
         i)
-            COMPONENT=$OPTARG
+            COMPONENT="${OPTARG}"
             ;;
         r)
             WAIT=false
             ;;
         t)
-            TIER=$OPTARG
+            TIER="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

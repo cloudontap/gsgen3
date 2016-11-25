@@ -25,32 +25,32 @@ function usage() {
 while getopts ":c:hi:p:qr:v:" opt; do
     case $opt in
         c)
-            CERTIFICATE_CHAIN=$OPTARG
+            CERTIFICATE_CHAIN="${OPTARG}"
             ;;
         h)
             usage
             ;;
         i)
-            CERTIFICATE_ID=$OPTARG
+            CERTIFICATE_ID="${OPTARG}"
             ;;
         p)
-            CERTIFICATE_PUBLIC=$OPTARG
+            CERTIFICATE_PUBLIC="${OPTARG}"
             ;;
         q)
             QUIET="true"
             ;;
         r)
-            REGION=$OPTARG
+            REGION="${OPTARG}"
             ;;
         v)
-            CERTIFICATE_PRIVATE=$OPTARG
+            CERTIFICATE_PRIVATE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac

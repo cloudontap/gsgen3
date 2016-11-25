@@ -30,29 +30,29 @@ VARIABLES=()
 while getopts ":d:ho:r:t:v:" opt; do
     case $opt in
         d)
-            TEMPLATEDIR=$OPTARG
+            TEMPLATEDIR="${OPTARG}"
             ;;
         h)
             usage
             ;;
         o)
-            OUTPUT=$OPTARG
+            OUTPUT="${OPTARG}"
             ;;
         r)
             RAW_VARIABLES+=("${OPTARG}")
             ;;
         t)
-            TEMPLATE=$OPTARG
+            TEMPLATE="${OPTARG}"
             ;;
         v)
             VARIABLES+=("${OPTARG}")
             ;;
         \?)
-            echo -e "\nInvalid option: -$OPTARG" 
+            echo -e "\nInvalid option: - ${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption -$OPTARG requires an argument" 
+            echo -e "\nOption - ${OPTARG} requires an argument"
             usage
             ;;
     esac
