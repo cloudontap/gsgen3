@@ -58,11 +58,11 @@ while getopts ":a:e:hi:n:s:t:y:" opt; do
             export CREDENTIAL_TYPE="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: - ${OPTARG}"
+            echo -e "\nInvalid option: -${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption - ${OPTARG} requires an argument"
+            echo -e "\nOption -${OPTARG} requires an argument"
             usage
             ;;
     esac

@@ -60,11 +60,11 @@ while getopts ":d:hl:n:o:r:s:t:u" opt; do
             UPDATE_TENANT="true"
             ;;
         \?)
-            echo -e "\nInvalid option: - ${OPTARG}"
+            echo -e "\nInvalid option: -${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption - ${OPTARG} requires an argument"
+            echo -e "\nOption -${OPTARG} requires an argument"
             usage
             ;;
     esac

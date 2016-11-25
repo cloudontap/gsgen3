@@ -49,11 +49,11 @@ while getopts ":d:fhi:rt:" opt; do
             TIER="${OPTARG}"
             ;;
         \?)
-            echo -e "\nInvalid option: - ${OPTARG}"
+            echo -e "\nInvalid option: -${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption - ${OPTARG} requires an argument"
+            echo -e "\nOption -${OPTARG} requires an argument"
             usage
             ;;
     esac

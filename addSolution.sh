@@ -30,11 +30,11 @@ while getopts "hs:u" opt; do
             UPDATE_SOLUTION="true"
             ;;
         \?)
-            echo -e "\nInvalid option: - ${OPTARG}"
+            echo -e "\nInvalid option: -${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption - ${OPTARG} requires an argument"
+            echo -e "\nOption -${OPTARG} requires an argument"
             usage
             ;;
     esac

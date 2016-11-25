@@ -90,11 +90,11 @@ while getopts ":d:e:hi:m:n:o:r:s:t:y:" opt; do
       ALMTYPE="${OPTARG}"
       ;;
     \?)
-      echo -e "\nInvalid option: - ${OPTARG}"
+      echo -e "\nInvalid option: -${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption - ${OPTARG} requires an argument"
+      echo -e "\nOption -${OPTARG} requires an argument"
       usage
       ;;
    esac

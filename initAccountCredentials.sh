@@ -36,11 +36,11 @@ while getopts ":hi:o:" opt; do
       TID="${OPTARG}"
       ;;
     \?)
-      echo -e "\nInvalid option: - ${OPTARG}"
+      echo -e "\nInvalid option: -${OPTARG}"
       usage
       ;;
     :)
-      echo -e "\nOption - ${OPTARG} requires an argument"
+      echo -e "\nOption -${OPTARG} requires an argument"
       usage
       ;;
    esac

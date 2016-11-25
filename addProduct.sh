@@ -53,11 +53,11 @@ while getopts ":d:hl:n:o:p:r:u" opt; do
             UPDATE_PRODUCT="true"
             ;;
         \?)
-            echo -e "\nInvalid option: - ${OPTARG}"
+            echo -e "\nInvalid option: -${OPTARG}"
             usage
             ;;
         :)
-            echo -e "\nOption - ${OPTARG}" requires an argument"
+            echo -e "\nOption -${OPTARG}" requires an argument"
             usage
             ;;
     esac
