@@ -84,7 +84,7 @@ case $TYPE in
         if [[ !("${SLICE}" =~ key|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE_PREFIX}${REGION_PREFIX}template.json" ]]; then
                 TYPE_PREFIX="cont-"
-                TYPE_SUFFIX="cont"
+                TYPE_SUFFIX="-cont"
             fi
             if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
                 TYPE_PREFIX="container-"
