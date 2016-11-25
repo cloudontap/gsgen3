@@ -36,6 +36,9 @@ while getopts ":a:e:hi:n:s:t:y:" opt; do
         a)
             ACCOUNT="${OPTARG}"
             ;;
+        e)
+            export CREDENTIAL_EMAIL="${OPTARG}"
+            ;;
         h)
             usage
             ;;
