@@ -77,7 +77,7 @@ cp "${CERTIFICATE_PUBLIC}"  "${LOCAL_CERTIFICATE_PUBLIC}"
 cp "${CERTIFICATE_PRIVATE}" "${LOCAL_CERTIFICATE_PRIVATE}"
 cp "${CERTIFICATE_CHAIN}"   "${LOCAL_CERTIFICATE_CHAIN}"
 
-aws $--region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-ssl > temp_ssl_check.out 2>&1
+aws --region ${REGION} iam get-server-certificate --server-certificate-name ${CERTIFICATE_ID}-ssl > temp_ssl_check.out 2>&1
 RESULT=$?
 if [[ "${QUIET}" != "true" ]]; then cat temp_ssl_check.out; fi
 if [[ "${RESULT}" -ne 0 ]]; then
