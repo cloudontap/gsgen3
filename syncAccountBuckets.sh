@@ -69,7 +69,7 @@ pushd ${ACCOUNT_DIR}  > /dev/null 2>&1
 
 # Confirm access to the code bucket
 if [[ "${CHECK}" == "true" ]]; then
-    aws --region ${ACCOUNT_REGION} s3 ls s3://${CODE_BUCKET}/ >/dev/null 2>&1
+    aws --region ${ACCOUNT_REGION} s3 ls s3://${CODE_BUCKET}/ > temp_code_access.txt
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
         echo -e "\nCan't access the code bucket. Does the service role for the server include access to the \"${ACCOUNT}\" code bucket? If windows, is a profile matching the account been set up? Nothing to do."
@@ -92,7 +92,7 @@ fi
 
 # Confirm access to the credentials bucket
 if [[ "${CHECK}" == "true" ]]; then
-    aws --region ${ACCOUNT_REGION} s3 ls s3://${CREDENTIALS_BUCKET}/ >/dev/null 2>&1
+    aws --region ${ACCOUNT_REGION} s3 ls s3://${CREDENTIALS_BUCKET}/ > temp_credential_access.txt
     RESULT=$?
     if [[ "$RESULT" -ne 0 ]]; then
         echo -e "\nCan't access the credentials bucket. Does the service role for the server include access to the \"${ACCOUNT}\" credentials bucket? If windows, is a profile matching the account been set up? Nothing to do."
