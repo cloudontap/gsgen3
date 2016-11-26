@@ -3,21 +3,25 @@
 if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
+STACK_INITIATE_DEFAULT="true"
+STACK_MONITOR_DEFAULT="true"
 STACK_OPERATION_DEFAULT="update"
 STACK_WAIT_DEFAULT=30
 function usage() {
     echo -e "\nManage a CloudFormation stack"
     echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -i -m -w STACK_WAIT -r REGION -d\n"
     echo -e "\nwhere\n"
-    echo -e "(o) -d to delete the stack"
+    echo -e "(o) -d (STACK_OPERATION=delete) to delete the stack"
     echo -e "    -h shows this text"
-    echo -e "(o) -i (INITIATE ONLY) initiates but does not monitor the stack operation"
-    echo -e "(o) -m (MONITOR ONLY) monitors but does not initiate the stack operation"
+    echo -e "(o) -i (STACK_MONITOR=false) initiates but does not monitor the stack operation"
+    echo -e "(o) -m (STACK_INITIATE=false) monitors but does not initiate the stack operation"
     echo -e "(o) -r REGION is the AWS region identifier for the region in which the stack should be managed"
     echo -e "(m) -s SLICE is the slice used to determine the stack template"
     echo -e "(m) -t TYPE is the stack type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
     echo -e "(o) -w STACK_WAIT is the interval between checking the progress of the stack operation"
     echo -e "\nDEFAULTS:\n"
+    echo -e "STACK_INITIATE = ${STACK_INITIATE_DEFAULT}"
+    echo -e "STACK_MONITOR = ${STACK_MONITOR_DEFAULT}"
     echo -e "STACK_OPERATION = ${STACK_OPERATION_DEFAULT}"
     echo -e "STACK_WAIT = ${STACK_WAIT_DEFAULT} seconds"
     echo -e "\nNOTES:\n"
@@ -68,8 +72,8 @@ done
 # Apply defaults
 STACK_OPERATION=${STACK_OPERATION:-${STACK_OPERATION_DEFAULT}}
 STACK_WAIT=${STACK_WAIT:-${STACK_WAIT_DEFAULT}}
-STACK_INITIATE=${STACK_INITIATE:-true}
-STACK_MONITOR=${STACK_MONITOR:-true}
+STACK_INITIATE=${STACK_INITIATE:-${STACK_INITIATE_DEFAULT}}
+STACK_MONITOR=${STACK_MONITOR:-${STACK_MONITOR_DEFAULT}
 
 
 # Set up the context
