@@ -58,6 +58,9 @@ while getopts ":dhimr:s:t:w:" opt; do
         t)
             TYPE="${OPTARG}"
             ;;
+        w)
+            STACK_WAIT="${OPTARG}"
+            ;;
         \?)
             echo -e "\nInvalid option: -${OPTARG}"
             usage
@@ -73,7 +76,7 @@ done
 STACK_OPERATION=${STACK_OPERATION:-${STACK_OPERATION_DEFAULT}}
 STACK_WAIT=${STACK_WAIT:-${STACK_WAIT_DEFAULT}}
 STACK_INITIATE=${STACK_INITIATE:-${STACK_INITIATE_DEFAULT}}
-STACK_MONITOR=${STACK_MONITOR:-${STACK_MONITOR_DEFAULT}
+STACK_MONITOR=${STACK_MONITOR:-${STACK_MONITOR_DEFAULT}}
 
 
 # Set up the context
