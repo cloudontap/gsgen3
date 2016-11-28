@@ -1461,7 +1461,11 @@
                                         },
                                     [/#if]
                                     "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}",
-                                    "ElasticsearchVersion" : "2.3",
+                                    [#if es.Version??]
+                                        "ElasticsearchVersion" : "${es.Version}",
+                                    [#else]
+                                        "ElasticsearchVersion" : "2.3",
+                                    [/#if]
                                     [#if (storageProfile.Volumes["codeontap"])??]
                                         [#assign volume = storageProfile.Volumes["codeontap"]]
                                         "EBSOptions" : {
