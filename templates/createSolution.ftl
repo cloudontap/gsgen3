@@ -605,26 +605,6 @@
                                                         ],
                                                         "Effect": "Allow"
                                                     }
-                                                    [#if getKey("cmkXsegmentXcmk")??]
-                                                    ,{
-                                                        "Resource": [
-                                                            { 
-                                                                "Fn::Join" : [
-                                                                    "", 
-                                                                    [
-                                                                        "arn:aws:kms:${regionId}:", 
-                                                                        {"Ref" : "AWS::AccountId"}, 
-                                                                        ":key/${getKey("cmkXsegmentXcmk")}"
-                                                                    ]
-                                                                ]
-                                                            }
-                                                        ],
-                                                        "Action": [
-                                                            "kms:Decrypt"
-                                                        ],
-                                                        "Effect": "Allow"
-                                                    }
-                                                    [/#if]
                                                 ]
                                             }
                                         }
