@@ -118,6 +118,15 @@
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
 [#assign logsBucket = "logs" + segmentDomainQualifier + "." + segmentDomain]
 [#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
+[#-- Support s3 update without changing existing bucket names (naming has changed over time) --]
+[#if getKey("s3XsegmentXlogs")??]
+    [#assign logsBucket = getKey("s3XsegmentXlogs")]
+[/#if]
+
+[#if getKey("s3XsegmentXbackups")??]
+    [#assign backupsBucket = getKey("s3XsegmentXbackups")]
+[/#if]
+
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
 
