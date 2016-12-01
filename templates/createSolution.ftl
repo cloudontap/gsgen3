@@ -177,7 +177,8 @@
             "Port" : ${destination.Port?c},
             "Protocol" : "${destination.Protocol}",
             "Tags" : [
-                { "Key" : "cot:request", "Value" : "${request}" },
+                { "Key" : "cot:request", "Value" : "${requestReference}" },
+                { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                 { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                 { "Key" : "cot:account", "Value" : "${accountId}" },
                 { "Key" : "cot:product", "Value" : "${productId}" },
@@ -195,6 +196,10 @@
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
+    "Metadata" : {
+        "RequestReference" : "${requestReference}",
+        "ConfigurationReference" : "${configurationReference}"
+    },
     "Resources" : {
         [#assign count = 0]
         [#list tiers as tier]
@@ -216,7 +221,8 @@
                                     "GroupDescription": "Security Group for ${tier.Name}-${component.Name}",
                                     "VpcId": "${vpc}",
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -243,7 +249,8 @@
                                         "BucketName" : "${component.Name}${segmentDomainQualifier}.${segmentDomain}",
                                     [/#if]
                                     "Tags" : [ 
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -443,7 +450,8 @@
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "LoadBalancerName" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -524,7 +532,8 @@
                                     "SecurityGroups":[ {"Ref" : "securityGroupX${tier.Id}X${component.Id}"} ],
                                     "Name" : "${productId}-${segmentId}-${tier.Id}-${component.Id}",
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -654,7 +663,8 @@
                                                                     "", 
                                                                     [
                                                                         "#!/bin/bash\n",
-                                                                        "echo \"cot:request=${request}\"\n",
+                                                                        "echo \"cot:request=${requestReference}\"\n",
+                                                                        "echo \"cot:configuration=${configurationReference}\"\n",
                                                                         "echo \"cot:accountRegion=${accountRegionId}\"\n",
                                                                         "echo \"cot:tenant=${tenantId}\"\n",
                                                                         "echo \"cot:account=${accountId}\"\n",
@@ -750,7 +760,8 @@
                                             ],
                                             "SourceDestCheck" : true,
                                             "Tags" : [
-                                                { "Key" : "cot:request", "Value" : "${request}" },
+                                                { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                                { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                                 { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                                 { "Key" : "cot:account", "Value" : "${accountId}" },
                                                 { "Key" : "cot:product", "Value" : "${productId}" },
@@ -952,7 +963,8 @@
                                                             "", 
                                                             [
                                                                 "#!/bin/bash\n",
-                                                                "echo \"cot:request=${request}\"\n",
+                                                                "echo \"cot:request=${requestReference}\"\n",
+                                                                "echo \"cot:configuration=${configurationReference}\"\n",
                                                                 "echo \"cot:accountRegion=${accountRegionId}\"\n",
                                                                 "echo \"cot:tenant=${tenantId}\"\n",
                                                                 "echo \"cot:account=${accountId}\"\n",
@@ -1055,7 +1067,8 @@
                                         "VPCZoneIdentifier" : ["${getKey("subnetX"+tier.Id+"X"+zones[0].Id)}"],
                                     [/#if]
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}", "PropagateAtLaunch" : "True" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:account", "Value" : "${accountId}", "PropagateAtLaunch" : "True" },
                                         { "Key" : "cot:product", "Value" : "${productId}", "PropagateAtLaunch" : "True" },
@@ -1197,7 +1210,8 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -1256,7 +1270,8 @@
                                         [/#list]
                                     ],
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -1277,7 +1292,8 @@
                                     "Parameters" : {
                                     },
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -1299,7 +1315,8 @@
                                     "OptionConfigurations" : [
                                     ],
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -1339,7 +1356,8 @@
                                         { "Ref" : "securityGroupX${tier.Id}X${component.Id}" }
                                     ],
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },
@@ -1462,7 +1480,8 @@
                                         },
                                     [/#if]
                                     "Tags" : [
-                                        { "Key" : "cot:request", "Value" : "${request}" },
+                                        { "Key" : "cot:request", "Value" : "${requestReference}" },
+                                        { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                                         { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                                         { "Key" : "cot:account", "Value" : "${accountId}" },
                                         { "Key" : "cot:product", "Value" : "${productId}" },

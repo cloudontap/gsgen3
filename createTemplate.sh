@@ -3,19 +3,21 @@
 if [[ -n "${GENERATION_DEBUG}" ]]; then set ${GENERATION_DEBUG}; fi
 trap '. ${GENERATION_DIR}/cleanupContext.sh; exit ${RESULT:-1}' EXIT SIGHUP SIGINT SIGTERM
 
-REQUEST_DEFAULT="unassigned"
+CONFIGURATION_REFERENCE_DEFAULT="unassigned"
+REQUEST_REFERENCE_DEFAULT="unassigned"
 function usage() {
     echo -e "\nCreate a CloudFormation (CF) template" 
-    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -q REQUEST -r REGION"
+    echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -c CONFIGURATION_REFERENCE -q REQUEST_REFERENCE -r REGION"
     echo -e "\nwhere\n"
-    echo -e "(o) -c CONFIGURATION_REFERENCE is the id of the configuration (commit id, branch id, tag)"
+    echo -e "(o) -c CONFIGURATION_REFERENCE is the identifier of the configuration used to generate this template"
     echo -e "    -h shows this text"
-    echo -e "(o) -q REQUEST is an opaque value to link this template to a triggering request management system"
+    echo -e "(o) -q REQUEST_REFERENCE is an opaque value to link this template to a triggering request management system"
     echo -e "(o) -r REGION is the AWS region identifier"
     echo -e "(m) -s SLICE is the slice to be included in the template"
     echo -e "(m) -t TYPE is the template type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
     echo -e "\nDEFAULTS:\n"
-    echo -e "REQUEST = \"${REQUEST_DEFAULT}\""
+    echo -e "CONFIGURATION_REFERENCE = \"${CONFIGURATION_REFERENCE_DEFAULT}\""
+    echo -e "REQUEST_REFERENCE = \"${REQUEST_REFERENCE_DEFAULT}\""
     echo -e "\nNOTES:\n"
     echo -e "1. You must be in the directory specific to the type"
     echo -e "2. REGION is only relevant for the \"product\" type"
@@ -42,7 +44,7 @@ while getopts ":c:hq:r:s:t:" opt; do
             usage
             ;;
         q)
-            REQUEST="${OPTARG}"
+            REQUEST_REFERENCE="${OPTARG}"
             ;;
         r)
             REGION="${OPTARG}"
@@ -65,7 +67,8 @@ while getopts ":c:hq:r:s:t:" opt; do
 done
 
 # Defaults
-REQUEST="${REQUEST:-${REQUEST_DEFAULT}}"
+CONFIGURATION_REFERENCE="${CONFIGURATION_REFERENCE:-${CONFIGURATION_REFERENCE_DEFAULT}}"
+REQUEST_REFERENCE="${REQUEST_REFERENCE:-${REQUEST_REFERENCE_DEFAULT}}"
 
 # Ensure mandatory arguments have been provided
 if [[ (-z "${TYPE}") || (-z "${SLICE}") ]]; then 
@@ -203,7 +206,6 @@ if [[ ! -d ${CF_DIR} ]]; then mkdir -p ${CF_DIR}; fi
 
 ARGS=()
 if [[ -n "${SLICE}"                   ]]; then ARGS+=("-v" "slice=${SLICE}"); fi
-if [[ -n "${CONFIGURATION_REFERENCE}" ]]; then ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}"); fi
 if [[ -n "${BUILD_REFERENCE}"         ]]; then ARGS+=("-v" "buildReference=${BUILD_REFERENCE}"); fi
 # Removal of /c/ is specifically for MINGW. It shouldn't affect other platforms as it won't be found
 if [[ "${TYPE}" == "application"      ]]; then ARGS+=("-r" "containerList=${COMPOSITE_CONTAINERS#/c/}"); fi
@@ -214,7 +216,8 @@ ARGS+=("-v" "blueprint=${COMPOSITE_BLUEPRINT}")
 ARGS+=("-v" "credentials=${COMPOSITE_CREDENTIALS}")
 ARGS+=("-v" "appsettings=${COMPOSITE_APPSETTINGS}")
 ARGS+=("-v" "stackOutputs=${COMPOSITE_STACK_OUTPUTS}")
-ARGS+=("-v" "request=${REQUEST}")
+ARGS+=("-v" "requestReference=${REQUEST_REFERENCE}")
+ARGS+=("-v" "configurationReference=${CONFIGURATION_REFERENCE}")
 
 ${GENERATION_DIR}/gsgen.sh -t $TEMPLATE -d $TEMPLATE_DIR -o $TEMP_OUTPUT "${ARGS[@]}"
 RESULT=$?

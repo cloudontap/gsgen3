@@ -136,12 +136,15 @@
     {
         "Name" : "ENVIRONMENT",
         "Value" : "${environmentName}"
+    },
+    {
+        "Name" : "REQUEST_REFERENCE",
+        "Value" : "${configurationReference}"
+    },
+    {
+        "Name" : "CONFIGURATION_REFERENCE",
+        "Value" : "${configurationReference}"
     }
-    [#if configurationReference??]
-        ,{
-            "Name" : "CONFIGURATION_REFERENCE",
-            "Value" : "${configurationReference}"
-        }
     [/#if]
     [#if buildCommit??]
         ,{
@@ -284,7 +287,8 @@
             "Port" : ${destination.Port?c},
             "Protocol" : "${destination.Protocol}",
             "Tags" : [
-                { "Key" : "cot:request", "Value" : "${request}" },
+                { "Key" : "cot:request", "Value" : "${requestReference}" },
+                { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                 { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                 { "Key" : "cot:account", "Value" : "${accountId}" },
                 { "Key" : "cot:product", "Value" : "${productId}" },
@@ -302,6 +306,16 @@
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
+    "Metadata" : {
+        "RequestReference" : "${requestReference}",
+        "ConfigurationReference" : "${configurationReference}"
+        [#if buildCommit??]
+            ,"BuildReference" : "${buildCommit}"
+        [/#if]
+        [#if appReference?? && (appReference != "")]
+            ,"AppReference" : "${appReference}"
+        [/#if]
+    },
     "Resources" : 
     {
         [#assign count = 0]
