@@ -35,6 +35,45 @@
             "Essential" : true,
             [#break]
 
+        [#case "policyCount"]
+            [#assign policyCount += 1]
+            [#break]
+
+        [#case "policy"]
+            "policyX${tier.Id}X${component.Id}X${task.Id}X${container.Id}": {
+                "Type" : "AWS::IAM::Policy",
+                "Properties" : {
+                    "PolicyDocument" : {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Action": [
+                                    "kms:Decrypt"
+                                ],
+                                "Resource": [
+                                     {
+                                        "Fn::Join" : [
+                                            "",
+                                            [
+                                                "arn:aws:kms:${regionId}:",
+                                                {"Ref" : "AWS::AccountId"},
+                                                ":key/${getKey("cmkXsegmentXcmk")}"
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "Effect": "Allow"
+                            }
+                        ]
+                    },
+                    "PolicyName" : "${tier.Name + "-" + component.Name + "-" + task.Name + "-" + container.Name}",
+                    "Roles" : [
+                        { "Ref" : "roleX${tier.Id}X${component.Id}X${task.Id}" }
+                    ]
+                }
+            },
+            [#break]
+
     [/#switch]
     [#break]
 
