@@ -145,7 +145,6 @@
         "Name" : "CONFIGURATION_REFERENCE",
         "Value" : "${configurationReference}"
     }
-    [/#if]
     [#if buildCommit??]
         ,{
             "Name" : "BUILD_REFERENCE",
