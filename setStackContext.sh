@@ -81,20 +81,20 @@ case $TYPE in
         TYPE_SUFFIX="-seg"
 
         # LEGACY: Support old formats for existing stacks so they can be updated 
-        if [[ !("${SLICE}" =~ key|dns ) ]]; then
+        if [[ !("${SLICE}" =~ cmk|cert|dns ) ]]; then
             if [[ -f "${CF_DIR}/cont-${SLICE_PREFIX}${REGION_PREFIX}template.json" ]]; then
                 TYPE_PREFIX="cont-"
                 TYPE_SUFFIX="-cont"
             fi
             if [[ -f "${CF_DIR}/container-${REGION}-template.json" ]]; then
                 TYPE_PREFIX="container-"
-                TYPE_SUFFIX="container"
+                TYPE_SUFFIX="-container"
                 SLICE_PREFIX=""
                 SLICE_SUFFIX=""
             fi
             if [[ -f "${CF_DIR}/${SEGMENT}-container-template.json" ]]; then
                 TYPE_PREFIX="${SEGMENT}-container-"
-                TYPE_SUFFIX="container"
+                TYPE_SUFFIX="-container"
                 SLICE_PREFIX=""
                 SLICE_SUFFIX=""
                 REGION_PREFIX=""

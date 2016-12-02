@@ -118,7 +118,7 @@
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
 [#assign logsBucket = "logs" + segmentDomainQualifier + "." + segmentDomain]
 [#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
-[#-- Support s3 update without changing existing bucket names (naming has changed over time) --]
+[#-- Support presence of existing s3 buckets (naming has changed over time) --]
 [#if getKey("s3XsegmentXlogs")??]
     [#assign logsBucket = getKey("s3XsegmentXlogs")]
 [/#if]
