@@ -241,14 +241,18 @@
                         [#-- S3 --]
                         [#if component.S3??]
                             [#assign s3 = component.S3]
+                            [#-- Current bucket naming --]
+                            [#if s3.Name != "S3"]
+                                [#assign bucketName = s3.Name + segmentDomainQualifier + "." + segmentDomain]
+                            [#else]
+                                [#assign bucketName = component.Name + segmentDomainQualifier + "." + segmentDomain]
+                            [/#if]
+                            [#-- Support presence of existing s3 buckets (naming has changed over time) --]
+                            [#assign bucketName = (getKey("s3XsegmentX" + component.Id))!bucketName]
                             "s3X${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
-                                    [#if s3.Name != "S3"]
-                                        "BucketName" : "${s3.Name}${segmentDomainQualifier}.${segmentDomain}",
-                                    [#else]
-                                        "BucketName" : "${component.Name}${segmentDomainQualifier}.${segmentDomain}",
-                                    [/#if]
+                                    "BucketName" : "${bucketName}",
                                     "Tags" : [ 
                                         { "Key" : "cot:request", "Value" : "${requestReference}" },
                                         { "Key" : "cot:configuration", "Value" : "${configurationReference}" },

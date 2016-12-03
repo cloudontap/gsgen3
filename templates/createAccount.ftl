@@ -63,9 +63,9 @@
             [#if sliceCount > 0],[/#if]
             [#list buckets as bucket]
                 [#-- Current bucket naming --]
-                [#assign bucketName = "bucket + accountDomainQualifier + "." + accountDomain]
+                [#assign bucketName = bucket + accountDomainQualifier + "." + accountDomain]
                 [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-                [#assign bucketName = getKey("s3XaccountX" + bucket)!bucketName]
+                [#assign bucketName = (getKey("s3XaccountX" + bucket))!bucketName]
                 "s3X${bucket}" : {
                     "Type" : "AWS::S3::Bucket",
                     "Properties" : {

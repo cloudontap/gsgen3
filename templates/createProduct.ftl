@@ -164,7 +164,7 @@
                                 [#assign bucketName = component.Name + productDomainQualifier + "." + productDomain]
                             [/#if]
                             [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-                            [#assign bucketName = getKey("s3XproductX" + component.Id)!bucketName]
+                            [#assign bucketName = (getKey("s3XproductX" + component.Id))!bucketName]
                             "s3X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
