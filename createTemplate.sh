@@ -9,9 +9,9 @@ function usage() {
     echo -e "\nCreate a CloudFormation (CF) template" 
     echo -e "\nUsage: $(basename $0) -t TYPE -s SLICE -c CONFIGURATION_REFERENCE -q REQUEST_REFERENCE -r REGION"
     echo -e "\nwhere\n"
-    echo -e "(o) -c CONFIGURATION_REFERENCE is the identifier of the configuration used to generate this template"
+    echo -e "(m) -c CONFIGURATION_REFERENCE is the identifier of the configuration used to generate this template"
     echo -e "    -h shows this text"
-    echo -e "(o) -q REQUEST_REFERENCE is an opaque value to link this template to a triggering request management system"
+    echo -e "(m) -q REQUEST_REFERENCE is an opaque value to link this template to a triggering request management system"
     echo -e "(o) -r REGION is the AWS region identifier"
     echo -e "(m) -s SLICE is the slice to be included in the template"
     echo -e "(m) -t TYPE is the template type - \"account\", \"product\", \"segment\", \"solution\" or \"application\""
@@ -26,8 +26,7 @@ function usage() {
     echo -e "5. SLICE may be one of \"eip\", \"s3\", \"cmk\", \"cert\", \"vpc\" or \"dns\" for the \"segment\" type"
     echo -e "6. Stack for SLICE of \"eip\" or \"s3\" must be created before stack for \"vpc\" for the \"segment\" type"
     echo -e "7. Stack for SLICE of \"vpc\" must be created before stack for \"dns\" for the \"segment\" type "
-    echo -e "8. CONFIGURATION_REFERENCE is mandatory for the \"application\" type"
-    echo -e "9. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
+    echo -e "8. To support legacy configurations, the SLICE combinations \"eipvpc\" and"
     echo -e "   \"eips3vpc\" are also supported but for new products, individual "
     echo -e "   templates for each slice should be created"
     echo -e ""
@@ -71,7 +70,10 @@ CONFIGURATION_REFERENCE="${CONFIGURATION_REFERENCE:-${CONFIGURATION_REFERENCE_DE
 REQUEST_REFERENCE="${REQUEST_REFERENCE:-${REQUEST_REFERENCE_DEFAULT}}"
 
 # Ensure mandatory arguments have been provided
-if [[ (-z "${TYPE}") || (-z "${SLICE}") ]]; then 
+if [[ (-z "${TYPE}") ||
+        (-z "${SLICE}") ||
+        (-z "${REQUEST_REFERENCE}") ||
+        (-z "${CONFIGURATION_REFERENCE}")]]; then
     echo -e "\nInsufficient arguments"
     usage
 fi
@@ -88,11 +90,6 @@ fi
 if [[ ("${TYPE}" == "segment") && 
       (!("${SLICE}" =~ eip|s3|cmk|cert|vpc|dns|eipvpc|eips3vpc)) ]]; then
     echo -e "\nUnknown slice ${SLICE} for the segment type"
-    usage
-fi
-if [[ (-z "${CONFIGURATION_REFERENCE}") && 
-      ("${TYPE}" == "application") ]]; then
-    echo -e "\nInsufficient arguments"
     usage
 fi
 
