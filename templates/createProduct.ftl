@@ -157,14 +157,18 @@
                         [#if component.S3??]
                             [#assign s3 = component.S3]
                             [#if sliceCount > 0],[/#if]
+                            [#-- Current bucket naming --]
+                            [#if s3.Name != "S3"]
+                                [#assign bucketName = s3.Name + productDomainQualifier + "." + productDomain]
+                            [#else]
+                                [#assign bucketName = component.Name + productDomainQualifier + "." + productDomain]
+                            [/#if]
+                            [#-- Support presence of existing s3 buckets (naming has changed over time) --]
+                            [#assign bucketName = getKey("s3XproductX" + component.Id)!bucketName]
                             "s3X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
-                                    [#if s3.Name != "S3"]
-                                        "BucketName" : "${s3.Name}${productDomainQualifier}.${productDomain}",
-                                    [#else]
-                                        "BucketName" : "${component.Name}${productDomainQualifier}.${productDomain}",
-                                    [/#if]
+                                    "BucketName" : "${bucketName}",
                                     "Tags" : [ 
                                         { "Key" : "cot:request", "Value" : "${requestReference}" },
                                         { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
