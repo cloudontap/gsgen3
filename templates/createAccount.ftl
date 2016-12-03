@@ -51,6 +51,11 @@
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
+    "Metadata" : {
+        "RequestReference" : "${requestReference}",
+        "ConfigurationReference" : "${configurationReference}",
+        "Prepared" : "${.now?iso_utc}"
+    },
     "Resources" : {
         [#assign sliceCount = 0]
         [#if slice?contains("s3")]
@@ -62,7 +67,8 @@
                     "Properties" : {
                         "BucketName" : "${bucket}${accountDomainQualifier}.${accountDomain}",
                         "Tags" : [ 
-                            { "Key" : "cot:request", "Value" : "${request}" },
+                            { "Key" : "cot:request", "Value" : "${requestReference}" },
+                            { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
                             { "Key" : "cot:tenant", "Value" : "${tenantId}" },
                             { "Key" : "cot:account", "Value" : "${accountId}" },
                             { "Key" : "cot:category", "Value" : "${categoryId}" }

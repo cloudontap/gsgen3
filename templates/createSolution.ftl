@@ -198,7 +198,8 @@
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Metadata" : {
         "RequestReference" : "${requestReference}",
-        "ConfigurationReference" : "${configurationReference}"
+        "ConfigurationReference" : "${configurationReference}",
+        "Prepared" : "${.now?iso_utc}"
     },
     "Resources" : {
         [#assign count = 0]
