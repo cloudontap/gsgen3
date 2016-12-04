@@ -48,6 +48,14 @@
 
 [#assign buckets = ["credentials", "code"]]
 
+[#-- Get stack output --]
+[#function getKey key]
+    [#list stackOutputsObject as pair]
+        [#if pair.OutputKey==key]
+            [#return pair.OutputValue]
+        [/#if]
+    [/#list]
+[/#function]
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
@@ -65,7 +73,7 @@
                 [#-- Current bucket naming --]
                 [#assign bucketName = bucket + accountDomainQualifier + "." + accountDomain]
                 [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-                [#assign bucketName = (getKey("s3XaccountX" + bucket))!bucketName]
+                [#assign bucketName = getKey("s3XaccountX" + bucket)!bucketName]
                 "s3X${bucket}" : {
                     "Type" : "AWS::S3::Bucket",
                     "Properties" : {

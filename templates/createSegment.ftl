@@ -120,8 +120,8 @@
 [#assign logsBucket = "logs" + segmentDomainQualifier + "." + segmentDomain]
 [#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
 [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-[#assign logsBucket = (getKey("s3XsegmentXlogs"))!logsBucket]
-[#assign backupsBucket = (getKey("s3XsegmentXbackups"))!backupsBucket]
+[#assign logsBucket = getKey("s3XsegmentXlogs")!logsBucket]
+[#assign backupsBucket = getKey("s3XsegmentXbackups")!backupsBucket]
 
 [#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
 [#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]

@@ -248,7 +248,7 @@
                                 [#assign bucketName = component.Name + segmentDomainQualifier + "." + segmentDomain]
                             [/#if]
                             [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-                            [#assign bucketName = (getKey("s3XsegmentX" + component.Id))!bucketName]
+                            [#assign bucketName = getKey("s3XsegmentX" + component.Id)!bucketName]
                             "s3X${tier.Id}X${component.Id}" : {
                                 "Type" : "AWS::S3::Bucket",
                                 "Properties" : {
