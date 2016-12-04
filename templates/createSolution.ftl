@@ -196,11 +196,7 @@
 
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
-    "Metadata" : {
-        "RequestReference" : "${requestReference}",
-        "ConfigurationReference" : "${configurationReference}",
-        "Prepared" : "${.now?iso_utc}"
-    },
+    [#include "templateMetadata.ftl"],
     "Resources" : {
         [#assign count = 0]
         [#list tiers as tier]
@@ -821,7 +817,7 @@
                             [#assign processorProfile = getProcessor(tier, component, "ECS")]
                             [#assign maxSize = processorProfile.MaxPerZone]
                             [#if multiAZ]
-                                [#assign maxSize = maxSize * zoneCount]
+                                [#assign maxSize = maxSize * zones?size]
                             [/#if]
                             [#assign storageProfile = getStorage(tier, component, "ECS")]
                             [#assign fixedIP = ecs.FixedIP?? && ecs.FixedIP]
@@ -1057,9 +1053,9 @@
                                     "Cooldown" : "30",
                                     "LaunchConfigurationName": {"Ref": "launchConfigX${tier.Id}X${component.Id}"},
                                     [#if multiAZ]
-                                        "MinSize": "${processorProfile.MinPerZone * zoneCount}",
+                                        "MinSize": "${processorProfile.MinPerZone * zones?size}",
                                         "MaxSize": "${maxSize}",
-                                        "DesiredCapacity": "${processorProfile.DesiredPerZone * zoneCount}",
+                                        "DesiredCapacity": "${processorProfile.DesiredPerZone * zones?size}",
                                         "VPCZoneIdentifier": [ 
                                             [#list zones as zone]
                                                 "${getKey("subnetX"+tier.Id+"X"+zone.Id)}"[#if !(zones?last.Id == zone.Id)],[/#if]
@@ -1193,16 +1189,16 @@
                                         "AZMode": "cross-az",
                                         "PreferredAvailabilityZones" : [
                                             [#assign countPerZone = processorProfile.CountPerZone]
-                                            [#assign zoneCount = 0]
+                                            [#assign cacheZoneCount = 0]
                                             [#list zones as zone]
                                                 [#list 1..countPerZone as i]
-                                                    [#if zoneCount > 0],[/#if]
+                                                    [#if cacheZoneCount > 0],[/#if]
                                                     "${zone.AWSZone}"
-                                                    [#assign zoneCount += 1]
+                                                    [#assign cacheZoneCount += 1]
                                                 [/#list]
                                         [/#list]
                                         ],
-                                        "NumCacheNodes" : "${processorProfile.CountPerZone * zoneCount}",
+                                        "NumCacheNodes" : "${processorProfile.CountPerZone * zones?size}",
                                     [#else]
                                         "AZMode": "single-az",
                                         "PreferredAvailabilityZone" : "${zones[0].AWSZone}",
@@ -1474,7 +1470,7 @@
                                         "InstanceType" : "${processorProfile.Processor}",
                                         "ZoneAwarenessEnabled" : ${multiAZ?string("true","false")},
                                         [#if multiAZ]
-                                            "InstanceCount" : ${processorProfile.CountPerZone * zoneCount}
+                                            "InstanceCount" : ${processorProfile.CountPerZone * zones?size}
                                         [#else]
                                             "InstanceCount" : ${processorProfile.CountPerZone}
                                         [/#if]
@@ -1624,7 +1620,7 @@
                                 [#assign processorProfile = getProcessor(tier, component, "ECS")]
                                 [#assign maxSize = processorProfile.MaxPerZone]
                                 [#if multiAZ]
-                                    [#assign maxSize *= zoneCount]
+                                    [#assign maxSize *= zones?size]
                                 [/#if]
                                 [#list 1..maxSize as index]
                                     ,"eipX${tier.Id}X${component.Id}X${index}Xip": {
