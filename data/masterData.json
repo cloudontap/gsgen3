@@ -802,7 +802,7 @@
             "Enabled" : true,
             "MultiAZ" : false
         },
-        "SSHPerSegment" : false,
+        "SSHPerSegment" : true,
         "RotateKey" : true,
         "Tiers" : {
             "Order" : ["web", "msg", "app", "db", "dir", "ana", "spare", "spare",
