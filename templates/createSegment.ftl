@@ -604,7 +604,13 @@
                                         [#list groupValue?values as entryValue]
                                             [#if entryValue?is_hash && (entryValue.CIDR)?has_content ]
                                                 [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("nat") ]
-                                                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                                    [#if (entryValue.CIDR)?is_sequence]
+                                                        [#list entryValue.CIDR as CIDRBlock]
+                                                            { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${CIDRBlock}" },
+                                                        [/#list]
+                                                    [#else]
+                                                        { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "${entryValue.CIDR}" },
+                                                    [/#if]
                                                 [/#if]
                                             [/#if]
                                         [/#list]

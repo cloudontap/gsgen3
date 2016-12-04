@@ -1416,9 +1416,17 @@
                                                                         [#list groupValue?values as entryValue]
                                                                             [#if entryValue?is_hash && (entryValue.CIDR)?has_content ]
                                                                                 [#if (!entryValue.Usage??) || entryValue.Usage?seq_contains("es") ]
-                                                                                    [#if ipCount > 0],[/#if]
-                                                                                    "${entryValue.CIDR}"
-                                                                                    [#assign ipCount += 1]
+                                                                                    [#if (entryValue.CIDR)?is_sequence]
+                                                                                        [#list entryValue.CIDR as CIDRBlock]
+                                                                                            [#if ipCount > 0],[/#if]
+                                                                                            "${CIDRBlock}"
+                                                                                            [#assign ipCount += 1]
+                                                                                        [/#list]
+                                                                                    [#else]
+                                                                                        [#if ipCount > 0],[/#if]
+                                                                                        "${entryValue.CIDR}"
+                                                                                        [#assign ipCount += 1]
+                                                                                    [/#if]
                                                                                 [/#if]
                                                                             [/#if]
                                                                         [/#list]
@@ -1439,7 +1447,9 @@
                                             [/#list]
                                         },
                                     [/#if]
-                                    "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}",
+                                    [#-- In order to permit updates to the security policy, don't name the domain. --]
+                                    [#-- Use tags in the console to find the right one --]
+                                    [#-- "DomainName" : "${productName}-${segmentId}-${tier.Id}-${component.Id}", --]
                                     [#if es.Version??]
                                         "ElasticsearchVersion" : "${es.Version}",
                                     [#else]
