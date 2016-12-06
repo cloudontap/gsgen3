@@ -266,7 +266,7 @@ fi
 
 export COMPOSITE_STACK_OUTPUTS="${INFRASTRUCTURE_DIR}/composite_stack_outputs.json"
 if [[ "${#STACK_LIST[@]}" -gt 0 ]]; then
-    ${GENERATION_DIR}/manageJSON.sh -f "[.[].Stacks[].Outputs[]]" -o ${COMPOSITE_STACK_OUTPUTS} "${STACK_LIST[@]}"
+    ${GENERATION_DIR}/manageJSON.sh -f "[.[].Stacks | select(.!=null) | .[].Outputs | select(.!=null) | .[]]" -o ${COMPOSITE_STACK_OUTPUTS} "${STACK_LIST[@]}"
 else
     echo "[]" > ${COMPOSITE_STACK_OUTPUTS}
 fi
