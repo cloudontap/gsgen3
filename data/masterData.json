@@ -304,10 +304,10 @@
             "Title": "Application Lifecycle Management Environment",
             "Description": "Normally only one environment for the alm. Entry mainly here for naming consistency",
             "Category": "alm",
-            "Logs": {
+            "Operations": {
                 "Expiration": 30
             },
-            "Backups": {
+            "Data": {
                 "Expiration": 90
             }
         },
@@ -315,10 +315,10 @@
             "Title": "Shared Services Environment",
             "Description": "One shared environment per account. Entry mainly here for naming consistency",
             "Category": "alm",
-            "Logs": {
+            "Operations": {
                 "Expiration": 30
             },
-            "Backups": {
+            "Data": {
                 "Expiration": 90
             }
         },
@@ -344,10 +344,10 @@
             "Name": "integration",
             "Description": "Mainly for devs to confirm components work together",
             "Category": "test",
-            "Logs": {
+            "Operations": {
                 "Expiration": 30
             },
-            "Backups": {
+            "Data": {
                 "Expiration": 90
             }
         },

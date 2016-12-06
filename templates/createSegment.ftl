@@ -117,14 +117,14 @@
 [#assign sshPerSegment = segmentObject.SSHPerSegment]
 [#assign rotateKeys = (segmentObject.RotateKeys)!true]
 [#-- Current bucket naming --]
-[#assign logsBucket = "logs" + segmentDomainQualifier + "." + segmentDomain]
-[#assign backupsBucket = "backups" + segmentDomainQualifier + "." + segmentDomain]
+[#assign operationsBucket = "operations" + segmentDomainQualifier + "." + segmentDomain]
+[#assign dataBucket = "data" + segmentDomainQualifier + "." + segmentDomain]
 [#-- Support presence of existing s3 buckets (naming has changed over time) --]
-[#assign logsBucket = getKey("s3XsegmentXlogs")!logsBucket]
-[#assign backupsBucket = getKey("s3XsegmentXbackups")!backupsBucket]
+[#assign operationsBucket = getKey("s3XsegmentXoperations")!getKey("s3XsegmentXlogs")!operationsBucket]
+[#assign dataBucket = getKey("s3XsegmentXdata")!getKey("s3XsegmentXbackups")!dataBucket]
 
-[#assign logsExpiration = (segmentObject.Logs.Expiration)!(environmentObject.Logs.Expiration)!90]
-[#assign backupsExpiration = (segmentObject.Backups.Expiration)!(environmentObject.Backups.Expiration)!365]
+[#assign operationsExpiration = (segmentObject.Operations.Expiration)!(environmentObject.Operations.Expiration)]
+[#assign dataExpiration = (segmentObject.Data.Expiration)!(environmentObject.Data.Expiration)]
 
 [#-- Required tiers --]
 [#function isTier tierId]
@@ -693,8 +693,8 @@
                                                             "echo \"cot:role=nat\"\n",
                                                             "echo \"cot:credentials=${credentialsBucket}\"\n",
                                                             "echo \"cot:code=${codeBucket}\"\n",
-                                                            "echo \"cot:logs=${logsBucket}\"\n",
-                                                            "echo \"cot:backups=${backupsBucket}\"\n"
+                                                            "echo \"cot:logs=${operationsBucket}\"\n",
+                                                            "echo \"cot:backups=${dataBucket}\"\n"
                                                         ]
                                                     ]
                                                 },
@@ -820,12 +820,12 @@
         [/#if]
         
         [#if slice?contains("s3")]
-            [#-- Create logs bucket --]
+            [#-- Create operations bucket --]
             [#if sliceCount > 0],[/#if]
-            "s3Xlogs" : {
+            "s3Xoperations" : {
                 "Type" : "AWS::S3::Bucket",
                 "Properties" : {
-                    "BucketName" : "${logsBucket}",
+                    "BucketName" : "${operationsBucket}",
                     "Tags" : [ 
                         { "Key" : "cot:request", "Value" : "${requestReference}" },
                         { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
@@ -840,18 +840,18 @@
                         "Rules" : [
                             {
                                 "Id" : "default",
-                                "ExpirationInDays" : ${logsExpiration},
+                                "ExpirationInDays" : ${operationsExpiration},
                                 "Status" : "Enabled"
                             }
                         ]
                     }
                 }
             },
-            [#-- Ensure ELBs can write to the logs bucket --]
-            "s3XlogsXpolicy" : {
+            [#-- Ensure ELBs can write to the operations bucket for logs --]
+            "s3XoperationsXpolicy" : {
                 "Type" : "AWS::S3::BucketPolicy",
                 "Properties" : {
-                    "Bucket" : "${logsBucket}",
+                    "Bucket" : "${operationsBucket}",
                     "PolicyDocument" : {
                         "Statement": [
                             {
@@ -860,17 +860,17 @@
                                     "AWS": "arn:aws:iam::${regionObject.Accounts["ELB"]}:root"
                                 },
                                 "Action": "s3:PutObject",
-                                "Resource": "arn:aws:s3:::${logsBucket}/AWSLogs/*"
+                                "Resource": "arn:aws:s3:::${operationsBucket}/AWSLogs/*"
                             }
                         ]
                     }
                 }
             },
-            [#-- Create backups bucket --]
-            "s3Xbackups" : {
+            [#-- Create data bucket --]
+            "s3Xdata" : {
                 "Type" : "AWS::S3::Bucket",
                 "Properties" : {
-                    "BucketName" : "${backupsBucket}",
+                    "BucketName" : "${dataBucket}",
                     "Tags" : [ 
                         { "Key" : "cot:request", "Value" : "${requestReference}" },
                         { "Key" : "cot:configuration", "Value" : "${configurationReference}" },
@@ -885,7 +885,7 @@
                         "Rules" : [
                             {
                                 "Id" : "default",
-                                "ExpirationInDays" : ${backupsExpiration},
+                                "ExpirationInDays" : ${dataExpiration},
                                 "Status" : "Enabled"
                             }
                         ]
@@ -979,11 +979,11 @@
         
         [#if slice?contains("s3")]
             [#if sliceCount > 0],[/#if]
-            "s3XsegmentXlogs" : {
-                "Value" : { "Ref" : "s3Xlogs" }
+            "s3XsegmentXoperations" : {
+                "Value" : { "Ref" : "s3Xoperations" }
             },
-            "s3XsegmentXbackups" : {
-                "Value" : { "Ref" : "s3Xbackups" }
+            "s3XsegmentXdata" : {
+                "Value" : { "Ref" : "s3Xdata" }
             }
             [#assign sliceCount += 1]
         [/#if]

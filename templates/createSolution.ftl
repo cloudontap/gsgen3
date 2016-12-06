@@ -52,8 +52,8 @@
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
 [#assign codeBucket = getKey("s3XaccountXcode")!"unknown"]
-[#assign logsBucket = getKey("s3XsegmentXlogs")]
-[#assign backupsBucket = getKey("s3XsegmentXbackups")]
+[#assign operationsBucket = getKey("s3XsegmentXoperations")!getKey("s3XsegmentXlogs")]
+[#assign dataBucket = getKey("s3XsegmentXdata")!getKey("s3XsegmentXbackups")]
 
 [#-- Get stack output --]
 [#function getKey key]
@@ -444,7 +444,7 @@
                                         "AccessLoggingPolicy" : {
                                             "EmitInterval" : 5,
                                             "Enabled" : true,
-                                            "S3BucketName" : "${logsBucket}"
+                                            "S3BucketName" : "${operationsBucket}"
                                         },
                                     [/#if]
                                     "Scheme" : "${(tier.RouteTable == "external")?string("internet-facing","internal")}",
@@ -590,7 +590,7 @@
                                                     {
                                                         "Resource": [
                                                             "arn:aws:s3:::${codeBucket}",
-                                                            "arn:aws:s3:::${logsBucket}"
+                                                            "arn:aws:s3:::${operationsBucket}"
                                                         ],
                                                         "Action": [
                                                             "s3:List*"
@@ -608,7 +608,7 @@
                                                     },
                                                     {
                                                         "Resource": [
-                                                            "arn:aws:s3:::${logsBucket}/*"
+                                                            "arn:aws:s3:::${operationsBucket}/DOCKERLogs/*"
                                                         ],
                                                         "Action": [
                                                             "s3:PutObject"
@@ -680,8 +680,8 @@
                                                                         "echo \"cot:role=${component.Role}\"\n",
                                                                         "echo \"cot:credentials=${credentialsBucket}\"\n",
                                                                         "echo \"cot:code=${codeBucket}\"\n",
-                                                                        "echo \"cot:logs=${logsBucket}\"\n",
-                                                                        "echo \"cot:backup=${backupsBucket}\"\n"
+                                                                        "echo \"cot:logs=${operationsBucket}\"\n",
+                                                                        "echo \"cot:backup=${dataBucket}\"\n"
                                                                     ]
                                                                 ]
                                                             },
@@ -867,7 +867,7 @@
                                                     {
                                                         "Resource": [
                                                             "arn:aws:s3:::${codeBucket}",
-                                                            "arn:aws:s3:::${logsBucket}"
+                                                            "arn:aws:s3:::${operationsBucket}"
                                                         ],
                                                         "Action": [
                                                             "s3:List*"
@@ -885,7 +885,7 @@
                                                     },
                                                     {
                                                         "Resource": [
-                                                            "arn:aws:s3:::${logsBucket}/*"
+                                                            "arn:aws:s3:::${operationsBucket}/DOCKERLogs/*"
                                                         ],
                                                         "Action": [
                                                             "s3:PutObject"
@@ -978,8 +978,8 @@
                                                                 "echo \"cot:role=${component.Role}\"\n",
                                                                 "echo \"cot:credentials=${credentialsBucket}\"\n",
                                                                 "echo \"cot:code=${codeBucket}\"\n",
-                                                                "echo \"cot:logs=${logsBucket}\"\n",
-                                                                "echo \"cot:backup=${backupsBucket}\"\n"
+                                                                "echo \"cot:logs=${operationsBucket}\"\n",
+                                                                "echo \"cot:backup=${dataBucket}\"\n"
                                                             ]
                                                         ]
                                                     },

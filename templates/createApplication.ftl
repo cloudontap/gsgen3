@@ -51,8 +51,8 @@
 [#-- Buckets --]
 [#assign credentialsBucket = getKey("s3XaccountXcredentials")!"unknown"]
 [#assign codeBucket = getKey("s3XaccountXcode")!"unknown"]
-[#assign logsBucket = getKey("s3XsegmentXlogs")]
-[#assign backupsBucket = getKey("s3XsegmentXbackups")]
+[#assign operationsBucket = getKey("s3XsegmentXoperations")!getKey("s3XsegmentXlogs")]
+[#assign dataBucket = getKey("s3XsegmentXdata")!getKey("s3XsegmentXbackups")]
 
 [#-- Get stack output --]
 [#function getKey key]
