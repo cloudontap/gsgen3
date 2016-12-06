@@ -58,8 +58,12 @@
             [#assign volumeCount += 1]
             [#break]
 
-        [#case "supplemental"]
-            ,"policyX${tier.Id}X${component.Id}Xs3" : {
+        [#case "policyCount"]
+            [#assign policyCount += 1]
+            [#break]
+
+        [#case "policy"]
+            "policyX${tier.Id}X${component.Id}X${task.Id}X${container.Id}": {
                 "Type": "AWS::IAM::Policy",
                 "Properties": {
                     "PolicyDocument" : {
@@ -67,7 +71,25 @@
                         "Statement": [
                             {
                                 "Resource": [
-                                    "arn:aws:s3:::${logsBucket}/*"
+                                    "arn:aws:s3:::${operationsBucket}"
+                                ],
+                                "Action": [
+                                    "s3:List*"
+                                ],
+                                "Effect": "Allow"
+                            },
+                            {
+                                "Resource": [
+                                    "arn:aws:s3:::${operationsBucket}/AWSLogs/*"
+                                ],
+                                "Action": [
+                                   "s3:GetObject"
+                                ],
+                                "Effect": "Allow"
+                            },
+                            {
+                                "Resource": [
+                                    "arn:aws:s3:::${operationsBucket}/DOCKERLogs/*"
                                 ],
                                 "Action": [
                                    "s3:GetObject",
@@ -77,10 +99,12 @@
                             }
                         ]
                     },
-                    "PolicyName": "${tier.Name}-${component.Name}-s3",
-                    "Roles" : [ "${getKey("roleX" + tier.Id + "X" + component.Id)}"]
+                    "PolicyName" : "${tier.Name + "-" + component.Name + "-" + task.Name + "-" + container.Name}",
+                    "Roles" : [
+                        { "Ref" : "roleX${tier.Id}X${component.Id}X${task.Id}" }
+                    ]
                 }
-            }
+            },
             [#break]
 
     [/#switch]
